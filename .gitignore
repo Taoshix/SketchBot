@@ -404,5 +404,4 @@ FodyWeavers.xsd
 **/Modules/TestOld.cs
 **/Modules/ImageModuleOld.cs
 **/Database/TempDB.cs
-**/Discord.Addons.Interactive/
 **/*.bat
