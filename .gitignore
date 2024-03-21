@@ -399,8 +399,4 @@ FodyWeavers.xsd
 
 **/*.json
 **/Jojo/
-**/Modules/DevModule.cs
-**/Modules/CommandsOld.cs
-**/Modules/TestOld.cs
-**/Modules/ImageModuleOld.cs
 **/*.bat
