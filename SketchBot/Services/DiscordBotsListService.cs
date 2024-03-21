@@ -11,14 +11,16 @@ using System.Linq;
 using Sketch_Bot.Models;
 using DiscordBotsList;
 using DiscordBotsList.Api;
+using Newtonsoft.Json;
 
 namespace Sketch_Bot.Services
 {
     public class DiscordBotsListService
     {
         private AuthDiscordBotListApi _dblApi;
-        public DiscordBotsListService(Config config)
+        public DiscordBotsListService()
         {
+            Config config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText("config.json"));
             AuthDiscordBotListApi dblApi = new AuthDiscordBotListApi(369865463670374400,
                 config.DblApiKey);
             _dblApi = dblApi;

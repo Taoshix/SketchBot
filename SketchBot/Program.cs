@@ -37,6 +37,7 @@ using Victoria.Node.EventArgs;
 using Victoria.Player;
 using Microsoft.Extensions.Hosting;
 using OsuSharp.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace Sketch_Bot
 {
@@ -54,12 +55,14 @@ namespace Sketch_Bot
         private readonly CommandService _commands;
         private ServiceProvider _provider;
         private readonly Jikan _jikan;
-        private readonly LavaNode _instanceOfLavaNode;
         private Config _config;
 
         ulong _channelid;
 
         public bool _databaseActive;
+        private AudioService _audioService;
+        private LavaNode _lavaNode;
+        private ILogger _loggerFactory;
 
         private Program()
         {
@@ -80,7 +83,11 @@ namespace Sketch_Bot
                     x.SelfDeaf = false;
                 })
                 .AddSingleton(_client)
-                .AddSingleton<AudioService>()
+                .AddLavaNode()
+                .AddLogging(x => {
+                    x.ClearProviders();
+                    x.SetMinimumLevel(LogLevel.Trace);
+                })
                 .AddSingleton<InteractiveService>()
                 .AddSingleton<TimerService>()
                 .AddSingleton<StatService>()
@@ -111,7 +118,7 @@ namespace Sketch_Bot
             _commands = _provider.GetRequiredService<CommandService>();
             _jikan = _provider.GetRequiredService<Jikan>();
             _databaseActive = _provider.GetRequiredService<TimerService>().GetDatabaseBool(true);
-            _instanceOfLavaNode = _provider.GetRequiredService<LavaNode>();
+            //_audioService = _provider.GetRequiredService<AudioService>();
             _interactionService.AddTypeConverter<Calculation>(new CalculationConverter());
             _interactionService.AddTypeConverter<ulong>(new UlongConverter());
 
@@ -130,10 +137,6 @@ namespace Sketch_Bot
             _client.UserUpdated += UpdateProfilePictures;
             _client.InteractionCreated += HandleInteraction;
             //_commands.CommandExecuted += OnCommandExecutedAsync;
-            _instanceOfLavaNode.OnTrackEnd += OnTrackEnded;
-            _instanceOfLavaNode.OnTrackException += OnTrackException;
-            _instanceOfLavaNode.OnTrackStuck += OnTrackStuck;
-            _instanceOfLavaNode.OnTrackStart += OnTrackStart;
         }
 
         private static Task Logger(LogMessage message)
@@ -273,11 +276,12 @@ namespace Sketch_Bot
         private async Task OnReady()
         {
             var cachingservice = _provider.GetRequiredService<CachingService>();
+            await _provider.UseLavaNodeAsync();
             if (_provider.GetRequiredService<TimerService>().GetDatabaseBool())
                 cachingservice.SetupBlackList();
-            try
+/*            try
             {
-                if (!_instanceOfLavaNode.IsConnected)
+                if (!_audioService.IsConnected)
                 {
                     await _instanceOfLavaNode.ConnectAsync();
                     Console.WriteLine(_instanceOfLavaNode.IsConnected);
@@ -286,7 +290,7 @@ namespace Sketch_Bot
             catch (Exception ex)
             {
                 Console.WriteLine($"{ex.GetType().ToString()}\n{ex.StackTrace}");
-            }
+            }*/
             await _interactionService.RegisterCommandsGloballyAsync();
         }
         private async Task OnTrackEnded(TrackEndEventArg<LavaPlayer<LavaTrack>, LavaTrack> args)

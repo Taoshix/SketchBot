@@ -17,6 +17,7 @@ using Discord.WebSocket;
 using Victoria.Node;
 using Victoria.Player;
 using Victoria.Node.EventArgs;
+using Microsoft.Extensions.Logging;
 
 namespace Sketch_Bot.Services
 {
@@ -24,11 +25,20 @@ namespace Sketch_Bot.Services
     {
         private readonly ConcurrentDictionary<ulong, CancellationTokenSource> _disconnectTokens;
         private readonly LavaNode _lavaNode;
+        private readonly ILogger _logger;
 
-        public AudioService(LavaNode lavaNode)//, ILoggerFactory loggerFactory)
+        public AudioService(LavaNode lavaNode, ILoggerFactory loggerFactory)
         {
             _disconnectTokens = new ConcurrentDictionary<ulong, CancellationTokenSource>();
+            _logger = loggerFactory.CreateLogger<LavaNode>();
             _lavaNode = lavaNode;
+            _lavaNode.OnTrackEnd += OnTrackEndAsync;
+            _lavaNode.OnTrackStart += OnTrackStartAsync;
+            _lavaNode.OnStatsReceived += OnStatsReceivedAsync;
+            _lavaNode.OnUpdateReceived += OnUpdateReceivedAsync;
+            _lavaNode.OnWebSocketClosed += OnWebSocketClosedAsync;
+            _lavaNode.OnTrackStuck += OnTrackStuckAsync;
+            _lavaNode.OnTrackException += OnTrackExceptionAsync;
         }
         public async Task OnTrackStarted(TrackStartEventArg<LavaPlayer<LavaTrack>, LavaTrack> arg)
         {
@@ -68,7 +78,45 @@ namespace Sketch_Bot.Services
             await _lavaNode.LeaveAsync(player.VoiceChannel);
             await player.TextChannel.SendMessageAsync("Thanks for using the music feature.");
         }
+        private static Task OnTrackExceptionAsync(TrackExceptionEventArg<LavaPlayer<LavaTrack>, LavaTrack> arg)
+        {
+            arg.Player.Vueue.Enqueue(arg.Track);
+            return arg.Player.TextChannel.SendMessageAsync($"{arg.Track} has been requeued because it threw an exception.");
+        }
 
+        private static Task OnTrackStuckAsync(TrackStuckEventArg<LavaPlayer<LavaTrack>, LavaTrack> arg)
+        {
+            arg.Player.Vueue.Enqueue(arg.Track);
+            return arg.Player.TextChannel.SendMessageAsync($"{arg.Track} has been requeued because it got stuck.");
+        }
+
+        private Task OnWebSocketClosedAsync(WebSocketClosedEventArg arg)
+        {
+            Console.WriteLine($"{arg.Code} {arg.Reason}");
+            return Task.CompletedTask;
+        }
+
+        private Task OnStatsReceivedAsync(StatsEventArg arg)
+        {
+            Console.WriteLine($"Players: {arg.Players}\nPlaying Players: {arg.PlayingPlayers}\nUptime: {arg.Uptime}");
+            return Task.CompletedTask;
+        }
+
+        private static Task OnUpdateReceivedAsync(UpdateEventArg<LavaPlayer<LavaTrack>, LavaTrack> arg)
+        {
+            return arg.Player.TextChannel.SendMessageAsync(
+                $"Player update received: {arg.Position}/{arg.Track?.Duration}");
+        }
+
+        private static Task OnTrackStartAsync(TrackStartEventArg<LavaPlayer<LavaTrack>, LavaTrack> arg)
+        {
+            return arg.Player.TextChannel.SendMessageAsync($"Started playing {arg.Track}.");
+        }
+
+        private static Task OnTrackEndAsync(TrackEndEventArg<LavaPlayer<LavaTrack>, LavaTrack> arg)
+        {
+            return arg.Player.TextChannel.SendMessageAsync($"Finished playing {arg.Track}.");
+        }
 
 
 
