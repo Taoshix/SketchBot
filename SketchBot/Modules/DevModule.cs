@@ -59,7 +59,7 @@ namespace Sketch_Bot.Modules
                     var emoji = new Emoji("✅");
                     GlobalsOld globals = new GlobalsOld { Context = Context, Guild = Context.Guild, DblApi = _service.DblApi() };
                     //object o = await CSharpScript.EvaluateAsync(@"using System;using System.Linq;using System.Threading.Tasks;using System.Collections.Generic;using Discord.WebSocket;using Discord;using System.Net;using System.Net.Http;using OsuSharp;using OsuSharp.UserEndpoint;using OsuSharp.Misc;using OsuSharp.Entities;try{" + @code + "} catch (exception) {}", scriptoptions, globals);
-                    object o = await CSharpScript.EvaluateAsync(@"using System;using System.Linq;using System.Threading.Tasks;using System.Collections.Generic;using System.IO;using Discord.WebSocket;using Discord;using System.Net;using System.Net.Http;using OsuSharp;using OsuSharp.Endpoints;using OsuSharp.Misc;using OsuSharp.Entities;using DiscordBotsList.Api;" + @code, scriptoptions, globals);
+                    object o = await CSharpScript.EvaluateAsync(@"using System;using System.Linq;using System.Threading.Tasks;using System.Collections.Generic;using System.IO;using Discord.WebSocket;using Discord;using System.Net;using System.Net.Http;using DiscordBotsList.Api;" + @code, scriptoptions, globals);
                     stopwatch.Stop();
                     if (o == null)
                     {
