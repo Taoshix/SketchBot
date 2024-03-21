@@ -18,6 +18,10 @@ namespace Sketch_Bot.Models
         public string DatabaseHost { get; set; }
         public string IMGFlip { get; set; }
         public int CaseNumber { get; set; }
+        public string TempDBUsername { get; set; }
+        public string TempDBPassword { get; set; }
+        public string TempDBHost { get; set; }
+        public string TempDBDatabase { get; set; }
         
     }
 }

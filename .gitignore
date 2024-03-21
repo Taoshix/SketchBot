@@ -403,5 +403,4 @@ FodyWeavers.xsd
 **/Modules/CommandsOld.cs
 **/Modules/TestOld.cs
 **/Modules/ImageModuleOld.cs
-**/Database/TempDB.cs
 **/*.bat
