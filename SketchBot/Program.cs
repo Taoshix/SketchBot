@@ -83,6 +83,8 @@ namespace Sketch_Bot
                     x.SelfDeaf = false;
                 })
                 .AddSingleton(_client)
+                .AddSingleton<AudioService>()
+                .AddSingleton<LavaNode>()
                 .AddLavaNode()
                 .AddLogging(x => {
                     x.ClearProviders();
