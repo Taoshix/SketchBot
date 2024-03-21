@@ -26,7 +26,7 @@ namespace Sketch_Bot
             stringBuilder.Server = config.DatabaseHost;
             stringBuilder.UserID = config.DatabaseUsername;
             stringBuilder.Password = config.DatabasePassword;
-            stringBuilder.Database = "Server Settings";
+            stringBuilder.Database = "Server settings";
             stringBuilder.SslMode = MySqlSslMode.Disabled;
             stringBuilder.Pooling = false;
 
