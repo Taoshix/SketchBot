@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using ImgFlip4NET;
+using Newtonsoft.Json;
 using Sketch_Bot.Models;
 
 namespace Sketch_Bot.Services
@@ -19,13 +20,13 @@ namespace Sketch_Bot.Services
         ImgFlipOptions options = new ImgFlipOptions();
 
         ImgFlipService service;
-        public MemeService(DiscordSocketClient client, Config config)
+        public MemeService(DiscordSocketClient client)
         {
             _client = client;
-            _config = config;
         }
         public ImgFlipService GetMemeService()
         {
+            _config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText("config.json"));
             options.Username = "Taoshi";
             options.Password = _config.IMGFlip;
             service = new ImgFlipService(options);
