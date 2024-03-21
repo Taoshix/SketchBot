@@ -225,7 +225,7 @@ namespace Sketch_Bot
                 if (msg == null) return;
                 if (msg.Author.Id == _client.CurrentUser.Id || msg.Author.IsBot) return;
                 int pos = 0;
-                var prefix = System.IO.File.ReadAllText("prefix.json");
+                var prefix = _config.Prefix;
                 var auther = msg.Author;
                 var socketguild = (auther as SocketGuildUser)?.Guild;
                 if (_provider.GetRequiredService<TimerService>().GetDatabaseBool())
@@ -235,10 +235,6 @@ namespace Sketch_Bot
                     {
                         cachingService.SetupPrefixes(socketguild);
                         prefix = cachingService.GetPrefix(socketguild.Id);
-                    }
-                    else
-                    {
-                        prefix = System.IO.File.ReadAllText("prefix.json");
                     }
                 }
                 if (msg.HasStringPrefix(prefix, ref pos) || msg.HasMentionPrefix(_client.CurrentUser, ref pos))
@@ -281,18 +277,6 @@ namespace Sketch_Bot
             await _provider.UseLavaNodeAsync();
             if (_provider.GetRequiredService<TimerService>().GetDatabaseBool())
                 cachingservice.SetupBlackList();
-/*            try
-            {
-                if (!_audioService.IsConnected)
-                {
-                    await _instanceOfLavaNode.ConnectAsync();
-                    Console.WriteLine(_instanceOfLavaNode.IsConnected);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"{ex.GetType().ToString()}\n{ex.StackTrace}");
-            }*/
             await _interactionService.RegisterCommandsGloballyAsync();
         }
         private async Task OnTrackEnded(TrackEndEventArg<LavaPlayer<LavaTrack>, LavaTrack> args)
