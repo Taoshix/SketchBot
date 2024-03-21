@@ -74,7 +74,7 @@ namespace Sketch_Bot
             _config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText("config.json"));
             _client = new DiscordSocketClient(new DiscordSocketConfig
             {
-                LogLevel = LogSeverity.Verbose,
+                LogLevel = LogSeverity.Info,
                 AlwaysDownloadUsers = true,
                 GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers
             });
