@@ -18,6 +18,7 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using Discord.Interactions;
 using System.Net.Http;
 using SixLabors.ImageSharp.Formats.Png;
+using Sketch_Bot.Models;
 
 namespace Sketch_Bot.Modules
 {
@@ -335,9 +336,9 @@ namespace Sketch_Bot.Modules
         public async Task Huewheel(int seconds, IAttachment inputImage)
         {
             await DeferAsync();
-            if (seconds < 1 || seconds > 60)
+            if (seconds < 1 || seconds > 10)
             {
-                await FollowupAsync("Seconds must be between `1` and `60`");
+                await FollowupAsync("Seconds must be between `1` and `10`");
                 return;
             }
             try
@@ -464,6 +465,76 @@ namespace Sketch_Bot.Modules
                 original.SaveAsGif(gifStream);
                 gifStream.Position = 0;
                 await Context.Interaction.FollowupWithFileAsync(gifStream, "Fadeout.gif", $"Fadeout duration: `{seconds}` seconds");
+                await gifStream.FlushAsync();
+            }
+            catch (Exception ex)
+            {
+                await FollowupAsync($"Unable to process the image\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+            }
+        }
+        [SlashCommand("spin", "Creates a GIF of the image spinning 360 degrees over the given seconds")]
+        public async Task Spin(int seconds, IAttachment inputImage)
+        {
+            await DeferAsync();
+            if (seconds < 1 || seconds > 10)
+            {
+                await FollowupAsync("Seconds must be between `1` and `10`");
+                return;
+            }
+            try
+            {
+                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+
+                int fps = 30;
+                int frameCount = seconds * fps;
+                int frameDelay = 100 / fps; // in 1/100s of a second
+
+                using var original = SixLabors.ImageSharp.Image.Load<Rgba32>(photoBytes);
+                int ow = original.Width;
+                int oh = original.Height;
+                var (newWidth, newHeight) = HelperFunctions.GetRotatedDimensions(ow, oh, 45);
+
+                using var gif = new Image<Rgba32>(newWidth, newHeight, new Rgba32(0, 0, 0, 0));
+                var gifMetaData = gif.Metadata.GetGifMetadata();
+                gifMetaData.RepeatCount = 0; // infinite loop
+
+                // Prepare the first frame (0 degrees)
+                using (var frame0 = original.Clone(ctx => ctx.Rotate(0f)))
+                {
+                    gif.Mutate(ctx => ctx.DrawImage(frame0, new Point((newWidth - ow) / 2, (newHeight - oh) / 2), 1f));
+                }
+                gif.Frames.RootFrame.Metadata.GetGifMetadata().FrameDelay = frameDelay;
+
+                // Generate and add rotated frames
+                for (int i = 0; i < frameCount; i++)
+                {
+                    float degrees = i * (360f / frameCount);
+
+                    // Create a blank square canvas
+                    using var canvas = new Image<Rgba32>(newWidth, newHeight, new Rgba32(0, 0, 0, 0));
+                    // Draw the original image centered on the canvas
+                    canvas.Mutate(ctx => ctx.DrawImage(original, new Point((newWidth - ow) / 2, (newHeight - oh) / 2), 1f));
+                    // Rotate the entire canvas
+                    canvas.Mutate(ctx => ctx.Rotate(degrees));
+
+                    // For the first frame, overwrite the root frame
+                    if (i == 0)
+                    {
+                        gif.Mutate(ctx => ctx.DrawImage(canvas, new Point(0, 0), 1f));
+                        gif.Frames.RootFrame.Metadata.GetGifMetadata().FrameDelay = frameDelay;
+                    }
+                    else
+                    {
+                        var meta = canvas.Frames.RootFrame.Metadata.GetGifMetadata();
+                        meta.FrameDelay = frameDelay;
+                        gif.Frames.AddFrame(canvas.Frames.RootFrame);
+                    }
+                }
+
+                using var gifStream = new MemoryStream();
+                gif.SaveAsGif(gifStream);
+                gifStream.Position = 0;
+                await Context.Interaction.FollowupWithFileAsync(gifStream, "Spin.gif", $"Spin ({seconds} second(s), 360°)");
                 await gifStream.FlushAsync();
             }
             catch (Exception ex)

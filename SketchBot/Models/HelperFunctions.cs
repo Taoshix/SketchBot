@@ -268,5 +268,21 @@ namespace Sketch_Bot.Models
             public override string ToString()
                 => $"{Result}";
         }
+        public static (int newWidth, int newHeight) GetRotatedDimensions(int width, int height, double angleDegrees)
+        {
+            // Convert angle to radians
+            double angleRadians = angleDegrees * Math.PI / 180.0;
+
+            // Get absolute cosine and sine of the angle
+            double cos = Math.Abs(Math.Cos(angleRadians));
+            double sin = Math.Abs(Math.Sin(angleRadians));
+
+            // Calculate the new bounding box dimensions
+            double newWidth = (width * cos) + (height * sin);
+            double newHeight = (width * sin) + (height * cos);
+
+            // Return as integers (rounded up to cover full image)
+            return (newWidth: (int)Math.Ceiling(newWidth), newHeight: (int)Math.Ceiling(newHeight));
+        }
     }
 }

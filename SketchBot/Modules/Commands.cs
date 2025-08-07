@@ -837,8 +837,7 @@ namespace Sketch_Bot.Modules
             {
                 var messages = await Context.Channel.GetMessagesAsync((int)amount + 1).FlattenAsync();
                 await (Context.Channel as ITextChannel)?.DeleteMessagesAsync(messages);
-                const int delay = 3000;
-                await RespondAsync($"Purge completed.", ephemeral:true);
+                await FollowupAsync($"Purge completed.", ephemeral:true);
             }
             else
             {
