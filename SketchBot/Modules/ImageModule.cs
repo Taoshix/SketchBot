@@ -476,9 +476,9 @@ namespace Sketch_Bot.Modules
         public async Task Spin(int seconds, IAttachment inputImage)
         {
             await DeferAsync();
-            if (seconds < 1 || seconds > 10)
+            if (seconds < 1 || seconds > 20)
             {
-                await FollowupAsync("Seconds must be between `1` and `10`");
+                await FollowupAsync("Seconds must be between `1` and `20`");
                 return;
             }
             try
@@ -492,32 +492,24 @@ namespace Sketch_Bot.Modules
                 using var original = SixLabors.ImageSharp.Image.Load<Rgba32>(photoBytes);
                 int ow = original.Width;
                 int oh = original.Height;
-                var (newWidth, newHeight) = HelperFunctions.GetRotatedDimensions(ow, oh, 45);
+                int canvasSize = Math.Max(ow, oh);
+                int shortest = Math.Min(ow, oh);
 
-                using var gif = new Image<Rgba32>(newWidth, newHeight, new Rgba32(0, 0, 0, 0));
+                using var gif = new Image<Rgba32>(canvasSize, canvasSize, new Rgba32(0, 0, 0, 0));
                 var gifMetaData = gif.Metadata.GetGifMetadata();
                 gifMetaData.RepeatCount = 0; // infinite loop
 
-                // Prepare the first frame (0 degrees)
-                using (var frame0 = original.Clone(ctx => ctx.Rotate(0f)))
-                {
-                    gif.Mutate(ctx => ctx.DrawImage(frame0, new Point((newWidth - ow) / 2, (newHeight - oh) / 2), 1f));
-                }
-                gif.Frames.RootFrame.Metadata.GetGifMetadata().FrameDelay = frameDelay;
-
-                // Generate and add rotated frames
                 for (int i = 0; i < frameCount; i++)
                 {
                     float degrees = i * (360f / frameCount);
 
-                    // Create a blank square canvas
-                    using var canvas = new Image<Rgba32>(newWidth, newHeight, new Rgba32(0, 0, 0, 0));
-                    // Draw the original image centered on the canvas
-                    canvas.Mutate(ctx => ctx.DrawImage(original, new Point((newWidth - ow) / 2, (newHeight - oh) / 2), 1f));
-                    // Rotate the entire canvas
-                    canvas.Mutate(ctx => ctx.Rotate(degrees));
+                    using var canvas = new Image<Rgba32>(canvasSize, canvasSize, new Rgba32(0, 0, 0, 0));
+                    var clone = original.Clone(ctx => ctx.Rotate(degrees));
+                    double radians = degrees * Math.PI / 180.0;
+                    int x = (int)(Math.Abs(Math.Sin(radians)) * ((canvasSize-shortest) / 2));
+                    int y = (int)(Math.Abs(Math.Cos(radians)) * ((canvasSize-shortest) / 2));
+                    canvas.Mutate(ctx => ctx.DrawImage(clone, new Point(x, y), 1f));
 
-                    // For the first frame, overwrite the root frame
                     if (i == 0)
                     {
                         gif.Mutate(ctx => ctx.DrawImage(canvas, new Point(0, 0), 1f));
