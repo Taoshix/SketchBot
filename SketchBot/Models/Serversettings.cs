@@ -13,6 +13,6 @@ namespace Sketch_Bot.Models
         public string roleId { get; set; }
         public int roleLevel { get; set; }
         public int XpMultiplier { get; set; }
-        public int LevelupMessages { get; set; }
+        public bool LevelupMessages { get; set; }
     }
 }

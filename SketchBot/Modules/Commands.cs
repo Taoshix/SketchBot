@@ -61,7 +61,7 @@ namespace Sketch_Bot.Modules
         {
             await DeferAsync();
             await FollowupAsync($"{Context.User.Mention} < {input}");
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?repeat with success! and repeated " + input + " (" + Context.Guild?.Name ?? "DM" + ")");
+            
         }
         [RequireUserPermission(GuildPermission.SendTTSMessages)]
         [SlashCommand("repeattts", "Echo a message")]
@@ -69,7 +69,7 @@ namespace Sketch_Bot.Modules
         {
             await DeferAsync();
             await FollowupAsync($"{Context.User.Mention} < {input}", null, true);
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?repeat with success! and repeated " + input + " (" + Context.Guild?.Name ?? "DM" + ")");
+            
         }
         [SlashCommand("rate", "Rates something out of 100")]
         public async Task Rate(string input)
@@ -126,13 +126,13 @@ namespace Sketch_Bot.Modules
                 if (min > max)
                 {
                     await FollowupAsync("The minimum value must not be over the maximum value!");
-                    Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?roll and failed! (MinOverMaxException)" + " (" + Context.Guild?.Name ?? "DM" + ")");
+                    
                 }
                 else
                 {
                     var rng = _rand.Next(min, max);
                     await FollowupAsync($"{Context.User.Username} rolled {rng} ({min}-{max})");
-                    Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?roll with success! and rolled " + rng + "(" + min + "-" + max + ")" + " (" + Context.Guild?.Name ?? "DM" + ")");
+                    
                 }
             }
             catch (IndexOutOfRangeException)
@@ -152,7 +152,7 @@ namespace Sketch_Bot.Modules
             {
                 await FollowupAsync("Hi! " + Context.User.Username);
             }
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?hello with success!" + " (" + Context.Guild?.Name ?? "DM" + ")");
+            
         }
         [SlashCommand("donate", "Sends a link for donations")]
         public async Task donate()
@@ -308,7 +308,7 @@ namespace Sketch_Bot.Modules
             embedBuilder.AddField("Execution time", time + "ms");
             var embed = embedBuilder.Build();
             await RespondAsync("", null,false,false,null,null,null,embed);
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?ping with success! " + Context.Client.Latency + "ms" + " (" + Context.Guild?.Name ?? "DM" + ")");
+            
         */
         }
         [SlashCommand("riskage", "Sends you a riskage")]
@@ -316,7 +316,7 @@ namespace Sketch_Bot.Modules
         {
             await DeferAsync();
             await FollowupWithFileAsync("DAB/riskage.jpg");
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?riskage with success!" + " (" + Context.Guild?.Name ?? "DM" + ")");
+            
         }
         [UserCommand("avatar")]
         public async Task avatar(IUser user)
@@ -343,7 +343,7 @@ namespace Sketch_Bot.Modules
             int randomIndex = _rand.Next(predictionsTexts.Length);
             string text = predictionsTexts[randomIndex];
             await FollowupAsync(":8ball: **Question: **" + input + "\n**Answer: **" + text);
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?8ball with success! " + "(" + input + ") (" + text + ") (" + Context.Guild?.Name ?? "DM" + ")");
+            
         }
         [RequireBotPermission(GuildPermission.KickMembers)]
         [RequireContext(ContextType.Guild)]
@@ -367,9 +367,6 @@ namespace Sketch_Bot.Modules
                                 $"\n**Kicked by: **{Context.User.Mention}!" +
                                 $"\n**Reason: **{reason}"; ///embed values///
                             var builtEmbed = embed.Build();
-                            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     "
-                                + Context.User.Username + " just ran ?kick with success! and kicked "
-                                + (user as IGuildUser).Username + " with the reason: " + (reason) + " (" + Context.Guild.Name + ")");
                             await (user as IGuildUser).KickAsync(reason);
                             await FollowupAsync("", null, false, false, null, null, null, builtEmbed);///sends embed///
                             /*
@@ -393,7 +390,7 @@ namespace Sketch_Bot.Modules
                         else
                         {
                             await user.KickAsync(reason);
-                            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?kick with success! and kicked " + (user as IGuildUser).Username + " (" + Context.Guild?.Name ?? "DM" + ")");
+                            
                         }
                     }
                     else
@@ -404,13 +401,13 @@ namespace Sketch_Bot.Modules
                 else
                 {
                     await FollowupAsync("/kick <user> <reason>");
-                    Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?kick and failed! (NoTargetException)" + " (" + Context.Guild?.Name ?? "DM" + ")");
+                    
                 }
             }
             else
             {
                 await FollowupAsync("You do not have Guild permission KickMembers");
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?kick and failed! (InsufficientPermissionsException)" + " (" + Context.Guild?.Name ?? "DM" + ")");
+                
             }
         }
         [RequireBotPermission(GuildPermission.BanMembers)]
@@ -435,9 +432,6 @@ namespace Sketch_Bot.Modules
                                 $"\n**banned by: **{Context.User.Mention}!" +
                                 $"\n**Reason: **{reason}"; ///embed values///
                             var builtEmbed = embed.Build();
-                            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     "
-                                + Context.User.Username + " just ran ?ban with success! and banned "
-                                + (user as IGuildUser).Username + " with the reason: " + (reason) + " (" + Context.Guild?.Name ?? "DM" + ")");
                             await Context.Guild.AddBanAsync(user, 7, reason);
                             await FollowupAsync("", null, false, false, null, null, null, builtEmbed);///sends embed///
                             /*
@@ -460,7 +454,7 @@ namespace Sketch_Bot.Modules
                         else
                         {
                             await Context.Guild.AddBanAsync(user, 7, reason);
-                            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?ban with success! and banned " + (user as IGuildUser).Username + " (" + Context.Guild?.Name ?? "DM" + ")");
+                            
                         }
                     }
                     else
@@ -471,13 +465,13 @@ namespace Sketch_Bot.Modules
                 else
                 {
                     await FollowupAsync("/ban <user> <reason>");
-                    Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?ban and failed! (NoTargetException)" + " (" + Context.Guild?.Name ?? "DM" + ")");
+                    
                 }
             }
             else
             {
                 await FollowupAsync("You do not have Guild permission BanMembers");
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?ban and failed! (InsufficientPermissionsException)" + " (" + Context.Guild?.Name ?? "DM" + ")");
+                
             }
         }
         [RequireBotPermission(GuildPermission.BanMembers)]
@@ -517,13 +511,13 @@ namespace Sketch_Bot.Modules
         public async Task riskagespil()
         {
             await FollowupAsync("https://scratch.mit.edu/projects/176501177/");
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?riskage spil with success!" + " (" + Context.Guild?.Name ?? "DM" + ")");
+            
         }
         [SlashCommand("pia", "Placeholder description")]
         public async Task piasko()
         {
             await FollowupAsync("http://gonzoft.com/spil/dk/games/kaste_sko_pk/sheepspilley.html");
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?pia with success!" + " (" + Context.Guild?.Name ?? "DM" + ")");
+            
         }
         */
         [SlashCommand("status", "Checks to see if a website is up")]
@@ -579,7 +573,7 @@ namespace Sketch_Bot.Modules
         {
             await RespondAsync("In memory of Vuk");
             await Context.Channel.SendFileAsync("DAB/vuk.jpg");
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?vuk with success!" + " (" + Context.Guild?.Name ?? "DM" + ")");
+            
         }
         */
         [RequireContext(ContextType.Guild)]
@@ -600,12 +594,12 @@ namespace Sketch_Bot.Modules
             {
                 await (Context.User as IGuildUser)?.ModifyAsync(x => x.Nickname = newNickname);
                 await FollowupAsync("Your Nickname is now **" + newNickname + "!**");
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?nickname with success! (" + newNickname + ") (" + Context.Guild?.Name ?? "DM" + ")");
+                
             }
             else
             {
                 await FollowupAsync("Your role is higher than mine or you already have the same nickname");
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?nickname with success! (RoleHigherException)" + " (" + Context.Guild?.Name ?? "DM" + ")");
+                
             }
         }
         [SlashCommand("cat", "Sends a random cat image")]
@@ -625,7 +619,7 @@ namespace Sketch_Bot.Modules
                     string CatImage = json["file"].ToString();
                     await FollowupAsync(CatImage);
                 }
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?cat with success!" + " (" + Context.Guild?.Name ?? "DM" + ")");
+                
             }
             catch (Exception ex)
             {
@@ -719,7 +713,7 @@ namespace Sketch_Bot.Modules
             };
             var embed = builder.Build();
             await FollowupAsync("", null, false, false, null, null, null, embed);
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?membercount with success! (" + Context.Guild.MemberCount + ") (" + Context.Guild?.Name ?? "DM" + ")");
+            
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("tokens", "Shows you how many tokens you have")]
@@ -752,7 +746,7 @@ namespace Sketch_Bot.Modules
             embed.Description = (user.Mention + " has " + userTable.FirstOrDefault().Tokens + " tokens to spend!:small_blue_diamond:");
             var builtEmbed = embed.Build();
             await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?tokens with success! (" + userTable.FirstOrDefault().Tokens + ") (" + Context.Guild.Name + ")");
+            
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("leaderboard", "Server leaderboard of Tokens or Leveling")]
@@ -809,8 +803,6 @@ namespace Sketch_Bot.Modules
                     embed.Description = ($"```css\n{longstring}\n```");
                     embed.WithFooter($"Page {index}/{celing}");
                     var builtEmbed = embed.Build();
-                    await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
-                    Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?leaderboard tokens with success! (" + index + ") (" + Context.Guild?.Name ?? "DM" + ")");
                 }
             }
             else
@@ -826,7 +818,7 @@ namespace Sketch_Bot.Modules
         {
             await DeferAsync();
             await FollowupAsync(user.Mention + " just got exposed <:exposed:357837551886925844>");
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?expose with success! and exposed (" + user.Username + ") (" + Context.Guild.Name + ")");
+            
         }
         [SlashCommand("invite", "Invite me to your server")]
         public async Task invite()
@@ -834,14 +826,6 @@ namespace Sketch_Bot.Modules
             await DeferAsync();
             await FollowupAsync("**" + Context.User.Username + "**, use this URL to invite me" +
                 "\nhttps://discord.com/api/oauth2/authorize?client_id=369865463670374400&permissions=1617578818631&scope=bot%20applications.commands");
-            if (Context.Guild != null)
-            {
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?invite with success!" + " (" + Context.Guild.Name + ")");
-            }
-            else
-            {
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?invite with success!" + " (" + Context.User + " DM" + ")");
-            }
         }
         [RequireBotPermission(GuildPermission.ManageMessages)]
         [RequireContext(ContextType.Guild)]
@@ -854,15 +838,12 @@ namespace Sketch_Bot.Modules
                 var messages = await Context.Channel.GetMessagesAsync((int)amount + 1).FlattenAsync();
                 await (Context.Channel as ITextChannel)?.DeleteMessagesAsync(messages);
                 const int delay = 3000;
-                var m = await ReplyAsync($"Purge completed. _This message will be deleted in {delay / 1000} seconds._");
-                await Task.Delay(delay);
-                await m.DeleteAsync();
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?purge with success! and deleted " + amount + " messages" + " (" + Context.Guild.Name + ")");
+                await RespondAsync($"Purge completed.", ephemeral:true);
             }
             else
             {
-                await FollowupAsync("You do not have guild permission ManageMessages");
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?purge and failed! (InsufficientPermissionsException)" + " (" + Context.Guild.Name + ")");
+                await FollowupAsync("You do not have guild permission ManageMessages", ephemeral:true);
+                
             }
         }
         [RequireContext(ContextType.Guild)]
@@ -892,14 +873,13 @@ namespace Sketch_Bot.Modules
                         embed.Description = (comment);
                         var builtEmbed = embed.Build();
                         await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
-                        Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + name + " just ran ?award with success!" + " (" + tokens + ") (" + comment + ") (" + Context.Guild.Name + ")");
+                        
                     }
                     else
                     {
                         embed.Title = (name + " was awarded " + tokens + " tokens!");
                         var builtEmbed = embed.Build();
                         await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
-                        Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + name + " just ran ?award with success!" + " (" + tokens + ")" + " (" + Context.Guild.Name + ")");
                     }
                 }
             }
@@ -941,14 +921,13 @@ namespace Sketch_Bot.Modules
                     embed.Description = (comment);
                     var builtEmbed = embed.Build();
                     await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
-                    Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?awardall with success!" + " (" + tokens + ") (" + comment + ") (" + Context.Guild.Name + ")");
+                    
                 }
                 else
                 {
                     embed.Title = ("All users were awarded " + tokens + " tokens!");
                     var builtEmbed = embed.Build();
                     await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
-                    Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?awardall with success!" + " (" + tokens + ") (" + Context.Guild.Name + ")");
                 }
             }
             else
@@ -1006,7 +985,6 @@ namespace Sketch_Bot.Modules
                     Database.ChangeTokens(user, amount); // We add the tokens to the user
                     await FollowupAsync($"You received your {amount} tokens!");
                 }
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?daily with success!" + " (" + Context.Guild.Name + ")");
             }
             else
             {
@@ -1016,7 +994,6 @@ namespace Sketch_Bot.Modules
                 TimeSpan di = new TimeSpan(23 - diff.Hours, 60 - diff.Minutes, 60 - diff.Seconds);
 
                 await FollowupAsync($"Your tokens refresh in {di} !");
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?daily and failed!" + " (NotRefreshedException) (" + Context.Guild.Name + ")");
             }
         }
         [RequireContext(ContextType.Guild)]
@@ -1067,14 +1044,14 @@ namespace Sketch_Bot.Modules
                                     embed.Description = (user.Mention + " has paid " + usertopay.Mention + " " + amount + " tokens!");
                                     var builtEmbed = embed.Build();
                                     await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
-                                    Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?pay with success!" + " (" + Context.Guild.Name + ")");
+                                    
                                 }
                             }
                         }
                         else
                         {
                             await FollowupAsync("Dont attempt to steal tokens from people!");
-                            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?pay and failed!" + " (TriedToStealTokensException) (" + Context.Guild.Name + ")");
+                            
                         }
                     }
                     else
@@ -1136,7 +1113,6 @@ namespace Sketch_Bot.Modules
             .AddField("My server:", "https://discord.gg/UPG8Vqb", true).AddField("Website:", "https://www.sketchbot.xyz", true);
             var embed = builder.Build();
             await FollowupAsync("", null,false,false,null,null,null,embed);
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?info with success!" + " (" + Context.Guild.Name ?? "(DM)" + ")");
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("serverinfo", "Displays info about the server")]
@@ -1217,7 +1193,6 @@ namespace Sketch_Bot.Modules
             string fileToPost = dirFiles[fileIndex].FullName;
             await Context.Channel.SendFileAsync(fileToPost, "Jojo's bizzare adventure " + pictureNumber);
             await FollowupAsync();
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?Jojo with success! " + pictureNumber + " (" + Context.Guild.Name + ")");
         }
         [SlashCommand("random", "Sends a random message")]
         public async Task Random()
@@ -1417,7 +1392,7 @@ namespace Sketch_Bot.Modules
             int messageNumber = randomFileIndex + 1;
             string fileToPost = RandomMessages[randomFileIndex];
             await FollowupAsync(fileToPost);
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?random with success! " + messageNumber + " (" + Context.Guild.Name + ")");
+            
         }
     }
 }

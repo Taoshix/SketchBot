@@ -35,6 +35,7 @@ using static Sketch_Bot.Models.HelperFunctions;
 using Microsoft.Extensions.Hosting;
 using OsuSharp.Extensions;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 
 namespace Sketch_Bot
 {
@@ -169,6 +170,8 @@ namespace Sketch_Bot
             if (!System.IO.File.Exists("config.json"))
             {
                 Console.WriteLine("Config file not found!");
+                Config.CreateDefaultConfigFile();
+                Console.WriteLine("Created new default config.json file, please fill it out before running the bot again.");
                 return;
             }
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
@@ -189,6 +192,7 @@ namespace Sketch_Bot
 
             if (_provider.GetService<CachingService>()._blacklist.Contains(context.User.Id))
             {
+                Console.WriteLine($"Blacklisted user {context.User.Username} tried to use a command");
                 await context.Interaction.RespondAsync("You are currently blacklisted!", ephemeral: true);
             }
             await _interactionService.ExecuteCommandAsync(context, _provider);
@@ -196,8 +200,10 @@ namespace Sketch_Bot
         }
         async Task SlashCommandExecuted(SlashCommandInfo arg1, Discord.IInteractionContext arg2, Discord.Interactions.IResult arg3)
         {
+            Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture)} {arg2.User.Username} Ran {arg1.Name} {string.Join(" ", arg1.FlattenedParameters)}");
             if (!arg3.IsSuccess)
             {
+                Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture)} {arg2.User.Username} Failed to run {arg1.Name} due to {arg3.ErrorReason}");
                 switch (arg3.Error)
                 {
                     case InteractionCommandError.UnmetPrecondition:
@@ -417,119 +423,102 @@ namespace Sketch_Bot
                         var user = msg.Author; /*Sets variable user to msg.author*/
                         var socketGuild = (user as SocketGuildUser)?.Guild;
                         var gotRole = false;
+                        var cache = _provider.GetService<CachingService>();
+                        var blacklisted = cache.GetBlackList();
                         List<SocketRole> RoleIdsField = new List<SocketRole>();
-                        if (user.IsBot || user.IsWebhook) return;
-                        if (socketGuild != null)
+                        if (user.IsBot || user.IsWebhook || socketGuild == null || blacklisted.Contains(user.Id)) return;
+                        if (!cache.IsInDatabase(socketGuild.Id, user.Id))
                         {
-                            var cache = _provider.GetService<CachingService>();
-                            var blacklisted = cache.GetBlackList();
-                            if (!blacklisted.Contains(user.Id))
+                            cache.SetupUserInDatabase(socketGuild, (SocketGuildUser)user);
+                        }
+                        ServerSettingsDB.CreateTableRole(socketGuild.Id.ToString());
+                        /*Gets the users Data from the database*/
+                        var guildUser = (SocketGuildUser)msg.Author;
+                        var xpService = _provider.GetService<XpService>();
+                        if (!xpService.GetList().Contains(guildUser))
+                        {
+                            rand = new Random();
+                            var xp = rand.Next(5, 15);
+                            var tokens = rand.Next(1, 4);
+                            var userData = Database.GetUserStatus(user).FirstOrDefault();
+                            Database.ChangeTokens(user, tokens);
+                            xpService.addUser(guildUser);
+                            //var xprate = ServerSettingsDB.GetXpRate(socketGuild.Id.ToString()).FirstOrDefault().XpMultiplier;
+                            if (userData == null)
                             {
-                                if (!cache.IsInDatabase(socketGuild.Id, user.Id))
-                                {
-                                    cache.SetupUserInDatabase(socketGuild, (SocketGuildUser)user);
-                                }
-                                ServerSettingsDB.CreateTableRole(socketGuild.Id.ToString());
-                                 /*Gets the users Data from the database*/
-                                var guildUser = (SocketGuildUser)msg.Author;
-                                var xpService = _provider.GetService<XpService>();
-                                if (!xpService.GetList().Contains(guildUser))
-                                {
-                                    rand = new Random();
-                                    var xp = rand.Next(5, 15);
-                                    var tokens = rand.Next(1, 4);
-                                    var userData = Database.GetUserStatus(user).FirstOrDefault();
-                                    Database.ChangeTokens(user, tokens);
-                                    xpService.addUser(guildUser);
-                                    //var xprate = ServerSettingsDB.GetXpRate(socketGuild.Id.ToString()).FirstOrDefault().XpMultiplier;
-                                    if (userData != null)
-                                    {
-                                        var xpToLevelUp = XP.caclulateNextLevel(userData.Level); /*sets xpToLevelUp to the number calculateNextLevel returns we pass through the users level*/
-                                        //var xprate = ServerSettingsDB.GetXpRate(socketGuild.Id.ToString()).FirstOrDefault().XpMultiplier;
-                                        if (userData.XP >= xpToLevelUp) /*Checks if the users xp is greater or equal to the xp required to level up*/
-                                        {
-                                            int addLevels = 0;
-                                            while (userData.XP >= xpToLevelUp)
-                                            {
-                                                if (userData != null)
-                                                {
-                                                    xpToLevelUp = XP.caclulateNextLevel(userData.Level + addLevels);
-                                                    if (userData.XP >= xpToLevelUp)
-                                                    {
-                                                        addLevels++;
-                                                    }
-                                                }
-                                            }
-                                            Database.levelUp(user, xp, addLevels);
-                                            /*Levels up the user using the levelUp method we created */
+                                Console.WriteLine("UserData is null!");
+                                return;
+                            }
 
-                                            //var roleId = ServerSettingsDB.GetRole(socketGuild.Id.ToString(), Database.GetUserStatus(user).FirstOrDefault().Level).FirstOrDefault().roleId;
-                                            var level = Database.GetUserStatus(user).FirstOrDefault().Level;
-                                            var result2 = ServerSettingsDB.GetRoles(socketGuild.Id.ToString());
-                                            var rolesBefore = (user as SocketGuildUser).Roles;
-                                            if (result2.Count >= 1)
-                                            {
-                                                var filteredRoles = result2.Where(x => x.roleLevel <= level).OrderByDescending(o => o.roleLevel);
-                                                var guild = (user as SocketGuildUser).Guild;
-                                                var roles = filteredRoles.Select(x => guild.GetRole(ulong.Parse(x.roleId)));
-                                                await (user as SocketGuildUser).AddRolesAsync(roles);
-                                                gotRole = true;
-                                                RoleIdsField.AddRange(roles);
-                                                if (!RoleIdsField.Any())
-                                                {
-                                                    gotRole = false;
-                                                }
-                                            }
-                                            var isLeveling = ServerSettingsDB.GetLevelupMessageBool(socketGuild.Id.ToString()).FirstOrDefault().LevelupMessages;
-                                            if (isLeveling == 1)
-                                            {
-                                                var embed = new EmbedBuilder(); /*Creates a embedBuilder*/
-                                                if (gotRole == false)
-                                                {
-                                                    embed.WithColor(new Color(0x4d006d)).AddField(y =>            /*Creates a embed with a colour then we add a field*/
-                                                    {
-                                                    //var userData2 = Database.GetUserStatus(user).FirstOrDefault(); /*We create a new variable for userData because we just updated the users level im unsure if this is required I just did it to be on the safe side*/
-                                                    y.Name = "Leveled up!"; /*sets the fields name to leveled up*/
-                                                        y.Value = $"{user.Mention} has leveled up to level {level}!";  /*We set the value to this string*/
-                                                    });
-                                                }
-                                                else
-                                                {
-                                                    var filteredRoles = RoleIdsField.Where(p => !rolesBefore.Any(p2 => p2.Id == p.Id));
-                                                    var roles = filteredRoles.Select(x => x.Mention);
-                                                    var fulltext = string.Join("\n", roles);
-                                                    embed.WithColor(new Color(0x4d006d)).AddField(y =>            /*Creates a embed with a colour then we add a field*/
-                                                    {
-                                                    //var userData2 = Database.GetUserStatus(user).FirstOrDefault(); /*We create a new variable for userData because we just updated the users level im unsure if this is required I just did it to be on the safe side*/
-                                                    y.Name = "Leveled up!"; /*sets the fields name to leveled up*/
-                                                        y.Value = $"{user.Mention} has leveled up to level {level}!" +
-                                                                  $"\n" +
-                                                                  $"\nLevel up rewards:\n {fulltext}";
-                                                    });
-                                                }
-                                                var builtEmbed = embed.Build();
-                                                await msg.Channel.SendMessageAsync("", embed: builtEmbed); /*Sends the embed*/
-                                            }
-                                        }
-                                        else if (user.IsBot != true)/*else if the user is not a bot then its just gonna add xp*/
+                            var xpToLevelUp = XP.caclulateNextLevel(userData.Level); /*sets xpToLevelUp to the number calculateNextLevel returns we pass through the users level*/
+                            //var xprate = ServerSettingsDB.GetXpRate(socketGuild.Id.ToString()).FirstOrDefault().XpMultiplier;
+                            if (userData.XP >= xpToLevelUp) /*Checks if the users xp is greater or equal to the xp required to level up*/
+                            {
+                                int addLevels = 0;
+                                while (userData.XP >= xpToLevelUp)
+                                {
+                                    xpToLevelUp = XP.caclulateNextLevel(userData.Level + addLevels);
+                                    if (userData.XP >= xpToLevelUp)
+                                    {
+                                        addLevels++;
+                                    }
+                                }
+                                Database.levelUp(user, xp, addLevels);
+                                /*Levels up the user using the levelUp method we created */
+
+                                //var roleId = ServerSettingsDB.GetRole(socketGuild.Id.ToString(), Database.GetUserStatus(user).FirstOrDefault().Level).FirstOrDefault().roleId;
+                                var level = Database.GetUserStatus(user).FirstOrDefault().Level;
+                                var rolesToAward = ServerSettingsDB.GetRoles(socketGuild.Id.ToString());
+                                var rolesBefore = (user as SocketGuildUser).Roles;
+                                if (rolesToAward.Count >= 1)
+                                {
+                                    var filteredRoles = rolesToAward.Where(x => x.roleLevel <= level).OrderByDescending(o => o.roleLevel);
+                                    var guild = (user as SocketGuildUser).Guild;
+                                    var roles = filteredRoles.Select(x => guild.GetRole(ulong.Parse(x.roleId)));
+                                    await (user as SocketGuildUser).AddRolesAsync(roles);
+                                    gotRole = true;
+                                    RoleIdsField.AddRange(roles);
+                                    if (!RoleIdsField.Any())
+                                    {
+                                        gotRole = false;
+                                    }
+                                }
+                                var isLeveling = ServerSettingsDB.GetLevelupMessageBool(socketGuild.Id.ToString()).FirstOrDefault().LevelupMessages;
+                                if (isLeveling)
+                                {
+                                    var embed = new EmbedBuilder(); /*Creates a embedBuilder*/
+                                    if (gotRole == false)
+                                    {
+                                        embed.WithColor(new Color(0x4d006d)).AddField(y =>            /*Creates a embed with a colour then we add a field*/
                                         {
-                                            Database.addXP(user, xp); /*adds the xp to the user*/
-                                        }
+                                            //var userData2 = Database.GetUserStatus(user).FirstOrDefault(); /*We create a new variable for userData because we just updated the users level im unsure if this is required I just did it to be on the safe side*/
+                                            y.Name = "Leveled up!"; /*sets the fields name to leveled up*/
+                                            y.Value = $"{user.Mention} has leveled up to level {level}!";  /*We set the value to this string*/
+                                        });
                                     }
                                     else
                                     {
-                                        Console.WriteLine("UserData is null!");
+                                        var filteredRoles = RoleIdsField.Where(p => !rolesBefore.Any(p2 => p2.Id == p.Id));
+                                        var roles = filteredRoles.Select(x => x.Mention);
+                                        var fulltext = string.Join("\n", roles);
+                                        embed.WithColor(new Color(0x4d006d)).AddField(y =>            /*Creates a embed with a colour then we add a field*/
+                                        {
+                                            //var userData2 = Database.GetUserStatus(user).FirstOrDefault(); /*We create a new variable for userData because we just updated the users level im unsure if this is required I just did it to be on the safe side*/
+                                            y.Name = "Leveled up!"; /*sets the fields name to leveled up*/
+                                            y.Value = $"{user.Mention} has leveled up to level {level}!" +
+                                                      $"\n" +
+                                                      $"\nLevel up rewards:\n {fulltext}";
+                                        });
                                     }
+                                    var builtEmbed = embed.Build();
+                                    await msg.Channel.SendMessageAsync("", embed: builtEmbed); /*Sends the embed*/
                                 }
                             }
-                            else
+                            else if (!user.IsBot)/*else if the user is not a bot then its just gonna add xp*/
                             {
-                                return;
+                                Database.addXP(user, xp); /*adds the xp to the user*/
                             }
-                        }
-                        else
-                        {
-                            return;
+
                         }
                     }
                     catch (Exception ex)
@@ -539,7 +528,7 @@ namespace Sketch_Bot
                 }
                 else
                 {
-                    Console.WriteLine("Database is inactive!");
+                    Console.WriteLine("XP Service Error: Database is down!");
                 }
             });
             return Task.CompletedTask;

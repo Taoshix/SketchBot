@@ -214,7 +214,7 @@ namespace Sketch_Bot
                 var levelupmessages = (int)table["LevelupMessages"];
                 result.Add(new Serversettings
                 {
-                    LevelupMessages = levelupmessages
+                    LevelupMessages = levelupmessages == 1
                 });
             }
 

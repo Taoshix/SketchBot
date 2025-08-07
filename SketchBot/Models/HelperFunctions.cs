@@ -29,39 +29,44 @@ namespace Sketch_Bot.Models
         public static string Bash(this string cmd)
         {
             var escapedArgs = cmd.Replace("\"", "\\\"");
-
-            var process = new Process()
+            try
             {
-                StartInfo = new ProcessStartInfo
+                var process = new Process()
                 {
-                    FileName = @"/bin/bash",
-                    Arguments = $"-c \"{escapedArgs}\"",
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardError = true,
-                }
-            };
-            process.Start();
-            string result = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
-            if (result == "")
-            {
-                if (process.ExitCode == 127)
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = @"/bin/bash",
+                        Arguments = $"-c \"{escapedArgs}\"",
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        RedirectStandardError = true,
+                    }
+                };
+                process.Start();
+                string result = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+                if (result == "")
                 {
-                    return $"Command `{cmd}` not found";
+                    if (process.ExitCode == 127)
+                    {
+                        return $"Command `{cmd}` not found";
+                    }
+                    else if (process.ExitCode == 0)
+                    {
+                        return "Command executed successfully";
+                    }
+                    else
+                    {
+                        return $"{process.StandardError.ReadToEnd()}";
+                    }
                 }
-                else if (process.ExitCode == 0)
-                {
-                    return "Command executed successfully";
-                }
-                else
-                {
-                    return $"{process.StandardError.ReadToEnd()}";
-                }
+                return result;
             }
-            return result;
-
+            catch(Exception ex)
+            {
+                return ex.Message;
+            }
         }
         public static List<string> AddToStartAndEnding(List<string> theList, string toStart, string toEnding)
         {
