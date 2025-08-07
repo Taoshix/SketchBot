@@ -331,6 +331,54 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
             }
         }
+        [SlashCommand("huewheel", "Creates a GIF cycling the hue of the image through 360 degrees over the given seconds")]
+        public async Task Huewheel(int seconds, IAttachment inputImage)
+        {
+            await DeferAsync();
+            if (seconds < 1 || seconds > 60)
+            {
+                await FollowupAsync("Seconds must be between `1` and `60`");
+                return;
+            }
+            try
+            {
+                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+
+                int fps = 30;
+                int frameCount = seconds * fps;
+                int frameDelay = 100 / fps; // in 1/100s of a second
+
+                using var original = SixLabors.ImageSharp.Image.Load<Rgba32>(photoBytes);
+
+                var gifMetaData = original.Metadata.GetGifMetadata();
+                gifMetaData.RepeatCount = 0; // infinite loop
+
+                // Prepare the first frame (0 degrees)
+                original.Mutate(x => x.Hue(0));
+                var rootFrameMeta = original.Frames.RootFrame.Metadata.GetGifMetadata();
+                rootFrameMeta.FrameDelay = frameDelay;
+
+                // Generate and add hue-shifted frames
+                for (int i = 1; i < frameCount; i++)
+                {
+                    float degrees = i * (360f / frameCount);
+                    using var frame = original.Clone(ctx => ctx.Hue(degrees));
+                    var meta = frame.Frames.RootFrame.Metadata.GetGifMetadata();
+                    meta.FrameDelay = frameDelay;
+                    original.Frames.AddFrame(frame.Frames.RootFrame);
+                }
+
+                using var gifStream = new MemoryStream();
+                original.SaveAsGif(gifStream);
+                gifStream.Position = 0;
+                await Context.Interaction.FollowupWithFileAsync(gifStream, "Huewheel.gif", $"Hue wheel ({seconds} second(s), 360°)");
+                await gifStream.FlushAsync();
+            }
+            catch (Exception ex)
+            {
+                await FollowupAsync($"Unable to process the image\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+            }
+        }
         [SlashCommand("opacity", "Multiplies the opacity of the input image with a given factor between 0 and 1")]
         public async Task Opacity(float factor, IAttachment inputImage)
         {
@@ -360,6 +408,67 @@ namespace Sketch_Bot.Modules
             catch (Exception ex)
             {
                 await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+            }
+        }
+        [SlashCommand("fadeout", "Creates a GIF fading out the image to transparency")]
+        public async Task Fadeout(int seconds, IAttachment inputImage)
+        {
+            await DeferAsync();
+            if (seconds < 1 || seconds > 100)
+            {
+                await FollowupAsync("Seconds must be between `1` and `100`");
+                return;
+            }
+            try
+            {
+                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+
+                using var original = SixLabors.ImageSharp.Image.Load<Rgba32>(photoBytes);
+
+                int frameCount = 256;
+                int frameDelay = (int)Math.Ceiling(seconds * 100.0 / frameCount); // in 1/100s
+
+                var gifMetaData = original.Metadata.GetGifMetadata();
+                gifMetaData.RepeatCount = 0; // infinite loop
+
+                var rootFrameMeta = original.Frames.RootFrame.Metadata.GetGifMetadata();
+                rootFrameMeta.FrameDelay = frameDelay;
+
+                // Generate and add fadeout frames
+                for (int i = 0; i < frameCount; i++)
+                {
+                    float t = i / (float)(frameCount - 1);
+                    using var frame = original.Clone();
+                    frame.ProcessPixelRows(accessor =>
+                    {
+                        for (int y = 0; y < accessor.Height; y++)
+                        {
+                            Span<Rgba32> row = accessor.GetRowSpan(y);
+                            for (int x = 0; x < row.Length; x++)
+                            {
+                                var orig = row[x];
+                                var bg = new Rgba32(255, 255, 255, 255); // White background
+                                row[x] = new Rgba32(
+                                    (byte)(orig.R * (1 - t) + bg.R * t),
+                                    (byte)(orig.G * (1 - t) + bg.G * t),
+                                    (byte)(orig.B * (1 - t) + bg.B * t),
+                                    255 // GIFs are opaque
+                                );
+                            }
+                        }
+                    });
+                    // Add frame to GIF as before
+                }
+
+                using var gifStream = new MemoryStream();
+                original.SaveAsGif(gifStream);
+                gifStream.Position = 0;
+                await Context.Interaction.FollowupWithFileAsync(gifStream, "Fadeout.gif", $"Fadeout duration: `{seconds}` seconds");
+                await gifStream.FlushAsync();
+            }
+            catch (Exception ex)
+            {
+                await FollowupAsync($"Unable to process the image\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
             }
         }
         [SlashCommand("detectedges", "Detect edges on an image")]

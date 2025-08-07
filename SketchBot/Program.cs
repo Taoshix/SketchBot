@@ -200,10 +200,10 @@ namespace Sketch_Bot
         }
         async Task SlashCommandExecuted(SlashCommandInfo arg1, Discord.IInteractionContext arg2, Discord.Interactions.IResult arg3)
         {
-            Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture)} {arg2.User.Username} Ran {arg1.Name} {string.Join(" ", arg1.FlattenedParameters)}");
+            Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture)} {arg2.User.Username} Ran /{arg1.Name}");
             if (!arg3.IsSuccess)
             {
-                Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture)} {arg2.User.Username} Failed to run {arg1.Name} due to {arg3.ErrorReason}");
+                Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture)} {arg2.User.Username} Failed to run /{arg1.Name} due to {arg3.ErrorReason}");
                 switch (arg3.Error)
                 {
                     case InteractionCommandError.UnmetPrecondition:
