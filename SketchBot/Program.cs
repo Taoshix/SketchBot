@@ -31,10 +31,7 @@ using System.Net.Sockets;
 using Newtonsoft.Json;
 using Discord.Interactions;
 using Sketch_Bot.TypeConverters;
-using Victoria.Node;
 using static Sketch_Bot.Models.HelperFunctions;
-using Victoria.Node.EventArgs;
-using Victoria.Player;
 using Microsoft.Extensions.Hosting;
 using OsuSharp.Extensions;
 using Microsoft.Extensions.Logging;
@@ -69,6 +66,8 @@ namespace Sketch_Bot
             if (!System.IO.File.Exists("config.json"))
             {
                 Console.WriteLine("Config file not found!");
+                Config.CreateDefaultConfigFile();
+                Console.WriteLine("Created new default config.json file, please fill it out before running the bot again.");
                 return;
             }
             _config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText("config.json"));
@@ -119,7 +118,8 @@ namespace Sketch_Bot
             _interactionService = _provider.GetRequiredService<InteractionService>();
             _commands = _provider.GetRequiredService<CommandService>();
             _jikan = _provider.GetRequiredService<Jikan>();
-            _databaseActive = _provider.GetRequiredService<TimerService>().GetDatabaseBool(true);
+            _databaseActive = _provider.GetRequiredService<CachingService>()._dbConnected;
+            _provider.GetRequiredService<StatService>().AddCache(_provider.GetRequiredService<CachingService>());
             //_audioService = _provider.GetRequiredService<AudioService>();
             _interactionService.AddTypeConverter<Calculation>(new CalculationConverter());
             _interactionService.AddTypeConverter<ulong>(new UlongConverter());
@@ -185,13 +185,12 @@ namespace Sketch_Bot
         {
             var context = new SocketInteractionContext(_client, arg);
 
-            if (context.User.IsBot || context.Guild == null) return;
+            if (context.User.IsBot) return;
 
             if (_provider.GetService<CachingService>()._blacklist.Contains(context.User.Id))
             {
                 await context.Interaction.RespondAsync("You are currently blacklisted!", ephemeral: true);
             }
-
             await _interactionService.ExecuteCommandAsync(context, _provider);
             
         }
@@ -232,7 +231,7 @@ namespace Sketch_Bot
                 var prefix = _config.Prefix;
                 var auther = msg.Author;
                 var socketguild = (auther as SocketGuildUser)?.Guild;
-                if (_provider.GetRequiredService<TimerService>().GetDatabaseBool())
+                if (_provider.GetRequiredService<CachingService>()._dbConnected)
                 {
                     var cachingService = _provider.GetRequiredService<CachingService>();
                     if (socketguild != null)
@@ -245,7 +244,7 @@ namespace Sketch_Bot
                 {
                     // Create a Command Context.
                     var context = new SocketCommandContext(_client, msg);
-                    if (_provider.GetRequiredService<TimerService>().GetDatabaseBool())
+                    if (_provider.GetRequiredService<CachingService>()._dbConnected)
                     {
                         var cache = _provider.GetService<CachingService>();
                         var blacklisted = cache.GetBlackList();
@@ -279,54 +278,9 @@ namespace Sketch_Bot
         {
             var cachingservice = _provider.GetRequiredService<CachingService>();
             await _provider.UseLavaNodeAsync();
-            if (_provider.GetRequiredService<TimerService>().GetDatabaseBool())
+            if (_provider.GetRequiredService<CachingService>()._dbConnected)
                 cachingservice.SetupBlackList();
             await _interactionService.RegisterCommandsGloballyAsync();
-        }
-        private async Task OnTrackEnded(TrackEndEventArg<LavaPlayer<LavaTrack>, LavaTrack> args)
-        {
-            if (!HelperFunctions.ShouldPlayNext(args.Reason))
-            {
-                return;
-            }
-
-            var player = args.Player;
-            if (!player.Vueue.TryDequeue(out var queueable))
-            {
-                await player.TextChannel.SendMessageAsync("Queue completed! Please add more tracks to keep going!");
-                await _provider.GetService<AudioService>().InitiateDisconnectAsync(player, TimeSpan.FromSeconds(10));
-                return;
-            }
-
-            if (queueable is not LavaTrack track)
-            {
-                await player.TextChannel.SendMessageAsync("Next item in queue is not a track.");
-                return;
-            }
-
-            await args.Player.PlayAsync(track);
-            await args.Player.TextChannel.SendMessageAsync(
-                $"{args.Reason}: {args.Track.Title}\nNow playing: {track.Title}");
-        }
-        private async Task OnTrackStart(TrackStartEventArg<LavaPlayer<LavaTrack>, LavaTrack> arg)
-        {
-            await _provider.GetService<AudioService>().OnTrackStarted(arg);
-        }
-        private async Task OnTrackException(TrackExceptionEventArg<LavaPlayer<LavaTrack>, LavaTrack> arg)
-        {
-            Console.WriteLine($"Track {arg.Track.Title} threw an exception. Please check Lavalink console/logs.");
-            arg.Player.Vueue.Enqueue(arg.Track);
-            await arg.Player.TextChannel?.SendMessageAsync(
-                $"{arg.Track.Title} has been re-added to queue after throwing an exception.");
-        }
-
-        private async Task OnTrackStuck(TrackStuckEventArg<LavaPlayer<LavaTrack>, LavaTrack> arg)
-        {
-            Console.WriteLine(
-                $"Track {arg.Track.Title} got stuck for {arg.Threshold}ms. Please check Lavalink console/logs.");
-            arg.Player.Vueue.Enqueue(arg.Track);
-            await arg.Player.TextChannel?.SendMessageAsync(
-                $"{arg.Track.Title} has been re-added to queue after getting stuck.");
         }
         private Task GuildCount(SocketGuild socketGuild)
         {
@@ -368,7 +322,7 @@ namespace Sketch_Bot
         }
         public async Task CreateNewTable(SocketGuild socketGuild)
         {
-            if (_provider.GetRequiredService<TimerService>().GetDatabaseBool())
+            if (_provider.GetRequiredService<CachingService>()._dbConnected)
             {
                 var cache = _provider.GetRequiredService<CachingService>();
                 string tablename = socketGuild.Id.ToString();
@@ -393,7 +347,7 @@ namespace Sketch_Bot
         }
         public async Task JoinedNewServer(SocketGuild socketGuild)
         {
-            if (_provider.GetRequiredService<TimerService>().GetDatabaseBool())
+            if (_provider.GetRequiredService<CachingService>()._dbConnected)
             {
                 try
                 {
@@ -456,7 +410,7 @@ namespace Sketch_Bot
             {
                 _provider.GetService<StatService>().msgCounter++;
                 
-                if (_provider.GetRequiredService<TimerService>().GetDatabaseBool())
+                if (_provider.GetRequiredService<CachingService>()._dbConnected)
                 {
                     try
                     {
@@ -594,7 +548,7 @@ namespace Sketch_Bot
         {
             _ = Task.Run(async () =>
             {
-                if (_provider.GetRequiredService<TimerService>().GetDatabaseBool())
+                if (_provider.GetRequiredService<CachingService>()._dbConnected)
                 {
                     if (!user.IsBot)
                     {
@@ -636,7 +590,7 @@ namespace Sketch_Bot
         {
             _ = Task.Run(async () =>
             {
-                if (_provider.GetRequiredService<TimerService>().GetDatabaseBool())
+                if (_provider.GetRequiredService<CachingService>()._dbConnected)
                 {
                     var auther = socketMessage.Author;
                     var socketguild = (auther as SocketGuildUser)?.Guild;

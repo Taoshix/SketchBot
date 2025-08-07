@@ -34,13 +34,13 @@ namespace Sketch_Bot.Modules
     {
         private InteractionService _service;
         private MemeService _service2;
-        private CachingService _service3;
+        private CachingService _cachingService;
 
         public Test(InteractionService service, MemeService service2, CachingService service3)           /* Create a constructor for the InteractionService dependency */
         {
             _service = service;
             _service2 = service2;
-            _service3 = service3;
+            _cachingService = service3;
         }
         [RequireUserPermission(GuildPermission.ManageRoles)]
         [RequireContext(ContextType.Guild)]
@@ -48,6 +48,11 @@ namespace Sketch_Bot.Modules
         public async Task Addrole(IRole role, int level)
         {
             await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
             ServerSettingsDB.CreateTableRole(Context.Guild.Id.ToString());
             ServerSettingsDB.AddRole(Context.Guild.Id.ToString(), role.Id.ToString(), level);
             await FollowupAsync(role.Name + " has been added! If anyone reaches level " + level + " they will recieve the role!");
@@ -58,6 +63,11 @@ namespace Sketch_Bot.Modules
         public async Task Removerole(IRole role)
         {
             await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
             ServerSettingsDB.CreateTableRole(Context.Guild.Id.ToString());
             ServerSettingsDB.RemoveRole(Context.Guild.Id.ToString(), role.Id.ToString());
             await FollowupAsync(role.Name + " has been removed");
@@ -105,6 +115,11 @@ namespace Sketch_Bot.Modules
         //[Alias("level","profile")]
         public async Task userstatus(IUser user)
         {
+            if (!_cachingService._dbConnected)
+            {
+                await RespondAsync("Database is down, please try again later");
+                return;
+            }
             var embed = new EmbedBuilder()
             {
                 Color = new Discord.Color(0, 0, 255)
@@ -128,7 +143,7 @@ namespace Sketch_Bot.Modules
                 "\nLevel " + userTable.FirstOrDefault().Level +
                 "\nXP " + userTable.FirstOrDefault().XP + " out of " + XP.caclulateNextLevel(userTable.FirstOrDefault().Level));
             var builtEmbed = embed.Build();
-            await Context.Channel.SendMessageAsync("", false, builtEmbed);
+            await RespondAsync("", [builtEmbed]);
         }
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
@@ -136,6 +151,11 @@ namespace Sketch_Bot.Modules
         public async Task setwelcome()
         {
             await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
             var channel = Context.Channel;
             ServerSettingsDB.SetWelcomeChannel(channel.Id.ToString(), Context.Guild.Id.ToString());
             await FollowupAsync("This will be the new welcome channel 👍");
@@ -146,6 +166,11 @@ namespace Sketch_Bot.Modules
         public async Task unsetwelcome()
         {
             await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
             ServerSettingsDB.SetWelcomeChannel("(NULL)", Context.Guild.Id.ToString());
             await FollowupAsync("Welcome messages has been disabled");
         }
@@ -154,6 +179,11 @@ namespace Sketch_Bot.Modules
         public async Task disableleveling()
         {
             await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
             ServerSettingsDB.UpdateLevelupMessagesBool(Context.Guild.Id.ToString(), 0);
             await FollowupAsync("Levelup messages are now disabled!");
         }
@@ -162,6 +192,11 @@ namespace Sketch_Bot.Modules
         public async Task enableleveling()
         {
             await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
             ServerSettingsDB.UpdateLevelupMessagesBool(Context.Guild.Id.ToString(), 1);
             await FollowupAsync("Levelup messages are now enabled!");
         }
@@ -170,6 +205,11 @@ namespace Sketch_Bot.Modules
         public async Task setmodlog()
         {
             await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
             if (((IGuildUser) Context.User).GuildPermissions.ManageChannels)
             {
                 var channel = Context.Channel;
@@ -218,6 +258,11 @@ namespace Sketch_Bot.Modules
         public async Task unsetmodlog()
         {
             await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
             if (((IGuildUser) Context.User).GuildPermissions.ManageChannels || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
                 ServerSettingsDB.SetModlogChannel("(NULL)", Context.Guild.Id.ToString());

@@ -18,6 +18,7 @@ namespace Sketch_Bot.Services
         public int msgCounter;
         private Dictionary<string, Timer> timers = new Dictionary<string, Timer>();
         private DiscordSocketClient _client;
+        public CachingService _cache;
         public TimeSpan uptime = DateTime.Now.Subtract(Process.GetCurrentProcess().StartTime);
         public int cmdCounter;
 
@@ -28,8 +29,11 @@ namespace Sketch_Bot.Services
             {
                 try
                 {
-                    Database.UpdateStats(buildBotStats());
-                    TempDB.UpdateStats(buildBotStats());
+                    if (_cache._dbConnected)
+                    {
+                        Database.UpdateStats(buildBotStats());
+                        TempDB.UpdateStats(buildBotStats());
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -58,6 +62,10 @@ namespace Sketch_Bot.Services
             uptime = DateTime.Now.Subtract(Process.GetCurrentProcess().StartTime);
             BotStats stats = new BotStats(_client.Guilds.Count, _client.Guilds.Sum(x => x.MemberCount), msgCounter, cmdCounter, averagePerMin, averageCmdPerMin, Process.GetCurrentProcess().StartTime);
             return stats;
+        }
+        public void AddCache(CachingService cache)
+        {
+            _cache = cache;
         }
     }
 }

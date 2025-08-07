@@ -35,7 +35,16 @@ namespace Sketch_Bot
 
             dbConnection = new MySqlConnection(connectionString);
 
-            dbConnection.Open();
+            var ping = dbConnection.Ping();
+            if (ping)
+            {
+                dbConnection.Open();
+            }
+            else
+            {
+                Console.WriteLine("Cant connect to database");
+                dbConnection = null;
+            }
         }
 
         public bool isDatabaseConnected()

@@ -5,7 +5,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Victoria.Player;
+using Victoria;
+using Victoria.Enums;
 
 namespace Sketch_Bot.Models
 {
@@ -131,7 +132,7 @@ namespace Sketch_Bot.Models
         }
         public static bool ShouldPlayNext(this TrackEndReason trackEndReason)
         {
-            return trackEndReason == TrackEndReason.Finished || trackEndReason == TrackEndReason.LoadFailed;
+            return trackEndReason == TrackEndReason.Finished || trackEndReason == TrackEndReason.Load_Failed;
         }
 
         /// <summary>

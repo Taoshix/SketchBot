@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
+using System.Text.Json;
 
 namespace Sketch_Bot.Models
 {
@@ -22,6 +24,30 @@ namespace Sketch_Bot.Models
         public string TempDBPassword { get; set; }
         public string TempDBHost { get; set; }
         public string TempDBDatabase { get; set; }
-        
+
+        // Creates a default config.json file with placeholder values
+        public static void CreateDefaultConfigFile(string path = "config.json")
+        {
+            var defaultConfig = new Config
+            {
+                Prefix = "!",
+                Token = "YOUR_TOKEN_HERE",
+                OsuApiKey = "YOUR_OSU_API_KEY_HERE",
+                OsuApiId = 0,
+                DblApiKey = "YOUR_DBL_API_KEY_HERE",
+                DatabaseUsername = "dbuser",
+                DatabasePassword = "dbpassword",
+                DatabaseHost = "localhost",
+                IMGFlip = "YOUR_IMGFLIP_KEY_HERE",
+                CaseNumber = 0,
+                TempDBUsername = "tempdbuser",
+                TempDBPassword = "tempdbpassword",
+                TempDBHost = "localhost",
+                TempDBDatabase = "tempdatabase"
+            };
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            var json = JsonSerializer.Serialize(defaultConfig, options);
+            File.WriteAllText(path, json);
+        }
     }
 }

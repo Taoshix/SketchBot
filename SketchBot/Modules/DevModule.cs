@@ -162,6 +162,11 @@ namespace Sketch_Bot.Modules
         [Command("im lazy", RunMode = RunMode.Async)]
         public async Task ImLazy()
         {
+            if (!_cachingService._dbConnected)
+            {
+                await ReplyAsync("Database is down, please try again later");
+                return;
+            }
             await ReplyAsync("Updating all of the tables so you don't have to!");
             var guilds = Context.Client.Guilds;
             foreach (var guild in guilds)
@@ -307,6 +312,11 @@ namespace Sketch_Bot.Modules
         [Command("blacklist", RunMode = RunMode.Async)]
         public async Task blacklist(RestUser user, [Remainder] string reason = "No reason")
         {
+            if (!_cachingService._dbConnected)
+            {
+                await ReplyAsync("Database is down, please try again later");
+                return;
+            }
             if (user.Id != 135446225565515776 && user.Id != 208624502878371840)
             {
                 if (Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
@@ -342,6 +352,11 @@ namespace Sketch_Bot.Modules
         [Command("blacklistid", RunMode = RunMode.Async)]
         public async Task blacklistid(ulong id, [Remainder] string reason = "No reason")
         {
+            if (!_cachingService._dbConnected)
+            {
+                await ReplyAsync("Database is down, please try again later");
+                return;
+            }
             var user = await Context.Client.Rest.GetUserAsync(id);
             if (user.Id != 135446225565515776 && user.Id != 208624502878371840)
             {
@@ -379,6 +394,11 @@ namespace Sketch_Bot.Modules
         [Command("unblacklist", RunMode = RunMode.Async)]
         public async Task unblacklist(RestUser user)
         {
+            if (!_cachingService._dbConnected)
+            {
+                await ReplyAsync("Database is down, please try again later");
+                return;
+            }
             if (Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
                 var result = _cachingService.GetBlackList();
@@ -416,6 +436,11 @@ namespace Sketch_Bot.Modules
         [Command("unblacklistid", RunMode = RunMode.Async)]
         public async Task unblacklistid(ulong id)
         {
+            if (!_cachingService._dbConnected)
+            {
+                await ReplyAsync("Database is down, please try again later");
+                return;
+            }
             var user = await Context.Client.Rest.GetUserAsync(id);
             if (Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
@@ -454,6 +479,11 @@ namespace Sketch_Bot.Modules
         [Command("Blacklistcheck", RunMode = RunMode.Async)]
         public async Task blacklistcheck(RestUser user)
         {
+            if (!_cachingService._dbConnected)
+            {
+                await ReplyAsync("Database is down, please try again later");
+                return;
+            }
             var result = Database.BlacklistCheck(user.Id);
             if (!result.Any())
             {
@@ -485,6 +515,11 @@ namespace Sketch_Bot.Modules
         [Command("Blacklistcheckid", RunMode = RunMode.Async)]
         public async Task blacklistcheckid(ulong id)
         {
+            if (!_cachingService._dbConnected)
+            {
+                await ReplyAsync("Database is down, please try again later");
+                return;
+            }
             var user = await Context.Client.Rest.GetUserAsync(id);
             var result = Database.BlacklistCheck(id);
             if (!result.Any())

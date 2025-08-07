@@ -16,72 +16,18 @@ using Sketch_Bot.Custom_Preconditions;
 using Sketch_Bot.Models;
 using Sketch_Bot.Services;
 using Victoria;
-using Victoria.Player;
-using Victoria.Node;
+using Victoria.Rest.Search;
 
 namespace Sketch_Bot.Modules
 {
     [RequireContext(ContextType.Guild)]
-    public class AudioModule : ModuleBase<SocketCommandContext>
+    public class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaNode, AudioService audioService) : ModuleBase<SocketCommandContext>
     {
-        private readonly LavaNode _lavaNode;
-
-        public AudioModule(LavaNode lavaNode)
-            => _lavaNode = lavaNode;
         private static readonly IEnumerable<int> Range = Enumerable.Range(1900, 2000);
 
-        [Command("Lyrics", RunMode = RunMode.Async)]
-        public async Task ShowGeniusLyrics()
-        {
-            if (!_lavaNode.TryGetPlayer(Context.Guild, out var player))
-            {
-                await ReplyAsync("I'm not connected to a voice channel.");
-                return;
-            }
-
-            if (player.PlayerState != PlayerState.Playing)
-            {
-                await ReplyAsync("Woaaah there, I'm not playing any tracks.");
-                return;
-            }
-
-            var lyrics = await player.Track.FetchLyricsFromGeniusAsync();
-            if (string.IsNullOrWhiteSpace(lyrics))
-            {
-                lyrics = await player.Track.FetchLyricsFromOvhAsync();
-                if (string.IsNullOrWhiteSpace(lyrics))
-                {
-                    await ReplyAsync($"No lyrics found for {player.Track.Title}");
-                    return;
-                }
-            }
-
-            var splitLyrics = lyrics.Split('\n');
-            var stringBuilder = new StringBuilder();
-            foreach (var line in splitLyrics)
-            {
-                if (Range.Contains(stringBuilder.Length))
-                {
-                    await ReplyAsync($"```{stringBuilder}```");
-                    stringBuilder.Clear();
-                }
-                else
-                {
-                    stringBuilder.AppendLine(line);
-                }
-            }
-
-            //await ReplyAsync($"```{stringBuilder}```");
-        }
         [Command("Join")]
         public async Task JoinAsync()
         {
-            if (_lavaNode.HasPlayer(Context.Guild))
-            {
-                await ReplyAsync("I'm already connected to a voice channel!");
-                return;
-            }
-
             var voiceState = Context.User as IVoiceState;
             if (voiceState?.VoiceChannel == null)
             {
@@ -91,19 +37,49 @@ namespace Sketch_Bot.Modules
 
             try
             {
-                await _lavaNode.JoinAsync(voiceState.VoiceChannel, Context.Channel as ITextChannel);
+                await lavaNode.JoinAsync(voiceState.VoiceChannel);
                 await ReplyAsync($"Joined {voiceState.VoiceChannel.Name}!");
+
+                audioService.TextChannels.TryAdd(Context.Guild.Id, Context.Channel.Id);
+            }
+            catch (Exception exception)
+            {
+                await ReplyAsync(exception.ToString());
+            }
+        }
+
+        [Command("Leave")]
+        public async Task LeaveAsync()
+        {
+            var voiceChannel = (Context.User as IVoiceState).VoiceChannel;
+            if (voiceChannel == null)
+            {
+                await ReplyAsync("Not sure which voice channel to disconnect from.");
+                return;
+            }
+
+            try
+            {
+                await lavaNode.LeaveAsync(voiceChannel);
+                await ReplyAsync($"I've left {voiceChannel.Name}!");
             }
             catch (Exception exception)
             {
                 await ReplyAsync(exception.Message);
             }
         }
-        [Alias("p")]
+
         [Command("Play")]
         public async Task PlayAsync([Remainder] string searchQuery)
         {
-            if (!_lavaNode.HasPlayer(Context.Guild))
+            if (string.IsNullOrWhiteSpace(searchQuery))
+            {
+                await ReplyAsync("Please provide search terms.");
+                return;
+            }
+
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player == null)
             {
                 var voiceState = Context.User as IVoiceState;
                 if (voiceState?.VoiceChannel == null)
@@ -111,426 +87,137 @@ namespace Sketch_Bot.Modules
                     await ReplyAsync("You must be connected to a voice channel!");
                     return;
                 }
+
                 try
                 {
-                    await _lavaNode.JoinAsync(voiceState.VoiceChannel, Context.Channel as ITextChannel);
+                    player = await lavaNode.JoinAsync(voiceState.VoiceChannel);
+                    await ReplyAsync($"Joined {voiceState.VoiceChannel.Name}!");
+                    audioService.TextChannels.TryAdd(Context.Guild.Id, Context.Channel.Id);
                 }
                 catch (Exception exception)
                 {
                     await ReplyAsync(exception.Message);
                 }
             }
-            if (string.IsNullOrWhiteSpace(searchQuery))
-            {
-                await ReplyAsync("Please provide search terms.");
-                return;
-            }
 
-            if (!_lavaNode.HasPlayer(Context.Guild))
+            var searchResponse = await lavaNode.LoadTrackAsync(searchQuery);
+            if (searchResponse.Type is SearchType.Empty or SearchType.Error)
             {
-                await ReplyAsync("I'm not connected to a voice channel.");
-                return;
-            }
-
-            var searchResponse = await _lavaNode.SearchAsync(Victoria.Responses.Search.SearchType.YouTube, searchQuery);//SearchYouTubeAsync(searchQuery);
-            
-            if (searchResponse.Status == Victoria.Responses.Search.SearchStatus.LoadFailed || searchResponse.Status == Victoria.Responses.Search.SearchStatus.NoMatches)
-            {
-                Console.WriteLine(searchResponse.Status);
                 await ReplyAsync($"I wasn't able to find anything for `{searchQuery}`.");
                 return;
             }
-            var thePlayer = _lavaNode.TryGetPlayer(Context.Guild, out LavaPlayer<LavaTrack> player);
-            if (player.PlayerState == PlayerState.Playing || player.PlayerState == PlayerState.Paused)
-            {
-                if (!string.IsNullOrWhiteSpace(searchResponse.Playlist.Name))
-                {
-                    var duration = player.Track.Duration + player.Vueue.Select(x => x.Duration).TotalTime();
-                    foreach (var track in searchResponse.Tracks)
-                    {
-                        player.Vueue.Enqueue(track);
-                    }
-                    var embed = new EmbedBuilder
-                    {
-                        Title = "Enqueued",
-                        Description = $"{searchResponse.Tracks.Count} tracks. {searchResponse.Tracks.Select(x => x.Duration).TotalTime()} {Context.User.Mention}\n" +
-                        $"Estimated time until playing `{duration}`",
-                        Color = new Color(0, 0, 255)
-                    }.Build();
-                    await ReplyAsync("", false, embed);
-                }
-                else
-                {
-                    var track = searchResponse.Tracks.First();
-                    var duration = player.Track.Duration + player.Vueue.Select(x => x.Duration).TotalTime();
-                    player.Vueue.Enqueue(track);
-                    var embed = new EmbedBuilder
-                    {
-                        Title = "Enqueued",
-                        Description = $"[{track.Title}]({track.Url}) {track.Duration} {Context.User.Mention}\n" +
-                        $"Estimated time until playing `{duration}`",
-                        Color = new Color(0, 0, 255)
-                    }.Build();
-                    await ReplyAsync("", false, embed);
-                }
-            }
-            else
-            {
-                var track = searchResponse.Tracks.First();
-                if (!string.IsNullOrWhiteSpace(searchResponse.Playlist.Name))
-                {
-                    var duration = player.Track.Duration + player.Vueue.Select(x => x.Duration).TotalTime();
-                    for (var i = 0; i < searchResponse.Tracks.Count; i++)
-                    {
-                        if (i == 0)
-                        {
-                            await player.PlayAsync(track);
-                            var embedd = new EmbedBuilder
-                            {
-                                Title = "Now Playing",
-                                Description = $"[{track.Title}]({track.Url}) {track.Duration} {Context.User.Mention}",
-                                Color = new Color(0,0,255)
-                            }.Build();
-                            await ReplyAsync("",false, embedd);
-                        }
-                        else
-                        {
-                            player.Vueue.Enqueue(searchResponse.Tracks.ElementAt(i));
-                        }
-                    }
-                    var embed = new EmbedBuilder
-                    {
-                        Title = "Enqueued",
-                        Description = $"{searchResponse.Tracks.Count} tracks. {searchResponse.Tracks.Select(x => x.Duration).TotalTime()} {Context.User.Mention}" +
-                        $"Estimated time until playing `{duration}",
-                        Color = new Color(0, 0, 255)
-                    }.Build();
-                    await ReplyAsync("", false, embed);
-                }
-                else
-                {
-                    await player.PlayAsync(track);
-                    var embed = new EmbedBuilder
-                    {
-                        Title = "Now Playing",
-                        Description = $"[{track.Title}]({track.Url}) {track.Duration} {Context.User.Mention}",
-                        Color = new Color(0, 0, 255)
-                    }.Build();
-                    await ReplyAsync("", false, embed);
-                }
-            }
 
-        }
-        [Command("Remove")]
-        public async Task RemoveSong(int index)
-        {
-            if (_lavaNode.TryGetPlayer(Context.Guild, out var player))
+            var track = searchResponse.Tracks.FirstOrDefault();
+            if (player.GetQueue().Count == 0)
             {
-                if (player.Vueue.Count > 0)
-                {
-                    if (index <= player.Vueue.Count)
-                    {
-                        await ReplyAsync($"Removed {player.Vueue.ElementAt(index - 1).Title} from the queue");
-                        player.Vueue.RemoveAt(index - 1);
-                    }
-                    else
-                    {
-                        await ReplyAsync($"No song at index `{index}`");
-                    }
-                }
-                else
-                {
-                    await ReplyAsync("Queue is empty");
-                }
-            }
-            else
-            {
-                await ReplyAsync("I'm not connected to a voice channel.");
-                return;
-            }
-        }
-        [Command("Stop")]
-        public async Task StopAsync()
-        {
-            var voiceState = Context.User as IVoiceState;
-            if (voiceState?.VoiceChannel == null)
-            {
-                await ReplyAsync("You must be connected to a voice channel!");
-                return;
-            }
-            if (_lavaNode.HasPlayer(Context.Guild))
-            {
-                var thePlayer = _lavaNode.TryGetPlayer(Context.Guild, out LavaPlayer<LavaTrack> player);
-                if (player.PlayerState == PlayerState.Playing || player.PlayerState == PlayerState.Paused)
-                {
-                    await player.StopAsync();
-                    player.Vueue.Clear();
-                    await ReplyAsync("The playback has been stopped and the queue has been cleared");
-                }
-                else
-                {
-                    await ReplyAsync("I am not playing anything");
-                }
-            }
-            else
-            {
-                await ReplyAsync("I am not playing anything");
-            }
-        }
-        [Command("Leave")]
-        public async Task LeaveAsync()
-        {
-            var voiceState = Context.User as IVoiceState;
-            if (voiceState?.VoiceChannel == null)
-            {
-                await ReplyAsync("You must be connected to a voice channel!");
+                await player.PlayAsync(lavaNode, track);
+                await ReplyAsync($"Now playing: {track.Title}");
                 return;
             }
 
-            if (_lavaNode.HasPlayer(Context.Guild))
-            {
-                var thePlayer = _lavaNode.TryGetPlayer(Context.Guild, out LavaPlayer<LavaTrack> player);
-                if (player.PlayerState == PlayerState.Playing || player.PlayerState == PlayerState.Paused)
-                {
-                    player.Vueue.Clear();
-                    await player.StopAsync();
-                }
+            player.GetQueue().Enqueue(track);
+            await ReplyAsync($"Added {track.Title} to queue.");
+        }
 
-            }
-            await ReplyAsync($"Left {_lavaNode.Players.First(x => x.VoiceChannel.GuildId == Context.Guild.Id).VoiceChannel.Name}");
-            await _lavaNode.LeaveAsync(_lavaNode.Players.First(x => x.VoiceChannel.GuildId == Context.Guild.Id).VoiceChannel);
-        }
-        [Command("Skip")]
-        public async Task SkipAsync()
-        {
-            var voiceState = Context.User as IVoiceState;
-            if (voiceState?.VoiceChannel == null)
-            {
-                await ReplyAsync("You must be connected to a voice channel!");
-                return;
-            }
-            if (_lavaNode.HasPlayer(Context.Guild))
-            {
-                if (_lavaNode.Players.First(x => x.VoiceChannel.GuildId == Context.Guild.Id).Vueue.Count > 0)
-                {
-                    var thePlayer = _lavaNode.TryGetPlayer(Context.Guild, out LavaPlayer<LavaTrack> player);
-                    if (player.PlayerState == PlayerState.Playing || player.PlayerState == PlayerState.Paused)
-                    {
-                        await ReplyAsync($"Skipped {player.Track.Title}");
-                        await player.SkipAsync();
-                    }
-                    else
-                    {
-                        await ReplyAsync("I am not playing anything");
-                    }
-                }
-                else
-                {
-                    await ReplyAsync("Queue is empty");
-                }
-            }
-        }
-        [Command("seek")]
-        public async Task SeekAsync(TimeSpan span)
-        {
-            var voiceState = Context.User as IVoiceState;
-            if (voiceState?.VoiceChannel == null)
-            {
-                await ReplyAsync("You must be connected to a voice channel!");
-                return;
-            }
-
-            if (_lavaNode.HasPlayer(Context.Guild))
-            {
-                var thePlayer = _lavaNode.TryGetPlayer(Context.Guild, out LavaPlayer<LavaTrack> player);
-                await player.SeekAsync(span);
-                await ReplyAsync($"Seeking to {span:hh\\:mm\\:ss}");
-            }
-            else
-            {
-                await ReplyAsync("I am not playing anything");
-            }
-
-        }
-        [Alias("songs","q")]
-        [Command("Queue")]
-        public async Task QueueAsync()
-        {
-            if (_lavaNode.TryGetPlayer(Context.Guild, out var player))
-            {
-                if (player.Vueue.Count > 0 || player.Track != null)
-                {
-                    var queue = player.Vueue.Cast<LavaTrack>();
-                    string stringqueue = $"0. [{player.Track.Title}]({player.Track.Url}) {player.Track.Duration}\n";
-                    int i = 1;
-                    if (player.Vueue.Count > 0)
-                    {
-                        foreach (var track in queue)
-                        {
-                            stringqueue += $"\n{i}. [{track.Title}]({track.Url}) {track.Duration}";
-                            i++;
-                        }
-                    }
-                    var duration = player.Track.Duration + queue.Select(x => x.Duration).TotalTime();
-                    EmbedBuilder builder = new EmbedBuilder
-                    {
-                        Title = $"Queue for {Context.Guild.Name}",
-                        Color = new Color(0, 0, 255),
-                        Description = stringqueue,
-                        Timestamp = DateTime.Now,
-                    }.WithFooter(footer =>
-                    {
-                        footer.Text = $"Duration: {duration}";
-                    });
-                    var embed = builder.Build();
-                    await ReplyAsync("", false, embed);
-                }
-                else
-                {
-                    await ReplyAsync("I am not playing anything");
-                }
-            }
-            else
-            {
-                await ReplyAsync("I'm not connected to a voice channel.");
-                return;
-            }
-        }
-        [Command("Pause")]
+        [Command("Pause"), RequirePlayer]
         public async Task PauseAsync()
         {
-            var voiceState = Context.User as IVoiceState;
-            if (voiceState?.VoiceChannel == null)
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player.IsPaused && player.Track != null)
             {
-                await ReplyAsync("You must be connected to a voice channel!");
-                return;
-            }
-            if (_lavaNode.TryGetPlayer(Context.Guild, out var player))
-            {
-                if(player.PlayerState == PlayerState.Playing)
-                {
-                    await player.PauseAsync();
-                    await ReplyAsync("Paused playback :pause_button:");
-                }
-                else if(player.PlayerState == PlayerState.Paused)
-                {
-                    await ReplyAsync("I am already paused");
-                }
-            }
-            else
-            {
-                await ReplyAsync("I'm not connected to a voice channel.");
-                return;
-            }
-        }
-        [Command("Resume")]
-        public async Task ResumeAsync()
-        {
-            var voiceState = Context.User as IVoiceState;
-            if (voiceState?.VoiceChannel == null)
-            {
-                await ReplyAsync("You must be connected to a voice channel!");
-                return;
-            }
-            if (_lavaNode.TryGetPlayer(Context.Guild, out var player))
-            {
-                if (player.PlayerState == PlayerState.Paused)
-                {
-                    await player.ResumeAsync();
-                    await ReplyAsync("Resumed playback :arrow_forward:");
-                }
-                else if (player.PlayerState == PlayerState.Playing)
-                {
-                    await ReplyAsync("I am already playing");
-                }
-            }
-            else
-            {
-                await ReplyAsync("I'm not connected to a voice channel.");
-                return;
-            }
-        }
-        [Priority(1)]
-        [Command("Volume")]
-        public async Task VolumeAsync(ushort volume)
-        {
-            var voiceState = Context.User as IVoiceState;
-            if (voiceState?.VoiceChannel == null)
-            {
-                await ReplyAsync("You must be connected to a voice channel!");
-                return;
-            }
-            if (volume > 0 && volume <= 150)
-            {
-                if (_lavaNode.TryGetPlayer(Context.Guild, out var player))
-                {
-                    await player.SetVolumeAsync(volume);
-                    await ReplyAsync($":thumbsup:Volume has been set to {volume}");
-                }
-                else
-                {
-                    await ReplyAsync("I'm not connected to a voice channel.");
-                    return;
-                }
-            }
-            else
-            {
-                await ReplyAsync("Volume must be between 1 and 150!");
-            }
-        }
-        [Priority(0)]
-        [Command("Volume")]
-        public async Task VolumeAsync()
-        {
-            var voiceState = Context.User as IVoiceState;
-            if (voiceState?.VoiceChannel == null)
-            {
-                await ReplyAsync("You must be connected to a voice channel!");
-                return;
-            }
-            if (_lavaNode.TryGetPlayer(Context.Guild, out var player))
-            {
-                await ReplyAsync($"Volume is currently set to `{player.Volume}`");
-            }
-            else
-            {
-                await ReplyAsync("I'm not connected to a voice channel.");
-                return;
-            }
-        }
-        [Alias("np", "NowPlaying", "song")]
-        [Command("Playing")]
-        public async Task NowPlayingAsync()
-        {
-            var voiceState = Context.User as IVoiceState;
-            if (voiceState?.VoiceChannel == null)
-            {
-                await ReplyAsync("You must be connected to a voice channel!");
+                await ReplyAsync("I cannot pause when I'm not playing anything!");
                 return;
             }
 
-            if (_lavaNode.TryGetPlayer(Context.Guild, out var player))
+            try
             {
-                bool overAnHour = player.Track.Duration > TimeSpan.FromHours(1);
-                string position = player.Track.Position.ToString(@"mm\:ss");
-                if (overAnHour)
-                {
-                    position = player.Track.Position.ToString(@"hh\:mm\:ss");
-                }
-                EmbedBuilder builder = new EmbedBuilder
-                {
-                    Title = player.Track.Title,
-                    Description = $"{position}/{(overAnHour ? player.Track.Duration.ToString(@"hh\:mm\:ss") : player.Track.Duration.ToString(@"mm\:ss"))}",
-                    Color = Color.DarkBlue,
-                    Timestamp = DateTime.Now
-                };
-                var embed = builder.Build();
-                await ReplyAsync("", false, embed);
+                await player.PauseAsync(lavaNode);
+                await ReplyAsync($"Paused: {player.Track.Title}");
             }
-            else
+            catch (Exception exception)
             {
-                await ReplyAsync("I'm not connected to a voice channel.");
+                await ReplyAsync(exception.Message);
+            }
+        }
+
+        [Command("Resume"), RequirePlayer]
+        public async Task ResumeAsync()
+        {
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (!player.IsPaused && player.Track != null)
+            {
+                await ReplyAsync("I cannot resume when I'm not playing anything!");
                 return;
+            }
+
+            try
+            {
+                await player.ResumeAsync(lavaNode, player.Track);
+                await ReplyAsync($"Resumed: {player.Track.Title}");
+            }
+            catch (Exception exception)
+            {
+                await ReplyAsync(exception.Message);
+            }
+        }
+
+        [Command("Stop"), RequirePlayer]
+        public async Task StopAsync()
+        {
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (!player.State.IsConnected || player.Track == null)
+            {
+                await ReplyAsync("Woah, can't stop won't stop.");
+                return;
+            }
+
+            try
+            {
+                await player.StopAsync(lavaNode, player.Track);
+                await ReplyAsync("No longer playing anything.");
+            }
+            catch (Exception exception)
+            {
+                await ReplyAsync(exception.Message);
+            }
+        }
+
+        [Command("Skip"), RequirePlayer]
+        public async Task SkipAsync()
+        {
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (!player.State.IsConnected)
+            {
+                await ReplyAsync("Woaaah there, I can't skip when nothing is playing.");
+                return;
+            }
+
+            var voiceChannelUsers = Context.Guild.CurrentUser.VoiceChannel
+                .Users
+                .Where(x => !x.IsBot)
+                .ToArray();
+
+            if (!audioService.VoteQueue.Add(Context.User.Id))
+            {
+                await ReplyAsync("You can't vote again.");
+                return;
+            }
+
+            var percentage = audioService.VoteQueue.Count / voiceChannelUsers.Length * 100;
+            if (percentage < 85)
+            {
+                await ReplyAsync("You need more than 85% votes to skip this song.");
+                return;
+            }
+
+            try
+            {
+                var (skipped, currenTrack) = await player.SkipAsync(lavaNode);
+                await ReplyAsync($"Skipped: {skipped.Title}\nNow Playing: {currenTrack.Title}");
+            }
+            catch (Exception exception)
+            {
+                await ReplyAsync(exception.Message);
             }
         }
     }

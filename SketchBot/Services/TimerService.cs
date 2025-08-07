@@ -24,11 +24,12 @@ namespace Sketch_Bot.Services
                                                            // a specific Timer instance by name.
 
 
-        public bool databaseActive = true;
-        
+        private CachingService _cachingService;
+
         //string Message = "not NULL (Get rekt Declan xD)";
-        public TimerService(DiscordSocketClient client)
+        public TimerService(DiscordSocketClient client, CachingService cachingService)
         {
+            _cachingService = cachingService;
             timers.Add("Timer", new Timer(async _ =>
             {
                 try
@@ -51,7 +52,7 @@ namespace Sketch_Bot.Services
             TimeSpan.FromMinutes(30))); // 5) Time after which message should repeat (use `Timeout.Infinite` for no repeat));
             timers.Add("Database", new Timer(async _ =>
             {
-                databaseActive = true;
+                _cachingService.UpdateDBStatus();
             },
             null,
             TimeSpan.FromMinutes(0),  // 4) Time that message should fire after the timer is created
@@ -66,24 +67,6 @@ namespace Sketch_Bot.Services
         public void Restart() // 7) Example to restart the timer
         {
             timers["Timer"].Change(TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(30));
-        }
-
-        public bool GetDatabaseBool()
-        {
-            return databaseActive;
-        }
-        public bool GetDatabaseBool(bool state)
-        {
-            databaseActive = state;
-            if (!state)
-            {
-                Console.WriteLine("Database Deactivated!");
-            }
-            else
-            {
-                Console.WriteLine("Database Reactivated!");
-            }
-            return databaseActive;
         }
     }
 }

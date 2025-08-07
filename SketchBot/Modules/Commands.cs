@@ -28,6 +28,7 @@ using System.Threading;
 using Discord.Interactions;
 using System.Data;
 using System.IO;
+using SketchBot.Handlers;
 
 namespace Sketch_Bot.Modules
 {
@@ -71,100 +72,50 @@ namespace Sketch_Bot.Modules
             Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?repeat with success! and repeated " + input + " (" + Context.Guild?.Name ?? "DM" + ")");
         }
         [SlashCommand("rate", "Rates something out of 100")]
-        public async Task rate(string input)
+        public async Task Rate(string input)
         {
             await DeferAsync();
-            _rand = new Random();
-            int randomFileIndex = _rand.Next(1001);
-            double rating = randomFileIndex / 10.0;
-            if (input == "hhx")
-            {
-                await FollowupAsync("I rate " + input + " **" + "-1" + "** out of 100");
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rate with success! and got -1 out of 10 (hhx)" + " (" + Context.Guild?.Name ?? "DM" + ")");
-            }
-            else if (input.ToLower() == "mee6")
-            {
-                await FollowupAsync("I rate " + input + " **" + "-1" + "** out of 100");
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rate with success! and got -1 out of 10 (hhx)" + " (" + Context.Guild?.Name ?? "DM" + ")");
-            }
-            else switch (input)
-                {
-                    case "stx":
-                        await FollowupAsync("I rate " + input + " **" + "-1" + "** out of 100");
-                        Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rate with success! and got -1 out of 10 (stx)" + " (" + Context.Guild?.Name ?? "DM" + ")");
-                        break;
-                    case "the meaning of life":
-                        await FollowupAsync("I rate " + input + " **" + "42" + "** out of 42");
-                        Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rate with success! and got 42 out of 42 (the meaning of life)" + " (" + Context.Guild?.Name ?? "DM" + ")");
-                        break;
-                    case "bush":
-                        await FollowupAsync("I rate " + input + " **" + "9" + "** out of 11");
-                        Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rate with success! and got 9 out of 11 (bush)" + " (" + Context.Guild?.Name ?? "DM" + ")");
-                        break;
-                    case "@Taoshi":
-                        await FollowupAsync("I rate " + input + " **" + "2147483647" + "** out of 100");
-                        Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rate with success! and got 2147483647 out of 10 (Taoshi)" + " (" + Context.Guild?.Name ?? "DM" + ")");
-                        break;
-                    case "Taoshi#3480":
-                        await FollowupAsync("I rate " + input + " **" + "2147483647" + "** out of 100");
-                        Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rate with success! and got 2147483647 out of 10 (Taoshi)" + " (" + Context.Guild?.Name ?? "DM" + ")");
-                        break;
-                    case "Taoshi":
-                        await FollowupAsync("I rate " + input + " **" + "2147483647" + "** out of 100");
-                        Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rate with success! and got 2147483647 out of 10 (Taoshi)" + " (" + Context.Guild?.Name ?? "DM" + ")");
-                        break;
-                    default:
-                        {
-                            if (input.ToLower() == "taoshi")
-                            {
-                                await FollowupAsync("I rate " + input + " **" + "2147483647" + "** out of 100");
-                                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rate with success! and got 2147483647 out of 10 (Taoshi)" + " (" + Context.Guild?.Name ?? "DM" + ")");
-                            }
-                            else if (input == "<@135446225565515776>")
-                            {
-                                await FollowupAsync("I rate " + input + " **" + "2147483647" + "** out of 100");
-                                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rate with success! and got 2147483647 out of 10 (Taoshi)" + " (" + Context.Guild?.Name ?? "DM" + ")");
-                            }
-                            else if (input == "htx")
-                            {
-                                await FollowupAsync("I rate " + input + " **" + "101" + "** out of 100");
-                                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rate with success! and got 11 out of 10 (htx)" + " (" + Context.Guild?.Name ?? "DM" + ")");
-                            }
-                            else if (input == "riskage")
-                            {
-                                await FollowupAsync("I rate " + input + " **" + "100" + "** out of 100");
-                                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rate with success! and got 10 out of 10 (riskage)" + " (" + Context.Guild?.Name ?? "DM" + ")");
-                            }
-                            else if (input == "riskage bot")
-                            {
-                                await FollowupAsync("I rate " + input + " **" + "100" + "** out of 100");
-                                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rate with success! and got 10 out of 10 (riskage bot)" + " (" + Context.Guild?.Name ?? "DM" + ")");
-                            }
-                            else if (input == "@Tjampen")
-                            {
-                                await FollowupAsync("I rate " + input + " **" + "9999999" + "** out of 100");
-                                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rate with success! and got 10 out of 10 (riskage bot)" + " (" + Context.Guild?.Name ?? "DM" + ")");
-                            }
-                            else if (input == "Tjampen")
-                            {
-                                await FollowupAsync("I rate " + input + " **" + "9999999" + "** out of 100");
-                                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rate with success! and got 10 out of 10 (riskage bot)" + " (" + Context.Guild?.Name ?? "DM" + ")");
-                            }
-                            else if (input == "<@208624502878371840>")
-                            {
-                                await FollowupAsync("I rate " + input + " **" + "9999999" + "** out of 100");
-                                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rate with success! and got 10 out of 10 (riskage bot)" + " (" + Context.Guild?.Name ?? "DM" + ")");
-                            }
-                            else
-                            {
-                                await FollowupAsync("I rate " + input + " **" + rating + "** out of 100");
-                                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rate with success! and got " + randomFileIndex + " out of 10 " + "(" + input + ")" + " (" + Context.Guild?.Name ?? "DM" + ")");
-                            }
+            var ci = CultureInfo.InvariantCulture;
 
-                            break;
-                        }
-                }
+            var specialRatings = new Dictionary<string, (double rating, string comment)>(StringComparer.OrdinalIgnoreCase)
+    {
+        { "hhx", (-1, "hhx") },
+        { "mee6", (-1, "mee6") },
+        { "stx", (-1, "stx") },
+        { "the meaning of life", (42, "the meaning of life (out of 42)") },
+        { "bush", (9, "bush (out of 11)") },
+        { "htx", (101, "htx (out of 100)") },
+        { "riskage", (100, "riskage (out of 100)") },
+        { "riskage bot", (100, "riskage bot (out of 100)") },
+        { "@Tjampen", (9999999, "Tjampen") },
+        { "Tjampen", (9999999, "Tjampen") },
+        { "<@208624502878371840>", (9999999, "Tjampen") },
+        { "Taoshi", (2147483647, "Taoshi") },
+        { "Taoshi#3480", (2147483647, "Taoshi") },
+        { "@Taoshi", (2147483647, "Taoshi") },
+        { "<@135446225565515776>", (2147483647, "Taoshi") }
+    };
+
+            string username = Context.User.Username;
+            string guildName = Context.Guild?.Name ?? "DM";
+            string timestamp = DateTime.Now.ToString("HH:mm:ss", ci);
+
+            if (specialRatings.TryGetValue(input, out var special))
+            {
+                await FollowupAsync($"I rate {input} **{special.rating}** out of 100");
+                Console.WriteLine($"{timestamp} Command     {username} just ran ?rate with success! and got {special.rating} ({special.comment}) ({guildName})");
+            }
+            else
+            {
+                var rand = new Random();
+                int randomScore = rand.Next(1001); // 0–1000
+                double rating = randomScore / 10.0;
+
+                await FollowupAsync($"I rate {input} **{rating}** out of 100");
+                Console.WriteLine($"{timestamp} Command     {username} just ran ?rate with success! and got {randomScore} ({input}) ({guildName})");
+            }
         }
+
         [SlashCommand("roll", "Rolls between x and y")]
         public async Task roll(int min = 1, int max = 100)
         {
@@ -228,6 +179,11 @@ namespace Sketch_Bot.Modules
         public async Task gamble(long amount)
         {
             await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
             _rand = new Random();
             var currentTokens = Database.GetUserStatus(Context.User).FirstOrDefault().Tokens;
             if (amount > currentTokens) await FollowupAsync("You don't have enough tokens");
@@ -279,6 +235,11 @@ namespace Sketch_Bot.Modules
         public async Task gambleall()
         {
             await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
             long amount = Database.GetUserStatus(Context.User).FirstOrDefault().Tokens;
             _rand = new Random();
             var currentTokens = Database.GetUserStatus(Context.User).FirstOrDefault().Tokens;
@@ -569,68 +530,46 @@ namespace Sketch_Bot.Modules
         public async Task status(string websiteUrl = "http://sketchbot.xyz")
         {
             await DeferAsync();
+            async Task SendStatusEmbed(string url, string status, string description)
+            {
+                var embed = new EmbedBuilder
+                {
+                    Title = "Status",
+                    Description = $"{url} \n\n{description}",
+                    Timestamp = DateTime.Now,
+                    ThumbnailUrl = Context.Client.CurrentUser.GetAvatarUrl(ImageFormat.Auto, 1024)
+                };
+                embed.WithFooter(footer =>
+                {
+                    footer
+                        .WithText("Requested by " + Context.User.Username)
+                        .WithIconUrl(Context.User.GetAvatarUrl());
+                });
+                await FollowupAsync("", null, false, false, null, null, null, embed.Build());
+            }
+
             try
             {
                 if (!websiteUrl.StartsWith("https://") && !websiteUrl.StartsWith("http://"))
                 {
                     websiteUrl = "https://" + websiteUrl;
                 }
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(websiteUrl);
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                if (HttpStatusCode.OK == response.StatusCode)
+                using (var httpClient = new HttpClient())
                 {
-                    // Website is Online
-                    response.Close();
-                    var embed = new EmbedBuilder();
-                    embed.Title = ("Status");
-                    embed.Description = ($"{websiteUrl} \n\nserver is **online**");
-                    embed.Timestamp = (DateTime.Now);
-                    embed.WithFooter(footer =>
+                    HttpResponseMessage response = await httpClient.GetAsync(websiteUrl);
+                    if (response.IsSuccessStatusCode)
                     {
-                        footer
-                        .WithText("Requested by " + Context.User.Username)
-                            .WithIconUrl(Context.User.GetAvatarUrl());
-                    });
-                    embed.ThumbnailUrl = Context.Client.CurrentUser.GetAvatarUrl(ImageFormat.Auto, 1024);
-                    var builtEmbed = embed.Build();
-                    await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
-                }
-                else
-                {
-                    // Website if Offline
-                    response.Close();
-                    var embed = new EmbedBuilder();
-                    embed.Title = ("Status");
-                    embed.Description = ($"{websiteUrl} \n\nserver is **offline**");
-                    embed.Timestamp = (DateTime.Now);
-                    embed.WithFooter(footer =>
+                        await SendStatusEmbed(websiteUrl, "online", "server is **online**");
+                    }
+                    else
                     {
-                        footer
-                        .WithText("Requested by " + Context.User.Username)
-                            .WithIconUrl(Context.User.GetAvatarUrl());
-                    });
-                    embed.ThumbnailUrl = Context.Client.CurrentUser.GetAvatarUrl(ImageFormat.Auto, 1024);
-                    var builtEmbed = embed.Build();
-                    await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
+                        await SendStatusEmbed(websiteUrl, "offline", "server is **offline**");
+                    }
                 }
             }
             catch (WebException)
-
             {
-                // Connection is not available
-                var embed = new EmbedBuilder();
-                embed.Title = ("Status");
-                embed.Description = ($"{websiteUrl} \n\nconnection is **not available**");
-                embed.Timestamp = (DateTime.Now);
-                embed.WithFooter(footer =>
-                {
-                    footer
-                    .WithText("Requested by " + Context.User.Username)
-                        .WithIconUrl(Context.User.GetAvatarUrl());
-                });
-                embed.ThumbnailUrl = (Context.Client.CurrentUser.GetAvatarUrl(ImageFormat.Auto, 1024));
-                var builtEmbed = embed.Build();
-                await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
+                await SendStatusEmbed(websiteUrl, "not available", "connection is **not available**");
             }
             Console.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " Command     " + Context.User.Username + " just ran ?status with success!" + " (" + Context.Guild?.Name ?? "DM" + ")");
         }
@@ -669,7 +608,7 @@ namespace Sketch_Bot.Modules
                 Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?nickname with success! (RoleHigherException)" + " (" + Context.Guild?.Name ?? "DM" + ")");
             }
         }
-        [SlashCommand("cat", "Placeholder description")]
+        [SlashCommand("cat", "Sends a random cat image")]
         public async Task Cat()
         {
             await DeferAsync();
@@ -693,7 +632,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("API didn't return anything");
             }
         }
-        [SlashCommand("fox", "Placeholder description")]
+        [SlashCommand("fox", "Sends a random fox image")]
         public async Task fox()
         {
             await DeferAsync();
@@ -718,7 +657,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("API didn't return anything");
             }
         }
-        [SlashCommand("birb", "Placeholder description")]
+        [SlashCommand("birb", "Sends a random birb bird image")]
         public async Task birb()
         {
             await DeferAsync();
@@ -745,7 +684,7 @@ namespace Sketch_Bot.Modules
             }
         }
 
-        [SlashCommand("calculate", "calculates a math problem")]
+        [SlashCommand("calculate", "Calculates a math problem")]
         public async Task calculateAsync(HelperFunctions.Calculation expression)
         {
             await DeferAsync();
@@ -787,6 +726,11 @@ namespace Sketch_Bot.Modules
         public async Task userstatus(IGuildUser user = null)
         {
             await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
             var embed = new EmbedBuilder()
             {
                 Color = new Color(0, 0, 255)
@@ -812,11 +756,16 @@ namespace Sketch_Bot.Modules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("leaderboard", "Server leaderboard of Tokens or Leveling")]
-        public async Task leaderboard(string type, int index = 1)
+        public async Task leaderboard([Summary("Type"), Autocomplete(typeof(LeaderboardAutocompleteHandler))] string type, int index = 1)
         {
             await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
             type = type.ToLower();
-            string[] types = {"tokens", "leveling"};
+            string[] types = { "tokens", "leveling" };
             index = index > 0 ? index : 1;
             int pagelimit = index - index + 10 * index - 10;
             IUser user = Context.User;
@@ -921,6 +870,11 @@ namespace Sketch_Bot.Modules
         public async Task Award(IUser user, int tokens, string comment = null)
         {
             await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
             var name = (user as IGuildUser).Nickname ?? user.Username;
             if (((IGuildUser)Context.User).GuildPermissions.ManageGuild == true || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
@@ -960,6 +914,11 @@ namespace Sketch_Bot.Modules
         public async Task awardall(int tokens, string comment = "")
         {
             await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
             if (((IGuildUser)Context.User).GuildPermissions.ManageGuild == true || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
                 await ReplyAsync("Handing out tokens.....");
@@ -1002,6 +961,11 @@ namespace Sketch_Bot.Modules
         public async Task Daily(IGuildUser user = null)
         {
             await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
             if (user == null)
             {
                 user = Context.User as IGuildUser;
@@ -1060,6 +1024,11 @@ namespace Sketch_Bot.Modules
         public async Task pay(IUser usertopay, int amount, string comment = null)
         {
             await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
             var user = Context.User as SocketGuildUser;
             var result = Database.CheckExistingUser(user);
             var result2 = Database.CheckExistingUser(usertopay);
