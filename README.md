@@ -36,6 +36,8 @@ Join our [support server](https://discord.gg/UPG8Vqb) for help and updates.
 - `/calc <expression>` - Calculate math problems.
 - `/invert <image>` - Invert the colors of an image.
 
-Make your server even more sketchy with Sketch Bot!
+### Things to Note
+Due to the lack of message content intent, some commands must be invoked using a mention prefix like `@SketchBot anime bocchi the rock`
 
-**Don't delay, invite today!**
+##  **Don't delay, invite today!**
+Make your server even more sketchy with Sketch Bot!
