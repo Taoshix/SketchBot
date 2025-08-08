@@ -167,13 +167,6 @@ namespace Sketch_Bot
         }
         public async Task MainAsync()
         {
-            if (!System.IO.File.Exists("config.json"))
-            {
-                Console.WriteLine("Config file not found!");
-                Config.CreateDefaultConfigFile();
-                Console.WriteLine("Created new default config.json file, please fill it out before running the bot again.");
-                return;
-            }
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
             await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
 
