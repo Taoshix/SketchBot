@@ -1,6 +1,7 @@
 # Sketch Bot
 
-Sketch Bot is a multipurpose Discord bot packed with fun, utility, and moderation features to make your server more lively and engaging!
+Sketch Bot is a multipurpose Discord bot packed with fun, utility, and moderation features to make your server more lively and engaging! \
+Sketch Bot is written in C# using the [Discord.NET](https://github.com/discord-net/Discord.Net) library.
 
 ## Features
 
