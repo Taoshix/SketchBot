@@ -284,5 +284,12 @@ namespace Sketch_Bot.Models
             // Return as integers (rounded up to cover full image)
             return (newWidth: (int)Math.Ceiling(newWidth), newHeight: (int)Math.Ceiling(newHeight));
         }
+        public static string FormatFileSize(long bytes)
+        {
+            if (bytes < 1024 * 1024)
+                return $"{(bytes / 1024.0):0}KB";
+            else
+                return $"{(bytes / 1024.0 / 1024.0):0.00}MB";
+        }
     }
 }

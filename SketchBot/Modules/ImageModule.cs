@@ -42,7 +42,8 @@ namespace Sketch_Bot.Modules
                         image.Dispose();
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Invert.png");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Invert.png", $"Filesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -68,7 +69,8 @@ namespace Sketch_Bot.Modules
                         image.Save(stream, encoder);
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Grayscale.png");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Grayscale.png", $"Filesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -96,7 +98,8 @@ namespace Sketch_Bot.Modules
                         image.Save(stream, encoder);
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Flip.png");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Flip.png", $"Filesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -126,7 +129,8 @@ namespace Sketch_Bot.Modules
                         image.Dispose();
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Sepia.png");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Sepia.png", $"Filesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -158,7 +162,8 @@ namespace Sketch_Bot.Modules
 
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Pixelate.png", $"Factor: `{factor}`");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Pixelate.png", $"Factor: `{factor}`\nFilesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -188,7 +193,8 @@ namespace Sketch_Bot.Modules
 
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Contrast.png", $"Factor: `{factor}`");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Contrast.png", $"Factor: `{factor}`\n Filesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -218,7 +224,8 @@ namespace Sketch_Bot.Modules
 
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Glow.png", $"Factor: `{size}`");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Glow.png", $"Factor: `{size}`\nFilesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -244,7 +251,8 @@ namespace Sketch_Bot.Modules
 
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Skew.png", $"X: `{x}` Y: `{y}`");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Skew.png", $"X: `{x}` Y: `{y}`\nFilesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -270,7 +278,8 @@ namespace Sketch_Bot.Modules
 
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Oil.png");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Oil.png", $"Filesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -296,7 +305,8 @@ namespace Sketch_Bot.Modules
 
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Polaroid.png");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Polaroid.png", $"Filesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -322,7 +332,8 @@ namespace Sketch_Bot.Modules
 
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Hue.png", $"Degrees: `{degrees}`");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Hue.png", $"Degrees: `{degrees}`\nFilesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -372,7 +383,8 @@ namespace Sketch_Bot.Modules
                 using var gifStream = new MemoryStream();
                 original.SaveAsGif(gifStream);
                 gifStream.Position = 0;
-                await Context.Interaction.FollowupWithFileAsync(gifStream, "Huewheel.gif", $"Hue wheel ({seconds} second(s), 360°)");
+                string fileSize = HelperFunctions.FormatFileSize(gifStream.Length);
+                await Context.Interaction.FollowupWithFileAsync(gifStream, "Huewheel.gif", $"Hue wheel\n`{seconds}` second(s)\nFrame count: `{frameCount}`\nFilesize: `{fileSize}`");
                 await gifStream.FlushAsync();
             }
             catch (Exception ex)
@@ -401,7 +413,8 @@ namespace Sketch_Bot.Modules
 
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Opacity.png");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Opacity.png", $"Filesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -464,7 +477,8 @@ namespace Sketch_Bot.Modules
                 using var gifStream = new MemoryStream();
                 original.SaveAsGif(gifStream);
                 gifStream.Position = 0;
-                await Context.Interaction.FollowupWithFileAsync(gifStream, "Fadeout.gif", $"Fadeout duration: `{seconds}` seconds");
+                string fileSize = HelperFunctions.FormatFileSize(gifStream.Length);
+                await Context.Interaction.FollowupWithFileAsync(gifStream, "Fadeout.gif", $"Fadeout duration: `{seconds}` second(s)\nFilesize: `{fileSize}`");
                 await gifStream.FlushAsync();
             }
             catch (Exception ex)
@@ -523,7 +537,8 @@ namespace Sketch_Bot.Modules
                 using var gifStream = new MemoryStream();
                 gif.SaveAsGif(gifStream);
                 gifStream.Position = 0;
-                await Context.Interaction.FollowupWithFileAsync(gifStream, "Spin.gif", $"Spin ({seconds} second(s), Framecount: {frameCount})");
+                string fileSize = HelperFunctions.FormatFileSize(gifStream.Length);
+                await Context.Interaction.FollowupWithFileAsync(gifStream, "Spin.gif", $"Spin\n`{seconds}` second(s)\nFrame count: `{frameCount}`\nFilesize: `{fileSize}`");
                 await gifStream.FlushAsync();
             }
             catch (Exception ex)
@@ -547,7 +562,8 @@ namespace Sketch_Bot.Modules
 
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"DetectEdges.png");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"DetectEdges.png", $"Filesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -573,7 +589,14 @@ namespace Sketch_Bot.Modules
 
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Crop.png", $"Width: `{width}`\nHeight: `{height}`");
+                    if (width > 3840 || height > 2160)
+                    {
+                        await FollowupAsync("Image is larger than `3840x2160`");
+                        stream.Dispose();
+                        return;
+                    }
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Crop.png", $"`{width}`x`{height}`\nFilesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -603,7 +626,8 @@ namespace Sketch_Bot.Modules
 
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Brightness.png", $"Factor: `{factor}`");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Brightness.png", $"Factor: `{factor}`\nFilesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -629,7 +653,8 @@ namespace Sketch_Bot.Modules
 
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Rotate.png", $"Degrees `{angle}`");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Rotate.png", $"Degrees `{angle}`\nFilesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -658,7 +683,8 @@ namespace Sketch_Bot.Modules
                         image.Save(stream, encoder);
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Saturate.png", $"Factor: `{size}`");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Saturate.png", $"Factor: `{size}`\nFilesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -678,7 +704,6 @@ namespace Sketch_Bot.Modules
             }
             try
             {
-
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
                 using (var stream = new MemoryStream())
                 {
@@ -688,7 +713,8 @@ namespace Sketch_Bot.Modules
                         image.Save(stream, encoder);
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Blur.png", $"Factor: `{factor}`");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Blur.png", $"Factor: `{factor}`\nFilesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -719,7 +745,8 @@ namespace Sketch_Bot.Modules
                         image.Dispose();
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Sharpen.png", $"Factor: `{size}`");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Sharpen.png", $"Factor: `{size}`\nFilesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
@@ -753,11 +780,12 @@ namespace Sketch_Bot.Modules
                             image.Mutate(x => x.Resize(image.Width * 2, image.Height * 2));
                             image.Save(stream, encoder);
 
-                            width = image.Width;
-                            height = image.Height;
+                            width = Math.Min(image.Width, 3840);
+                            height = Math.Min(image.Height, 2160);
                             image.Dispose();
                             stream.Position = 0;
-                            await Context.Interaction.FollowupWithFileAsync(stream, $"Upscale.png", $"Image upscaled by `2` (`{width}x{height}`)");
+                            string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                            await Context.Interaction.FollowupWithFileAsync(stream, $"Upscale.png", $"Image upscaled by `2` (`{width}x{height}`)\nFilesize: `{fileSize}`");
                             await stream.FlushAsync();
                             stream.Dispose();
                         }
@@ -795,7 +823,8 @@ namespace Sketch_Bot.Modules
                         image.Dispose();
                     }
                     stream.Position = 0;
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Resize.png", $"Image resized to `{width}x{height}`");
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Resize.png", $"Image resized to `{width}x{height}`\nFilesize: `{fileSize}`");
                     await stream.FlushAsync();
                     stream.Dispose();
                 }
