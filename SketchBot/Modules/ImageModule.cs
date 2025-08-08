@@ -505,10 +505,7 @@ namespace Sketch_Bot.Modules
 
                     using var canvas = new Image<Rgba32>(canvasSize, canvasSize, new Rgba32(0, 0, 0, 0));
                     var clone = original.Clone(ctx => ctx.Rotate(degrees));
-                    double radians = degrees * Math.PI / 180.0;
-                    int x = (int)(Math.Abs(Math.Sin(radians)) * ((canvasSize-shortest) / 2));
-                    int y = (int)(Math.Abs(Math.Cos(radians)) * ((canvasSize-shortest) / 2));
-                    canvas.Mutate(ctx => ctx.DrawImage(clone, new Point(x, y), 1f));
+                    canvas.Mutate(ctx => ctx.DrawImage(clone, new Point(0, 0), 1f));
 
                     if (i == 0)
                     {
@@ -526,7 +523,7 @@ namespace Sketch_Bot.Modules
                 using var gifStream = new MemoryStream();
                 gif.SaveAsGif(gifStream);
                 gifStream.Position = 0;
-                await Context.Interaction.FollowupWithFileAsync(gifStream, "Spin.gif", $"Spin ({seconds} second(s), 360°)");
+                await Context.Interaction.FollowupWithFileAsync(gifStream, "Spin.gif", $"Spin ({seconds} second(s), Framecount: {frameCount})");
                 await gifStream.FlushAsync();
             }
             catch (Exception ex)
