@@ -115,35 +115,37 @@ namespace Sketch_Bot.Modules
         //[Alias("level","profile")]
         public async Task userstatus(IUser user)
         {
+            await DeferAsync();
+            if (user.IsBot)
+            {
+                await FollowupAsync("Bots don't have stats");
+                return;
+            }
             if (!_cachingService._dbConnected)
             {
-                await RespondAsync("Database is down, please try again later");
+                await FollowupAsync("Database is down, please try again later");
                 return;
             }
             var embed = new EmbedBuilder()
             {
                 Color = new Discord.Color(0, 0, 255)
             };
-            if (user == null)
-            {
-                user = Context.User as IGuildUser;
-            }
             var name = (user as IGuildUser).Nickname ?? user.Username;
             Database.CreateTable(Context.Guild.Id.ToString());
             var result = Database.CheckExistingUser(user as IGuildUser);
 
             if (!result.Any())
             {
-                Database.EnterUser((user as IGuildUser));
+                Database.EnterUser(user as IGuildUser);
             }
 
-            var userTable = Database.GetUserStatus((user as IGuildUser)) ?? throw new ArgumentNullException("Database.GetUserStatus(user)");
-            embed.Title = ("Stats for " + name);
-            embed.Description = (userTable.FirstOrDefault().Tokens + " tokens:small_blue_diamond:" +
+            var userTable = Database.GetUserStatus(user as IGuildUser) ?? throw new ArgumentNullException("Database.GetUserStatus(user)");
+            embed.Title = "Stats for " + name;
+            embed.Description = userTable.FirstOrDefault().Tokens + " tokens:small_blue_diamond:" +
                 "\nLevel " + userTable.FirstOrDefault().Level +
-                "\nXP " + userTable.FirstOrDefault().XP + " out of " + XP.caclulateNextLevel(userTable.FirstOrDefault().Level));
+                "\nXP " + userTable.FirstOrDefault().XP + " out of " + XP.caclulateNextLevel(userTable.FirstOrDefault().Level);
             var builtEmbed = embed.Build();
-            await RespondAsync("", [builtEmbed]);
+            await FollowupAsync("", [builtEmbed]);
         }
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
