@@ -19,7 +19,6 @@ namespace Sketch_Bot.Models
         public string DatabasePassword { get; set; }
         public string DatabaseHost { get; set; }
         public string IMGFlip { get; set; }
-        public int CaseNumber { get; set; }
         public string TempDBUsername { get; set; }
         public string TempDBPassword { get; set; }
         public string TempDBHost { get; set; }
@@ -52,7 +51,6 @@ namespace Sketch_Bot.Models
                 DatabasePassword = Environment.GetEnvironmentVariable("SKETCHBOT_DATABASE_PASSWORD") ?? fileConfig?.DatabasePassword ?? string.Empty,
                 DatabaseHost = Environment.GetEnvironmentVariable("SKETCHBOT_DATABASE_HOST") ?? fileConfig?.DatabaseHost ?? string.Empty,
                 IMGFlip = Environment.GetEnvironmentVariable("SKETCHBOT_IMGFLIP") ?? fileConfig?.IMGFlip ?? string.Empty,
-                CaseNumber = int.TryParse(Environment.GetEnvironmentVariable("SKETCHBOT_CASE_NUMBER"), out var caseNum) ? caseNum : fileConfig?.CaseNumber ?? 0,
                 TempDBUsername = Environment.GetEnvironmentVariable("SKETCHBOT_TEMPDB_USERNAME") ?? fileConfig?.TempDBUsername ?? string.Empty,
                 TempDBPassword = Environment.GetEnvironmentVariable("SKETCHBOT_TEMPDB_PASSWORD") ?? fileConfig?.TempDBPassword ?? string.Empty,
                 TempDBHost = Environment.GetEnvironmentVariable("SKETCHBOT_TEMPDB_HOST") ?? fileConfig?.TempDBHost ?? string.Empty,
@@ -74,7 +72,6 @@ namespace Sketch_Bot.Models
                 DatabasePassword = "dbpassword",
                 DatabaseHost = "localhost",
                 IMGFlip = "YOUR_IMGFLIP_KEY_HERE",
-                CaseNumber = 0,
                 TempDBUsername = "tempdbuser",
                 TempDBPassword = "tempdbpassword",
                 TempDBHost = "localhost",
