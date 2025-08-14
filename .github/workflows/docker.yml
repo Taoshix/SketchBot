@@ -8,8 +8,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      REGISTRY: ghcr.io/taoshix
-      IMAGE_NAME: sketchbot
+      REGISTRY: ghcr.io
+      IMAGE_NAME: taoshix/sketchbot
 
     steps:
       - name: Checkout code
