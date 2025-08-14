@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  sketchbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/${COMPOSE_PROJECT_OWNER:-your-gh-username}/sketchbot:latest
+    container_name: sketchbot
+    restart: unless-stopped
+    environment:
+      # Example: pass your Discord token as an environment variable
+      # DISCORD_TOKEN: your_token_here
+    # volumes:
+    #   - ./SketchBot/config.json:/app/config.json
