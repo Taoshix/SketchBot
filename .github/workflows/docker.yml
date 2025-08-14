@@ -28,8 +28,4 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: ghcr.io/sketchbot:latest
-
-      # Optionally, build with docker-compose
-      # - name: Build with Docker Compose
-      #   run: docker-compose build
+          tags: ghcr.io/${{ github.repository_owner | toLower }}/sketchbot:latest
