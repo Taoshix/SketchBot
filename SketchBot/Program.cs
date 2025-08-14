@@ -64,14 +64,7 @@ namespace Sketch_Bot
 
         private Program()
         {
-            if (!System.IO.File.Exists("config.json"))
-            {
-                Console.WriteLine("Config file not found!");
-                Config.CreateDefaultConfigFile();
-                Console.WriteLine("Created new default config.json file, please fill it out before running the bot again.");
-                return;
-            }
-            _config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText("config.json"));
+            _config = Config.Load();
             _client = new DiscordSocketClient(new DiscordSocketConfig
             {
                 LogLevel = LogSeverity.Info,

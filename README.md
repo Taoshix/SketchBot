@@ -40,5 +40,44 @@ Join our [support server](https://discord.gg/UPG8Vqb) for help and updates.
 ### Things to Note
 Due to the lack of message content intent, some commands must be invoked using a mention prefix like `@SketchBot anime bocchi the rock`
 
+## Docker Setup
+
+You can run Sketch Bot in a containerized environment using Docker and Docker Compose.
+
+### 1. Clone the repository
+```sh
+git clone https://github.com/Taoshix/SketchBot.git
+cd SketchBot
+```
+
+### 2. Create a `.env` file
+Create a `.env` file in the project root with your secrets and configuration:
+```env
+SKETCHBOT_PREFIX=?
+SKETCHBOT_TOKEN=your_discord_token
+SKETCHBOT_OSU_API_ID=our_osu_app_id
+SKETCHBOT_OSU_API_KEY=your_osu_api_key
+SKETCHBOT_DBL_API_KEY=your_dbl_api_key
+SKETCHBOT_DATABASE_USERNAME=dbuser
+SKETCHBOT_DATABASE_PASSWORD=dbpassword
+SKETCHBOT_DATABASE_NAME=dbname
+SKETCHBOT_DATABASE_HOST=localhost
+SKETCHBOT_IMGFLIP=your_imgflip_key
+```
+Do note that not all environment variables are required, but they enable additional features.
+
+### 3. Build and run with Docker Compose
+```sh
+docker-compose up --build
+```
+
+This will build the container and start Sketch Bot using the secrets from your `.env` file.
+
+### 4. Stopping the bot
+Press `Ctrl+C` in the terminal, or run:
+```sh
+docker-compose down
+```
+
 ##  **Don't delay, invite today!**
 Make your server even more sketchy with Sketch Bot!

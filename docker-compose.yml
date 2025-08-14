@@ -4,11 +4,23 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ghcr.io/${COMPOSE_PROJECT_OWNER:-your-gh-username}/sketchbot:latest
+    image: ghcr.io/taoshix/sketchbot:latest
     container_name: sketchbot
     restart: unless-stopped
     environment:
-      # Example: pass your Discord token as an environment variable
-      # DISCORD_TOKEN: your_token_here
+      SKETCHBOT_PREFIX: ${SKETCHBOT_PREFIX}
+      SKETCHBOT_TOKEN: ${SKETCHBOT_TOKEN}
+      SKETCHBOT_OSU_API_ID: ${SKETCHBOT_OSU_API_ID}
+      SKETCHBOT_OSU_API_KEY: ${SKETCHBOT_OSU_API_KEY}
+      SKETCHBOT_DBL_API_KEY: ${SKETCHBOT_DBL_API_KEY}
+      SKETCHBOT_DATABASE_USERNAME: ${SKETCHBOT_DATABASE_USERNAME}
+      SKETCHBOT_DATABASE_PASSWORD: ${SKETCHBOT_DATABASE_PASSWORD}
+      SKETCHBOT_DATABASE_NAME: ${SKETCHBOT_DATABASE_NAME}
+      SKETCHBOT_DATABASE_HOST: ${SKETCHBOT_DATABASE_HOST}
+      SKETCHBOT_IMGFLIP: ${SKETCHBOT_IMGFLIP}
+      SKETCHBOT_TEMPDB_USERNAME: ${SKETCHBOT_TEMPDB_USERNAME}
+      SKETCHBOT_TEMPDB_PASSWORD: ${SKETCHBOT_TEMPDB_PASSWORD}
+      SKETCHBOT_TEMPDB_HOST: ${SKETCHBOT_TEMPDB_HOST}
+      SKETCHBOT_TEMPDB_DATABASE: ${SKETCHBOT_TEMPDB_DATABASE}
     # volumes:
     #   - ./SketchBot/config.json:/app/config.json
