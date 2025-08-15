@@ -99,7 +99,6 @@ namespace Sketch_Bot.Modules
                     await ReplyAsync(exception.Message);
                 }
             }
-
             var searchResponse = await lavaNode.LoadTrackAsync(searchQuery);
             if (searchResponse.Type is SearchType.Empty or SearchType.Error)
             {

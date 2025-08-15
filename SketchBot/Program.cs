@@ -58,8 +58,6 @@ namespace Sketch_Bot
         ulong _channelid;
 
         public bool _databaseActive;
-        private AudioService _audioService;
-        private LavaNode _lavaNode;
         private ILogger _loggerFactory;
 
         private Program()
@@ -72,17 +70,13 @@ namespace Sketch_Bot
                 GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers
             });
             _provider = new ServiceCollection()
-                .AddLavaNode(x => {
-                    x.SelfDeaf = false;
-                })
                 .AddSingleton(_client)
-                .AddSingleton<AudioService>()
-                .AddSingleton<LavaNode>()
-                .AddLavaNode()
                 .AddLogging(x => {
                     x.ClearProviders();
                     x.SetMinimumLevel(LogLevel.Trace);
                 })
+                .AddLavaNode()
+                .AddSingleton<AudioService>()
                 .AddSingleton<InteractiveService>()
                 .AddSingleton<TimerService>()
                 .AddSingleton<StatService>()
@@ -114,7 +108,6 @@ namespace Sketch_Bot
             _jikan = _provider.GetRequiredService<Jikan>();
             _databaseActive = _provider.GetRequiredService<CachingService>()._dbConnected;
             _provider.GetRequiredService<StatService>().AddCache(_provider.GetRequiredService<CachingService>());
-            //_audioService = _provider.GetRequiredService<AudioService>();
             _interactionService.AddTypeConverter<Calculation>(new CalculationConverter());
             _interactionService.AddTypeConverter<ulong>(new UlongConverter());
 

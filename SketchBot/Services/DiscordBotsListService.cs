@@ -20,7 +20,7 @@ namespace Sketch_Bot.Services
         private AuthDiscordBotListApi _dblApi;
         public DiscordBotsListService()
         {
-            Config config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText("config.json"));
+            Config config = Config.Load();
             AuthDiscordBotListApi dblApi = new AuthDiscordBotListApi(369865463670374400,
                 config.DblApiKey);
             _dblApi = dblApi;

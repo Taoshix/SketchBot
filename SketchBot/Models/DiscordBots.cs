@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DiscordBotsList.Api;
 using System.IO;
 using Newtonsoft.Json;
+using System.Net.Http;
 
 namespace Sketch_Bot.Models
 {
@@ -15,7 +16,7 @@ namespace Sketch_Bot.Models
         {
             try
             {
-                Config config = JsonConvert.DeserializeObject<Config>(File.ReadAllText("config.json"));
+                Config config = Config.Load();
                 AuthDiscordBotListApi DblApi = new AuthDiscordBotListApi(369865463670374400,
                     config.DblApiKey);
                 var me = await DblApi.GetMeAsync();
@@ -23,40 +24,27 @@ namespace Sketch_Bot.Models
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Console.WriteLine();
             }
         }
         public static async Task UpdateStats2(int servercount)
         {
             try
             {
-                HttpWebRequest request = (HttpWebRequest) WebRequest.Create("https://discord.bots.gg/api/v1/bots/369865463670374400/stats");
-                Config config = JsonConvert.DeserializeObject<Config>(File.ReadAllText("config.json"));
-                request.ContentType = "application/json";
-                request.Method = "POST";
-                request.Headers.Add("Authorization",
-                    config.DblApiKey);
-                using (var streamWriter = new StreamWriter(request.GetRequestStream()))
+                Config config = Config.Load();
+                using (var httpClient = new HttpClient())
                 {
-                    string json = "{ \"guildCount\" : " + servercount + " }";
-
-                    streamWriter.Write(json);
-                    streamWriter.Flush();
-                }
-
-                var httpResponse = (HttpWebResponse) request.GetResponse();
-                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
-                {
-                    var responseText = streamReader.ReadToEnd();
-                    Console.WriteLine(responseText);
-
-                    //Now you have your response.
-                    //or false depending on information in the response     
+                    httpClient.DefaultRequestHeaders.Add("Authorization", config.DbggApiKey);
+                    var json = JsonConvert.SerializeObject(new { guildCount = servercount });
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+                    var response = await httpClient.PostAsync("https://discord.bots.gg/api/v1/bots/369865463670374400/stats", content);
+                    var responseText = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine(responseText);    
                 }
             }
-            catch (WebException ex)
+            catch (HttpRequestException ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.ToString());
             }
         }
     }
