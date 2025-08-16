@@ -105,11 +105,12 @@ namespace Sketch_Bot.Modules
                 await ReplyAsync("You have not voted today");
             }
         }
+        [RequireContext(ContextType.Guild)]
         [Command("gamble", RunMode = RunMode.Async)]
         public async Task gamble(long amount)
         {
             _rand = new Random();
-            var currentTokens = Database.GetUserStatus(Context.User).FirstOrDefault().Tokens;
+            var currentTokens = Database.GetUserStatus(Context.User as IGuildUser).FirstOrDefault().Tokens;
             if (amount > currentTokens) await ReplyAsync("You don't have enough tokens");
             else if (amount < 1) await ReplyAsync("The minimum amount of tokens is 1");
             else
@@ -117,8 +118,8 @@ namespace Sketch_Bot.Modules
                 var RNG = _rand.Next(0, 100);
                 if (RNG >= 53)
                 {
-                    Database.ChangeTokens(Context.User, amount);
-                    currentTokens = Database.GetUserStatus(Context.User).FirstOrDefault().Tokens;
+                    Database.ChangeTokens(Context.User as IGuildUser, amount);
+                    currentTokens = Database.GetUserStatus(Context.User as IGuildUser).FirstOrDefault().Tokens;
                     EmbedBuilder builder = new EmbedBuilder()
                     {
                         Title = "You won!",
@@ -136,8 +137,8 @@ namespace Sketch_Bot.Modules
                 }
                 else
                 {
-                    Database.RemoveTokens(Context.User, amount);
-                    currentTokens = Database.GetUserStatus(Context.User).FirstOrDefault().Tokens;
+                    Database.RemoveTokens(Context.User as IGuildUser, amount);
+                    currentTokens = Database.GetUserStatus(Context.User as IGuildUser).FirstOrDefault().Tokens;
                     EmbedBuilder builder = new EmbedBuilder()
                     {
                         Title = "You lost!",
@@ -155,20 +156,21 @@ namespace Sketch_Bot.Modules
                 }
             }
         }
+        [RequireContext(ContextType.Guild)]
         [Command("gamble all", RunMode = RunMode.Async)]
         public async Task gambleall()
         {
-            long amount = Database.GetUserStatus(Context.User).FirstOrDefault().Tokens;
+            long amount = Database.GetUserStatus(Context.User as IGuildUser).FirstOrDefault().Tokens;
             _rand = new Random();
-            var currentTokens = Database.GetUserStatus(Context.User).FirstOrDefault().Tokens;
+            var currentTokens = Database.GetUserStatus(Context.User as IGuildUser).FirstOrDefault().Tokens;
             if (amount < 1) await ReplyAsync("The minimum amount of tokens is 1");
             else
             {
                 var RNG = _rand.Next(0, 100);
                 if (RNG >= 53)
                 {
-                    Database.ChangeTokens(Context.User, amount);
-                    currentTokens = Database.GetUserStatus(Context.User).FirstOrDefault().Tokens;
+                    Database.ChangeTokens(Context.User as IGuildUser, amount);
+                    currentTokens = Database.GetUserStatus(Context.User as IGuildUser).FirstOrDefault().Tokens;
                     EmbedBuilder builder = new EmbedBuilder()
                     {
                         Title = "You won!",
@@ -186,8 +188,8 @@ namespace Sketch_Bot.Modules
                 }
                 else
                 {
-                    Database.RemoveTokens(Context.User, amount);
-                    currentTokens = Database.GetUserStatus(Context.User).FirstOrDefault().Tokens;
+                    Database.RemoveTokens(Context.User as IGuildUser, amount);
+                    currentTokens = Database.GetUserStatus(Context.User as IGuildUser).FirstOrDefault().Tokens;
                     EmbedBuilder builder = new EmbedBuilder()
                     {
                         Title = "You lost!",
@@ -862,7 +864,7 @@ namespace Sketch_Bot.Modules
                         {
                             Color = new Color(0, 0, 255)
                         };
-                        var list = Database.GetAllUsersTokens(user);
+                        var list = Database.GetAllUsersTokens(user as IGuildUser);
                         var foreachedlist = new List<string>();
                         foreach (var item in list.Skip(pagelimit).Take(10))
                         {
@@ -914,7 +916,7 @@ namespace Sketch_Bot.Modules
                         {
                             Color = new Color(0, 0, 255)
                         };
-                        var list = Database.GetAllUsersLeveling(user);
+                        var list = Database.GetAllUsersLeveling(user as IGuildUser);
                         var foreachedlist = new List<string>();
                         foreach (var item in list.Skip(pageLimit).Take(10))
                         {
@@ -1063,14 +1065,14 @@ namespace Sketch_Bot.Modules
             var name = ((IGuildUser)user).Nickname ?? user.Username;
             if (((IGuildUser)Context.User).GuildPermissions.ManageGuild == true || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
-                var result = Database.CheckExistingUser(user);
+                var result = Database.CheckExistingUser(user as IGuildUser);
                 if (result.Count() <= 1)
                 {
                     var embed = new EmbedBuilder()
                     {
                         Color = new Color(0, 0, 255)
                     };
-                    Database.addXP(user, xptogive);
+                    Database.addXP(user as IGuildUser, xptogive);
                     embed.Title = (name + " was awarded " + xptogive + " xp!");
                     embed.Description = (reason);
                     var builtEmbed = embed.Build();
@@ -1142,7 +1144,7 @@ namespace Sketch_Bot.Modules
             {
                 Database.EnterUser(user);
             }
-            var tableName = Database.GetUserStatus(Context.User); // We get the user status
+            var tableName = Database.GetUserStatus(Context.User as IGuildUser); // We get the user status
 
             DateTime now = DateTime.Now; // We get the actual time
             DateTime daily = tableName.FirstOrDefault().Daily;
@@ -1159,7 +1161,7 @@ namespace Sketch_Bot.Modules
                 {
                     await ReplyAsync($"You would have gotten 4x more tokens if you have voted today. See {ServerSettingsDB.GetSettings(Context.Guild.Id.ToString()).FirstOrDefault()?.Prefix}upvote");
                 }
-                Database.ChangeDaily(Context.User);
+                Database.ChangeDaily(Context.User as IGuildUser);
                 if (user != Context.User as IGuildUser)
                 {
                     _rand = new Random();

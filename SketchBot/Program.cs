@@ -428,14 +428,14 @@ namespace Sketch_Bot
                     rand = new Random();
                     int xp = rand.Next(5, 15);
                     int tokens = rand.Next(1, 4);
-                    var userData = Database.GetUserStatus(user).FirstOrDefault();
+                    var userData = Database.GetUserStatus(guildUser).FirstOrDefault();
                     if (userData == null)
                     {
                         Console.WriteLine("UserData is null!");
                         return;
                     }
 
-                    Database.ChangeTokens(user, tokens);
+                    Database.ChangeTokens(guildUser, tokens);
                     xpService.addUser(guildUser);
 
                     var xpToLevelUp = XP.caclulateNextLevel(userData.Level);
@@ -445,7 +445,7 @@ namespace Sketch_Bot
                         while (userData.XP >= XP.caclulateNextLevel(userData.Level + addLevels))
                             addLevels++;
 
-                        Database.levelUp(user, xp, addLevels);
+                        Database.levelUp(guildUser, xp, addLevels);
 
                         var newLevel = userData.Level + addLevels;
                         var rolesToAward = ServerSettingsDB.GetRoles(socketGuild.Id.ToString());
@@ -478,7 +478,7 @@ namespace Sketch_Bot
                     }
                     else if (!user.IsBot)
                     {
-                        Database.addXP(user, xp);
+                        Database.addXP(guildUser, xp);
                     }
                 }
                 catch (Exception ex)

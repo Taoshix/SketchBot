@@ -81,11 +81,11 @@ namespace Sketch_Bot
         {
             MySqlConnection.ClearAllPools();
         }
-        public static List<string> CheckExistingUser(IUser user)
+        public static List<string> CheckExistingUser(IGuildUser user)
         {
             var result = new List<string>();
             var database = new Database();
-            var realguildid = (user as IGuildUser).Guild.Id;
+            var realguildid = user.Guild.Id;
             var str = string.Format("SELECT * FROM `{1}` WHERE user_id = '{0}'", user.Id, realguildid.ToString());
             var userTable = database.FireCommand(str);
             
@@ -157,11 +157,11 @@ namespace Sketch_Bot
 
             database.CloseConnection();
         }
-        public static List<userTable> GetUserStatus(IUser user)
+        public static List<userTable> GetUserStatus(IGuildUser user)
         {
             var result = new List<userTable>();
             var database = new Database();
-            var realguildid = (user as IGuildUser).Guild.Id;
+            var realguildid = user.Guild.Id;
             var str = string.Format("SELECT * FROM `{1}` WHERE user_id = '{0}'", user.Id, realguildid.ToString());
             var userTable = database.FireCommand(str);
 
@@ -187,13 +187,13 @@ namespace Sketch_Bot
             return result;
 
         }
-        public static List<userTable> GetAllUsersTokens(IUser user)
+        public static List<userTable> GetAllUsersTokens(IGuildUser user)
         {
             //int pagelimit = numberOfPositions-numberOfPositions+10*numberOfPositions-10;
             var result = new List<userTable>();
             //Console.WriteLine("Getting all users");
             var database = new Database();
-            var realguildid = (user as IGuildUser).Guild.Id;
+            var realguildid = user.Guild.Id;
             var str = string.Format("SELECT * FROM `{1}` ORDER BY tokens DESC LIMIT 10000", user.Id, realguildid.ToString());
             var userTable = database.FireCommand(str);
 
@@ -218,13 +218,13 @@ namespace Sketch_Bot
 
             return result;
         }
-        public static List<userTable> GetAllUsersLeveling(IUser user)
+        public static List<userTable> GetAllUsersLeveling(IGuildUser user)
         {
             //int pagelimit = numberOfPositions - numberOfPositions + 10 * numberOfPositions - 10;
             var result = new List<userTable>();
             //Console.WriteLine("Getting all users");
             var database = new Database();
-            var realguildid = (user as IGuildUser).Guild.Id;
+            var realguildid = user.Guild.Id;
             var str = string.Format("SELECT * FROM `{1}` ORDER BY level DESC, xp DESC LIMIT 10000;", user.Id, realguildid.ToString());
             var userTable = database.FireCommand(str);
 
@@ -274,9 +274,9 @@ namespace Sketch_Bot
 
             return result;
         }
-        public static void addXP(IUser user, long xp)/*Creates a new method with IUser and int xp as its params*/
+        public static void addXP(IGuildUser user, long xp)/*Creates a new method with IUser and int xp as its params*/
         {
-            var realguildid = (user as IGuildUser).Guild.Id;
+            var realguildid = user.Guild.Id;
             var database = new Database(); /*Sets up a connection to the database*/
             try /*Tries this*/
             {
@@ -293,9 +293,9 @@ namespace Sketch_Bot
                 return;
             }
         }
-        public static void levelUp(IUser user, long xp, long level)
+        public static void levelUp(IGuildUser user, long xp, long level)
         {
-            var realguildid = (user as IGuildUser).Guild.Id;
+            var realguildid = user.Guild.Id;
             var database = new Database();
             try/*Tries the following code*/
             {
@@ -312,10 +312,10 @@ namespace Sketch_Bot
                 return;
             }
         }
-        public static void ChangeTokens(IUser user, long tokens)
+        public static void ChangeTokens(IGuildUser user, long tokens)
         {
             var database = new Database();
-            var realguildid = (user as IGuildUser).Guild.Id;
+            var realguildid = user.Guild.Id;
             try
             {
                 var strings = string.Format("UPDATE `{2}` SET tokens = tokens + '{1}' WHERE user_id = {0}", user.Id, tokens, realguildid.ToString());
@@ -331,10 +331,10 @@ namespace Sketch_Bot
                 return;
             }
         }
-        public static void RemoveTokens(IUser user, long tokens)
+        public static void RemoveTokens(IGuildUser user, long tokens)
         {
             var database = new Database();
-            var realguildid = (user as IGuildUser).Guild.Id;
+            var realguildid = user.Guild.Id;
             try
             {
                 var strings = string.Format("UPDATE `{2}` SET tokens = tokens - '{1}' WHERE user_id = {0}", user.Id, tokens, realguildid.ToString());
@@ -394,10 +394,10 @@ namespace Sketch_Bot
             database.CloseConnection();
             return result;
         }
-        public static void ChangeDaily(IUser user)
+        public static void ChangeDaily(IGuildUser user)
         {
             var database = new Database();
-            string realguildid = (user as IGuildUser).Guild.Id.ToString();
+            var realguildid = user.Guild.Id;
             try
             {
                 var strings = string.Format($"UPDATE `{realguildid}` SET daily = curtime() WHERE user_id = '{user.Id}'");
@@ -413,7 +413,7 @@ namespace Sketch_Bot
         public static void DeleteUser(IGuildUser user)
         {
             Console.WriteLine("Deleting user");
-            var guildid = (user as IGuildUser).Guild.Id.ToString();
+            var guildid = user.Guild.Id.ToString();
             var database = new Database();
 
             var str = string.Format("DELETE FROM `{1}` WHERE (user_id ) = " + user.Id, user.Id, guildid);
