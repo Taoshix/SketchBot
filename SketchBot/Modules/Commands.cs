@@ -56,7 +56,7 @@ namespace Sketch_Bot.Modules
             _interactionService = service5;
         }
 
-        [SlashCommand("Repeat", "Echo a message")]
+        [SlashCommand("repeat", "Echo a message")]
         public async Task testt(string input)
         {
             await DeferAsync();
@@ -64,14 +64,14 @@ namespace Sketch_Bot.Modules
             
         }
         [RequireUserPermission(GuildPermission.SendTTSMessages)]
-        [SlashCommand("Repeattts", "Echo a message")]
+        [SlashCommand("repeattts", "Echo a message")]
         public async Task repeattts(string input)
         {
             await DeferAsync();
             await FollowupAsync($"{Context.User.Mention} < {input}", null, true);
             
         }
-        [SlashCommand("Rate", "Rates something out of 100")]
+        [SlashCommand("rate", "Rates something out of 100")]
         public async Task Rate(string input)
         {
             await DeferAsync();
@@ -116,7 +116,7 @@ namespace Sketch_Bot.Modules
             }
         }
 
-        [SlashCommand("Roll", "Rolls between x and y")]
+        [SlashCommand("roll", "Rolls between x and y")]
         public async Task roll(int min = 1, int max = 100)
         {
             await DeferAsync();
@@ -140,7 +140,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("The number has to be between 0 and 2147483647!");
             }
         }
-        [SlashCommand("Hello", "Hello")]
+        [SlashCommand("hello", "Hello")]
         public async Task hello()
         {
             await DeferAsync();
@@ -154,13 +154,13 @@ namespace Sketch_Bot.Modules
             }
             
         }
-        [SlashCommand("Donate", "Sends a link for donations")]
+        [SlashCommand("donate", "Sends a link for donations")]
         public async Task donate()
         {
             await DeferAsync();
             await FollowupAsync("https://www.patreon.com/Sketch_Bot");
         }
-        [SlashCommand("Upvote", "Sends a link for upvoting the bot")]
+        [SlashCommand("upvote", "Sends a link for upvoting the bot")]
         public async Task upvote()
         {
             await DeferAsync();
@@ -175,7 +175,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("You have not voted today");
             }
         }
-        [SlashCommand("Gamble", "Gamble tokens")]
+        [SlashCommand("gamble", "Gamble tokens")]
         public async Task gamble(long amount)
         {
             await DeferAsync();
@@ -231,7 +231,7 @@ namespace Sketch_Bot.Modules
                 }
             }
         }
-        [SlashCommand("Gambleall", "Gambles all of your tokens")]
+        [SlashCommand("gambleall", "Gambles all of your tokens")]
         public async Task gambleall()
         {
             await DeferAsync();
@@ -287,7 +287,7 @@ namespace Sketch_Bot.Modules
                 }
             }
         }
-        [SlashCommand("Ping", "Pong")]
+        [SlashCommand("ping", "Pong")]
         public async Task ping()
         {
             await DeferAsync();
@@ -311,13 +311,13 @@ namespace Sketch_Bot.Modules
             
         */
         }
-        [UserCommand("Avatar")]
+        [UserCommand("avatar")]
         public async Task avatar(IUser user)
         {
             await DeferAsync();
             await FollowupAsync(user.GetAvatarUrl(ImageFormat.Auto, 256));
         }
-        [SlashCommand("Eightball", "Ask the 8ball a question")]
+        [SlashCommand("eightball", "Ask the 8ball a question")]
         public async Task eightball(string input)
         {
             await DeferAsync();
@@ -340,7 +340,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireBotPermission(GuildPermission.KickMembers)]
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("Kick", "Kicks someone from the server")]
+        [SlashCommand("kick", "Kicks someone from the server")]
         public async Task kick(IGuildUser user, string reason = "No reason")
         {
             await DeferAsync();
@@ -369,7 +369,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireBotPermission(GuildPermission.BanMembers)]
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("Ban", "Bans someone from the server")]
+        [SlashCommand("ban", "Bans someone from the server")]
         public async Task banAsync(IGuildUser user, string reason = "No reason")
         {
             await DeferAsync();
@@ -398,7 +398,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireBotPermission(GuildPermission.BanMembers)]
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("Unban", "Unbans someone from the server")]
+        [SlashCommand("unban", "Unbans someone from the server")]
         public async Task unbanAsync(RestUser user, string reason = "No reason")
         {
             await DeferAsync();
@@ -410,7 +410,7 @@ namespace Sketch_Bot.Modules
                     "\n" + reason);
             }
         }
-        [SlashCommand("Status", "Checks to see if a website is up")]
+        [SlashCommand("status", "Checks to see if a website is up")]
         public async Task status(string websiteUrl = "http://sketchbot.xyz")
         {
             await DeferAsync();
@@ -505,7 +505,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Failed to change nickname. This may be due to role hierarchy or permissions.");
             }
         }
-        [SlashCommand("Cat", "Sends a random cat image")]
+        [SlashCommand("cat", "Sends a random cat image")]
         public async Task Cat()
         {
             await DeferAsync();
@@ -529,7 +529,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("API didn't return anything");
             }
         }
-        [SlashCommand("Fox", "Sends a random fox image")]
+        [SlashCommand("fox", "Sends a random fox image")]
         public async Task fox()
         {
             await DeferAsync();
@@ -554,7 +554,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("API didn't return anything");
             }
         }
-        [SlashCommand("Birb", "Sends a random birb bird image")]
+        [SlashCommand("birb", "Sends a random birb bird image")]
         public async Task birb()
         {
             await DeferAsync();
@@ -581,7 +581,7 @@ namespace Sketch_Bot.Modules
             }
         }
 
-        [SlashCommand("Calculate", "Calculates a math problem")]
+        [SlashCommand("calculate", "Calculates a math problem")]
         public async Task calculateAsync(HelperFunctions.Calculation expression)
         {
             await DeferAsync();
@@ -596,7 +596,7 @@ namespace Sketch_Bot.Modules
         }
 
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("Membercount", "Tells you how many users are in the guild")]
+        [SlashCommand("membercount", "Tells you how many users are in the guild")]
         public async Task memcount()
         {
             await DeferAsync();
@@ -619,7 +619,7 @@ namespace Sketch_Bot.Modules
             
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("Tokens", "Shows you how many tokens you have")]
+        [SlashCommand("tokens", "Shows you how many tokens you have")]
         public async Task userstatus(IGuildUser user = null)
         {
             await DeferAsync();
@@ -652,7 +652,7 @@ namespace Sketch_Bot.Modules
             
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("Leaderboard", "Server leaderboard of Tokens or Leveling")]
+        [SlashCommand("leaderboard", "Server leaderboard of Tokens or Leveling")]
         public async Task leaderboard([Summary("Type"), Autocomplete(typeof(LeaderboardAutocompleteHandler))] string type, int index = 1)
         {
             await DeferAsync();
@@ -715,7 +715,7 @@ namespace Sketch_Bot.Modules
                     "\nTokens, Leveling");
             }
         }
-        [SlashCommand("Invite", "Invite me to your server")]
+        [SlashCommand("invite", "Invite me to your server")]
         public async Task invite()
         {
             await DeferAsync();
@@ -724,7 +724,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireBotPermission(GuildPermission.ManageMessages)]
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("Purge", "Purges messages from the channel")]
+        [SlashCommand("purge", "Purges messages from the channel")]
         public async Task purge(uint amount)
         {
             await DeferAsync();
@@ -741,7 +741,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("Award", "Give someone tokens")]
+        [SlashCommand("award", "Give someone tokens")]
         public async Task Award(IUser user, int tokens, string comment = null)
         {
             await DeferAsync();
@@ -784,7 +784,7 @@ namespace Sketch_Bot.Modules
         }
         [Custom_Preconditions.Ratelimit(1,5,Custom_Preconditions.Measure.Minutes,Custom_Preconditions.RatelimitFlags.ApplyPerGuild)]
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("Awardall", "Give everyone on the server some tokens")]
+        [SlashCommand("awardall", "Give everyone on the server some tokens")]
         public async Task awardall(int tokens, string comment = "")
         {
             await DeferAsync();
@@ -830,7 +830,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("Daily", "Claim your daily")]
+        [SlashCommand("daily", "Claim your daily")]
         public async Task Daily(IGuildUser user = null)
         {
             await DeferAsync();
@@ -857,14 +857,14 @@ namespace Sketch_Bot.Modules
             if ((tableName.FirstOrDefault()?.Daily.ToString() == "0001-01-01 00:00:00") || (daily.DayOfYear < now.DayOfYear && difference < 0 || difference >= 0 || daily.Year < now.Year))
             {
                 int amount = 50; // The amount of credits the user is gonna receive, in uint of you followed BossDarkReaper advises or in int
-                if (await _discordBotListService.DblApi().HasVoted(Context.User.Id))
+                if (await _discordBotListService.DblApi().HasVoted(Context.User.Id)) // TODO: Make a confirmation system if the user has not voted today
                 {
                     amount *= 4;
                     await FollowupAsync("Thanks for voting today, here is a bonus");
                 }
                 else
                 {
-                    await FollowupAsync($"You would have gotten 4x more tokens if you have voted today. See /upvote");
+                    await FollowupAsync($"You would have gotten 4x more tokens if you have voted today. See /upvote"); 
                 }
                 Database.ChangeDaily(Context.User);
                 if (user != Context.User as IGuildUser)
@@ -891,7 +891,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("Pay", "Pay someone else some of your tokens")]
+        [SlashCommand("pay", "Pay someone else some of your tokens")]
         public async Task pay(IUser usertopay, int amount, string comment = "No comment")
         {
             await DeferAsync();
@@ -953,7 +953,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("You can't pay blacklisted users!");
             }
         }
-        [SlashCommand("Info", "Displays info about the bot")]
+        [SlashCommand("info", "Displays info about the bot")]
         public async Task info()
         {
             await DeferAsync();
@@ -995,7 +995,7 @@ namespace Sketch_Bot.Modules
             await FollowupAsync("", null,false,false,null,null,null,embed);
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("Serverinfo", "Displays info about the server")]
+        [SlashCommand("serverinfo", "Displays info about the server")]
         public async Task serverinfo()
         {
             await DeferAsync();
@@ -1027,7 +1027,7 @@ namespace Sketch_Bot.Modules
             await FollowupAsync("", null,false,false,null,null,null,embed);
         }
         [RequireContext(ContextType.Guild)]
-        [UserCommand("Userinfo")]
+        [UserCommand("userinfo")]
         public async Task userinfo(IUser user)
         {
             await DeferAsync();
@@ -1062,7 +1062,7 @@ namespace Sketch_Bot.Modules
             await FollowupAsync("", null,false,false,null,null,null,embed);
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("Userinfo", "Displays information about the user")]
+        [SlashCommand("userinfo", "Displays information about the user")]
         public async Task slashuserinfo(IUser user)
         {
             await DeferAsync();
