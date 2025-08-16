@@ -73,8 +73,6 @@ namespace Sketch_Bot.Services
 
         private void CreateGuildTablesAndSettings(string guildId, int levelup)
         {
-            Console.WriteLine("Creating Table...");
-            ServerSettingsDB.CreateTable(guildId);
             Console.WriteLine("Creating Role Table...");
             ServerSettingsDB.CreateTableRole(guildId);
             Console.WriteLine("Creating Words Table...");
@@ -83,27 +81,28 @@ namespace Sketch_Bot.Services
             ServerSettingsDB.MakeSettings(guildId, levelup);
             Console.WriteLine("Gettings Prefix...");
         }
-        public void SetupUserInDatabase(SocketGuild guild ,SocketGuildUser user)
+        public void SetupUserInDatabase(SocketGuild guild, SocketGuildUser user)
         {
-            if (_dbConnected)
-            {
-                if (!_usersInDatabase.ContainsKey(guild.Id))
-                {
-                    _usersInDatabase.Add(guild.Id, new List<ulong>());
-                }
-                if (!IsInDatabase(guild.Id, user.Id))
-                {
-                    var result = Database.CheckExistingUser(user); /*We check if the database contains the user*/
-                    if (result.Count <= 0 && user.IsBot == false) /*Checks if result contains anyone and checks if the user is not a bot*/
-                    {
-                        Database.EnterUser(user);  /*Enters the user*/
-                    }
-                    _usersInDatabase[guild.Id].Add(user.Id);
-                }
-            }
-            else
+            if (!_dbConnected)
             {
                 Console.WriteLine("DB not connected");
+                return;
+            }
+
+            if (!_usersInDatabase.TryGetValue(guild.Id, out var userList))
+            {
+                userList = new List<ulong>();
+                _usersInDatabase[guild.Id] = userList;
+            }
+
+            if (!IsInDatabase(guild.Id, user.Id))
+            {
+                var result = Database.CheckExistingUser(user);
+                if (result.Count == 0 && !user.IsBot)
+                {
+                    Database.EnterUser(user);
+                }
+                userList.Add(user.Id);
             }
         }
         public Dictionary<ulong, List<ulong>> GetDatabaseUsers()
@@ -144,80 +143,51 @@ namespace Sketch_Bot.Services
         }
         public bool IsInDatabase(ulong guildId, ulong userId)
         {
-            if (!_client.GetUser(userId).IsBot)
+            var user = _client.GetUser(userId);
+            if (user == null || user.IsBot)
             {
-                if (!_usersInDatabase.ContainsKey(guildId))
-                {
-                    _usersInDatabase.Add(guildId, new List<ulong>());
-                }
-                return _usersInDatabase[guildId].Contains(userId);
-            }
-            else
-            {
-                return true;
-            }
-            
-        }
-        public bool IsInDatabase(string guildId, ulong userId)
-        {
-            ulong guildIdParsed = ulong.Parse(guildId);
-            if (!_client.GetUser(userId).IsBot)
-            {
-                if (!_usersInDatabase.ContainsKey(guildIdParsed))
-                {
-                    _usersInDatabase.Add(guildIdParsed, new List<ulong>());
-                }
-                return _usersInDatabase[guildIdParsed].Contains(userId);
-            }
-            else
-            {
-                return true;
+                return true; // Bots are always considered to be in the database so we don't track them
             }
 
+            if (!_usersInDatabase.TryGetValue(guildId, out var userList))
+            {
+                userList = new List<ulong>();
+                _usersInDatabase[guildId] = userList;
+            }
+
+            return userList.Contains(userId);
         }
         public void SetupBadWords(SocketGuild guild)
         {
-            if (_dbConnected)
-            {
-                if (!_badWords.ContainsKey(guild.Id))
-                {
-                    var userTable = ServerSettingsDB.GetWords(guild.Id.ToString());
-                    if (!userTable.Any())
-                    {
-                        _badWords.Add(guild.Id, new List<string>());
-                        return;
-                    }
-                    List<string> words = new List<string>();
-                    foreach (var word in userTable)
-                    {
-                        words.Add(word.Words);
-                    }
-                    if (!words.Any())
-                    {
-                        _badWords.Add(guild.Id, new List<string>());
-                        return;
-                    }
-                    _badWords.Add(guild.Id, words);
-                }
-            }
-            else
+            if (!_dbConnected)
             {
                 Console.WriteLine("DB not connected");
+                return;
             }
+
+            if (_badWords.ContainsKey(guild.Id))
+                return;
+
+            var userTable = ServerSettingsDB.GetWords(guild.Id.ToString());
+            var words = userTable.Select(w => w.Words).Where(w => !string.IsNullOrWhiteSpace(w)).ToList();
+
+            _badWords.Add(guild.Id, words);
         }
         public void SetupBlackList()
         {
-            if (_dbConnected)
-            {
-                var userTable = Database.GetAllBlacklistedUsers();
-                foreach (var element in userTable)
-                {
-                    _blacklist.Add(ulong.Parse(element.UserId));
-                }
-            }
-            else
+            if (!_dbConnected)
             {
                 Console.WriteLine("DB not connected");
+                return;
+            }
+
+            var userTable = Database.GetAllBlacklistedUsers();
+            foreach (var element in userTable)
+            {
+                if (ulong.TryParse(element.UserId, out var userId))
+                {
+                    _blacklist.Add(userId);
+                }
             }
         }
         public void AddToBlacklist(ulong id)

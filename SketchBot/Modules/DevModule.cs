@@ -180,8 +180,6 @@ namespace Sketch_Bot.Modules
                 {
                     await ReplyAsync(e.Message +
                         "\nCreating table if not exists...");
-                    ServerSettingsDB.CreateTable(guild.Id.ToString());
-                    await Task.Delay(50);
                     ServerSettingsDB.CreateTableWords(guild.Id.ToString());
                     await Task.Delay(50);
                     ServerSettingsDB.MakeSettings(guild.Id.ToString(), 1);
@@ -204,7 +202,6 @@ namespace Sketch_Bot.Modules
                 try
                 {
                     Database.CreateTable(guild.Id.ToString());
-                    ServerSettingsDB.CreateTable(guild.Id.ToString());
                     var gottenprefix = ServerSettingsDB.GetPrefix(guild.Id.ToString());
                     if (!gottenprefix.Any())
                     {
