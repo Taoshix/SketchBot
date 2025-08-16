@@ -21,6 +21,7 @@ WORKDIR /app
 # Copy application files
 COPY --from=build-env /out .
 COPY SketchBot/LavaLink ./LavaLink
+COPY start.sh .
 
 # Use a shell script to run both processes
 COPY --from=build-env ./start.sh /app/start.sh
