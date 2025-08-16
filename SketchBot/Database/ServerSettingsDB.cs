@@ -20,7 +20,7 @@ namespace Sketch_Bot
         private Config config;
         public ServerSettingsDB()
         {
-            config = JsonConvert.DeserializeObject<Config>(File.ReadAllText("config.json"));
+            config = Config.Load();
 
             MySqlConnectionStringBuilder stringBuilder = new MySqlConnectionStringBuilder();
             stringBuilder.Server = config.DatabaseHost;
@@ -75,14 +75,6 @@ namespace Sketch_Bot
                 dbConnection.Close();
             }
         }
-        public static void CreateTable(string guildid)
-        {
-            var database = new ServerSettingsDB();
-            var str = string.Format("CREATE TABLE IF NOT EXISTS `{0}` (prefix varchar(50) DEFAULT '?', welcomechannel varchar(50) DEFAULT NULL, modlogchannel varchar(50) DEFAULT NULL, xpmultiplier int DEFAULT 1, LevelupMessages int DEFAULT 1)", guildid);
-            var table = database.FireCommand(str);
-
-            database.CloseConnection();
-        }
         public static void CreateTableRole(string guildid)
         {
             var database = new ServerSettingsDB();
@@ -101,8 +93,8 @@ namespace Sketch_Bot
         }
         public static void MakeSettings(string guildid, int levelup)
         {
-            var database = new ServerSettingsDB();
-            var str = string.Format("INSERT INTO `{0}` (prefix, welcomechannel, modlogchannel, xpmultiplier, LevelupMessages) VALUES ('?', NULL, NULL, 1, {1})", guildid, levelup);
+            var database = new Database();
+            var str = string.Format("INSERT INTO `server_settings` (id, prefix, welcomechannel, modlogchannel, xpmultiplier, LevelupMessages) VALUES ({0}, '?', NULL, NULL, 1, {1})", guildid, levelup);
             var table = database.FireCommand(str);
 
             database.CloseConnection();
@@ -117,8 +109,8 @@ namespace Sketch_Bot
         }
         public static void UpdateXprate(string guildid, int rate)
         {
-            var database = new ServerSettingsDB();
-            var str = string.Format("UPDATE `{0}` SET xpmultiplier = '{1}'", guildid, rate);
+            var database = new Database();
+            var str = string.Format("UPDATE `server_settings` SET xpmultiplier = '{1}' WHERE id = {0}", guildid, rate);
             var table = database.FireCommand(str);
 
             database.CloseConnection();
@@ -167,8 +159,8 @@ namespace Sketch_Bot
         }
         public static void UpdatePrefix(string guildid, string newprefix)
         {
-            var database = new ServerSettingsDB();
-            var str = string.Format("UPDATE `{0}` SET prefix = ('{1}')", guildid, newprefix);
+            var database = new Database();
+            var str = string.Format("UPDATE `server_settings` SET prefix = ('{1}') WHERE id = {0}", guildid, newprefix);
             var table = database.FireCommand(str);
 
             database.CloseConnection();
@@ -178,8 +170,8 @@ namespace Sketch_Bot
         public static List<Serversettings> GetSettings(string guildid)
         {
             var result = new List<Serversettings>();
-            var database = new ServerSettingsDB();
-            var str = string.Format("SELECT * FROM `{0}`", guildid);
+            var database = new Database();
+            var str = string.Format("SELECT * FROM `server_settings` where id = {0}", guildid);
             var table = database.FireCommand(str);
 
             while (table.Read())
@@ -205,8 +197,8 @@ namespace Sketch_Bot
         public static List<Serversettings> GetLevelupMessageBool(string guildid)
         {
             var result = new List<Serversettings>();
-            var database = new ServerSettingsDB();
-            var str = string.Format("SELECT * FROM `{0}`", guildid);
+            var database = new Database();
+            var str = string.Format("SELECT * FROM `server_settings` WHERE id = {0}", guildid);
             var table = database.FireCommand(str);
 
             while (table.Read())
@@ -225,7 +217,7 @@ namespace Sketch_Bot
         public static void UpdateLevelupMessagesBool(string guildid, int boool)
         {
             var database = new ServerSettingsDB();
-            var str = string.Format("UPDATE `{0}` SET LevelupMessages = ('{1}')", guildid, boool);
+            var str = string.Format("UPDATE `server_settings` SET LevelupMessages = ('{1}') WHERE id = {0}", guildid, boool);
             var table = database.FireCommand(str);
 
             database.CloseConnection();
@@ -235,8 +227,8 @@ namespace Sketch_Bot
         public static List<Serversettings> GetModlogChannel(string guildid)
         {
             var result = new List<Serversettings>();
-            var database = new ServerSettingsDB();
-            var str = string.Format("SELECT * FROM `{0}`", guildid);
+            var database = new Database();
+            var str = string.Format("SELECT * FROM `server_settings` WHERE id = {0}", guildid);
             var table = database.FireCommand(str);
 
             while (table.Read())
@@ -256,8 +248,8 @@ namespace Sketch_Bot
         public static List<Serversettings> GetPrefix(string guildid)
         {
             var result = new List<Serversettings>();
-            var database = new ServerSettingsDB();
-            var str = string.Format("SELECT * FROM `{0}`", guildid);
+            var database = new Database();
+            var str = string.Format("SELECT * FROM `server_settings` WHERE id = {0}", guildid);
             var table = database.FireCommand(str);
 
             while (table.Read())
@@ -274,12 +266,12 @@ namespace Sketch_Bot
 
             return result;
         }
-        public static List<String> CheckPrefix(SocketUser user)
+        public static List<string> CheckPrefix(SocketUser user)
         {
             var socketguild = (user as SocketGuildUser).Guild;
-            var result = new List<String>();
-            var database = new ServerSettingsDB();
-            var str = string.Format("SELECT * FROM `{0}`", socketguild.Id.ToString());
+            var result = new List<string>();
+            var database = new Database();
+            var str = string.Format("SELECT * FROM `server_settings` WHERE id = {0}", socketguild.Id.ToString());
             var userTable = database.FireCommand(str);
 
             while (userTable.Read())
@@ -293,8 +285,8 @@ namespace Sketch_Bot
         }
         public static void SetWelcomeChannel(string id, string guildid)
         {
-            var database = new ServerSettingsDB();
-            var str = string.Format("UPDATE `{0}` SET welcomechannel = '{1}'", guildid, id);
+            var database = new Database();
+            var str = string.Format("UPDATE `server_settings` SET welcomechannel = '{1}' WHERE id = {0}", guildid, id);
             var table = database.FireCommand(str);
 
             database.CloseConnection();
@@ -303,8 +295,8 @@ namespace Sketch_Bot
         }
         public static void SetModlogChannel(string id, string guildid)
         {
-            var database = new ServerSettingsDB();
-            var str = string.Format("UPDATE `{0}` SET modlogchannel = '{1}'", guildid, id);
+            var database = new Database();
+            var str = string.Format("UPDATE `server_settings` SET modlogchannel = '{1}' WHERE id = {0}", guildid, id);
             var table = database.FireCommand(str);
 
             database.CloseConnection();
@@ -314,8 +306,8 @@ namespace Sketch_Bot
         public static List<Serversettings> GetWelcomeChannel(string guildid)
         {
             var result = new List<Serversettings>();
-            var database = new ServerSettingsDB();
-            var str = string.Format("SELECT * FROM `{0}`", guildid);
+            var database = new Database();
+            var str = string.Format("SELECT * FROM `server_settings` WHERE id = {0}", guildid);
             var table = database.FireCommand(str);
 
             while (table.Read())
@@ -335,8 +327,8 @@ namespace Sketch_Bot
         public static List<Serversettings> GetXpRate(string guildid)
         {
             var result = new List<Serversettings>();
-            var database = new ServerSettingsDB();
-            var str = string.Format("SELECT * FROM `{0}`", guildid);
+            var database = new Database();
+            var str = string.Format("SELECT * FROM `server_settings` WHERE id = {0}", guildid);
             var table = database.FireCommand(str);
 
             while (table.Read())

@@ -21,7 +21,7 @@ namespace Sketch_Bot
 
         public Database()
         {
-            config = JsonConvert.DeserializeObject<Config>(File.ReadAllText("config.json"));
+            config = Config.Load();
             MySqlConnectionStringBuilder stringBuilder = new MySqlConnectionStringBuilder();
             stringBuilder.Server = config.DatabaseHost;
             stringBuilder.UserID = config.DatabaseUsername;
@@ -97,6 +97,14 @@ namespace Sketch_Bot
             }
             database.CloseConnection();
             return result;
+        }
+        public static void CreateSettingsTable()
+        {
+            var database = new Database();
+            var str = string.Format("CREATE TABLE IF NOT EXISTS `server_settings` (id varchar(50) PRIMARY KEY, prefix varchar(50) DEFAULT '?', welcomechannel varchar(50) DEFAULT NULL, modlogchannel varchar(50) DEFAULT NULL, xpmultiplier int DEFAULT 1, LevelupMessages int DEFAULT 1)");
+            var table = database.FireCommand(str);
+
+            database.CloseConnection();
         }
         public static void UpdateStats(BotStats stats)
         {

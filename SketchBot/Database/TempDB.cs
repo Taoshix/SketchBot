@@ -23,7 +23,7 @@ namespace Sketch_Bot
         
         public TempDB()
         {
-            Config config = JsonConvert.DeserializeObject<Config>(File.ReadAllText("config.json"));
+            Config config = Config.Load();
             server = config.TempDBHost;
             database = config.TempDBDatabase;
             username = config.TempDBUsername;

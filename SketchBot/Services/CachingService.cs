@@ -30,66 +30,58 @@ namespace Sketch_Bot.Services
         }
         public void SetupPrefixes(SocketGuild guild)
         {
-            if (_dbConnected)
-            {
-                if (!_prefixes.ContainsKey(guild.Id))
-                {
-                    int levelup = 1;
-                    if (guild.MemberCount >= 100)
-                    {
-                        levelup = 0;
-                    }
-                    try
-                    {
-                        var result = ServerSettingsDB.GetPrefix(guild.Id.ToString());
-
-                        if (result.Count > 0)
-                        {
-                            _prefixes.Add(guild.Id, result.FirstOrDefault().Prefix);
-                        }
-                        else
-                        {
-                            Console.WriteLine("Creating Table...");
-                            ServerSettingsDB.CreateTable(guild.Id.ToString());
-                            Console.WriteLine("Creating Role Table...");
-                            ServerSettingsDB.CreateTableRole(guild.Id.ToString());
-                            Console.WriteLine("Creating Words Table...");
-                            ServerSettingsDB.CreateTableWords(guild.Id.ToString());
-                            Console.WriteLine("Making Settings...");
-                            ServerSettingsDB.MakeSettings(guild.Id.ToString(), levelup);
-                            Console.WriteLine("Gettings Prefix...");
-                            var gottenPrefix = ServerSettingsDB.GetPrefix(guild.Id.ToString());
-                            Console.WriteLine($"Prefix: {gottenPrefix.FirstOrDefault()?.Prefix}");
-                            Console.WriteLine("Prefix has been set up");
-                            _prefixes.Add(guild.Id, result.FirstOrDefault().Prefix);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex);
-                        if (ex.Message.Contains(guild.Id.ToString()))
-                        {
-                            Console.WriteLine("Creating Table...");
-                            ServerSettingsDB.CreateTable(guild.Id.ToString());
-                            Console.WriteLine("Creating Role Table...");
-                            ServerSettingsDB.CreateTableRole(guild.Id.ToString());
-                            Console.WriteLine("Creating Words Table...");
-                            ServerSettingsDB.CreateTableWords(guild.Id.ToString());
-                            Console.WriteLine("Making Settings...");
-                            ServerSettingsDB.MakeSettings(guild.Id.ToString(), levelup);
-                            Console.WriteLine("Gettings Prefix...");
-                            var gottenPrefix = ServerSettingsDB.GetPrefix(guild.Id.ToString());
-                            Console.WriteLine($"Prefix: {gottenPrefix.FirstOrDefault()?.Prefix}");
-                            Console.WriteLine("Prefix has been set up");
-                            _prefixes.Add(guild.Id, "?");
-                        }
-                    }
-                }
-            }
-            else
+            if (!_dbConnected)
             {
                 Console.WriteLine("DB not connected");
+                return;
             }
+
+            if (_prefixes.ContainsKey(guild.Id))
+                return;
+
+            int levelup = guild.MemberCount >= 100 ? 0 : 1;
+            try
+            {
+                var result = ServerSettingsDB.GetPrefix(guild.Id.ToString());
+                if (result.Count > 0)
+                {
+                    _prefixes.Add(guild.Id, result.First().Prefix);
+                    return;
+                }
+
+                CreateGuildTablesAndSettings(guild.Id.ToString(), levelup);
+                var gottenPrefix = ServerSettingsDB.GetPrefix(guild.Id.ToString());
+                var prefix = gottenPrefix.FirstOrDefault()?.Prefix ?? "?";
+                Console.WriteLine($"Prefix: {prefix}");
+                Console.WriteLine("Prefix has been set up");
+                _prefixes.Add(guild.Id, prefix);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                if (ex.Message.Contains(guild.Id.ToString()))
+                {
+                    CreateGuildTablesAndSettings(guild.Id.ToString(), levelup);
+                    var gottenPrefix = ServerSettingsDB.GetPrefix(guild.Id.ToString());
+                    var prefix = gottenPrefix.FirstOrDefault()?.Prefix ?? "?";
+                    Console.WriteLine($"Prefix: {prefix}");
+                    Console.WriteLine("Prefix has been set up");
+                    _prefixes.Add(guild.Id, prefix);
+                }
+            }
+        }
+
+        private void CreateGuildTablesAndSettings(string guildId, int levelup)
+        {
+            Console.WriteLine("Creating Table...");
+            ServerSettingsDB.CreateTable(guildId);
+            Console.WriteLine("Creating Role Table...");
+            ServerSettingsDB.CreateTableRole(guildId);
+            Console.WriteLine("Creating Words Table...");
+            ServerSettingsDB.CreateTableWords(guildId);
+            Console.WriteLine("Making Settings...");
+            ServerSettingsDB.MakeSettings(guildId, levelup);
+            Console.WriteLine("Gettings Prefix...");
         }
         public void SetupUserInDatabase(SocketGuild guild ,SocketGuildUser user)
         {

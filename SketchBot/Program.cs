@@ -264,10 +264,14 @@ namespace Sketch_Bot
         }
         private async Task OnReady()
         {
+            ;
             var cachingservice = _provider.GetRequiredService<CachingService>();
             await _provider.UseLavaNodeAsync();
             if (_provider.GetRequiredService<CachingService>()._dbConnected)
+            {
+                Database.CreateSettingsTable();
                 cachingservice.SetupBlackList();
+            }
             await _interactionService.RegisterCommandsGloballyAsync();
         }
         private Task GuildCount(SocketGuild socketGuild)
@@ -340,7 +344,6 @@ namespace Sketch_Bot
                 try
                 {
                     var guildId = socketGuild.Id.ToString();
-                    ServerSettingsDB.CreateTable(guildId);
                     //await Task.Delay(50);
                     var prefix = ServerSettingsDB.GetPrefix(socketGuild.Id.ToString());
                     int levelup = 1;
