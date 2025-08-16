@@ -106,7 +106,13 @@ namespace Sketch_Bot.Modules
             var searchResponse = await lavaNode.LoadTrackAsync(searchQuery);
             if (searchResponse.Type is SearchType.Empty or SearchType.Error)
             {
-                await ReplyAsync($"I wasn't able to find anything for `{searchQuery}`.");
+                await ReplyAsync($"I wasn't able to find anything for `{searchQuery}`.\n" +
+                    $"You can use a direct link or make a search query\n" +
+                    $"Here is a list of prefixes for searching:\n" +
+                    $"`ytsearch:` for YouTube\n" +
+                    $"`ytmsearch:` for YouTubeMusic\n" +
+                    $"`scsearch:` for SoundCloud\n" +
+                    $"Example `ytsearch: Guitar, Loneliness and Blue Planet`");
                 return;
             }
 
