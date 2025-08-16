@@ -1,22 +1,26 @@
-using System.Threading.Tasks;
-using Discord.Commands;
 using Discord;
-using System;
 using Discord.Audio;
-using System.Diagnostics;
-using System.Collections.Concurrent;
-using YouTubeSearch;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Collections.Generic;
+using Discord.Commands;
 using Discord.WebSocket;
 using Sketch_Bot;
 using Sketch_Bot.Custom_Preconditions;
 using Sketch_Bot.Models;
 using Sketch_Bot.Services;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using TagLib.Matroska;
 using Victoria;
+using Victoria.Enums;
+using Victoria.Rest;
 using Victoria.Rest.Search;
+using YouTubeSearch;
 
 namespace Sketch_Bot.Modules
 {
@@ -107,15 +111,69 @@ namespace Sketch_Bot.Modules
             }
 
             var track = searchResponse.Tracks.FirstOrDefault();
-            if (player.GetQueue().Count == 0)
+            if (player.GetQueue().Count == 0 && player.Track == null)
             {
-                await player.PlayAsync(lavaNode, track);
-                await ReplyAsync($"Now playing: {track.Title}");
+                await player.PlayAsync(lavaNode, track, false);
                 return;
             }
 
             player.GetQueue().Enqueue(track);
             await ReplyAsync($"Added {track.Title} to queue.");
+        }
+
+        [Command("Queue")]
+        public async Task QueueAsync()
+        {
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            string queueList = "";
+            if (player == null || !player.State.IsConnected)
+            {
+                await ReplyAsync("I'm not connected to a voice channel.");
+                return;
+            }
+            var queue = player.GetQueue();
+            if(player.Track != null)
+            {
+                queueList += $"`0.` {player.Track.Title}\n----------------------------------\n";
+            }
+            if (queue.Any())
+            {
+                queueList += string.Join("\n", queue.Select((track, index) => $"`{index + 1}.` {track.Title}"));
+            }
+
+            await ReplyAsync($"Current Queue:\n{queueList}");
+        }
+        [Command("NowPlaying"), Alias("NP")]
+        public async Task NowPlayingAsync()
+        {
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player == null || !player.State.IsConnected)
+            {
+                await ReplyAsync("I'm not connected to a voice channel.");
+                return;
+            }
+            if (player.Track == null)
+            {
+                await ReplyAsync("I'm not currently playing anything.");
+                return;
+            }
+            var track = player.Track;
+
+            string durationFormat = track.Duration.Hours > 0 ? @"hh\:mm\:ss" : @"mm\:ss";
+            string positionFormat = track.Position.Hours > 0 ? @"hh\:mm\:ss" : @"mm\:ss";
+            string positionStr = track.Position.ToString(positionFormat);
+            string durationStr = track.Duration.ToString(durationFormat);
+
+            var embed = new EmbedBuilder()
+                .WithTitle("Now Playing")
+                .WithDescription(track.Title)
+                .WithUrl(track.Url)
+                .WithThumbnailUrl(track.Artwork)
+                .AddField("Progress", $"{positionStr} / {durationStr} ({(track.Position / track.Duration * 100).ToString("0.00")}%)")
+                .AddField("Author", track.Author)
+                .WithColor(Color.Blue)
+                .Build();
+            await ReplyAsync(embed: embed);
         }
 
         [Command("Pause"), RequirePlayer]
@@ -172,8 +230,15 @@ namespace Sketch_Bot.Modules
 
             try
             {
-                await player.StopAsync(lavaNode, player.Track);
-                await ReplyAsync("No longer playing anything.");
+                player.GetQueue().Clear();
+                await player.SeekAsync(lavaNode, player.Track.Duration); // Workaround: Seek to the end of the track to clear it
+                //await player.StopAsync(lavaNode, player.Track);
+                await ReplyAsync("No longer playing anything and queue has been cleared.");
+                var voiceChannel = (Context.User as IVoiceState).VoiceChannel;
+                if (voiceChannel != null)
+                {
+                    await lavaNode.LeaveAsync(voiceChannel);
+                }
             }
             catch (Exception exception)
             {
@@ -195,382 +260,200 @@ namespace Sketch_Bot.Modules
                 .Users
                 .Where(x => !x.IsBot)
                 .ToArray();
-
+            /*
             if (!audioService.VoteQueue.Add(Context.User.Id))
             {
                 await ReplyAsync("You can't vote again.");
                 return;
             }
 
-            var percentage = audioService.VoteQueue.Count / voiceChannelUsers.Length * 100;
-            if (percentage < 85)
+            float percentage = (float)audioService.VoteQueue.Count / voiceChannelUsers.Length;
+            if (percentage < 0.85)
             {
-                await ReplyAsync("You need more than 85% votes to skip this song.");
+                await ReplyAsync($"You need more than 85% votes to skip this song. ({percentage * 100}%)");
                 return;
             }
-
+            */
             try
             {
-                var (skipped, currenTrack) = await player.SkipAsync(lavaNode);
-                await ReplyAsync($"Skipped: {skipped.Title}\nNow Playing: {currenTrack.Title}");
+                // workaround for Victoria's skip method not skipping properly
+                var queue = player.GetQueue();
+                if (queue.Count > 0)
+                {
+                    var skipped = player.Track;
+                    var nextTrack = queue.FirstOrDefault();
+                    queue.RemoveAt(0);
+                    await ReplyAsync($"Skipped: {skipped.Title}");
+                    await player.PlayAsync(lavaNode, nextTrack, false);
+                }
+                else
+                {
+                    await ReplyAsync("No more tracks in the queue to skip to.");
+                }
+
+                //var (skipped, currenTrack) = await player.SkipAsync(lavaNode);
+                //await ReplyAsync($"Skipped: {skipped.Title}\nNow Playing: {currenTrack.Title}");
             }
             catch (Exception exception)
             {
                 await ReplyAsync(exception.Message);
             }
         }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        /*
-        // Scroll down further for the AudioService.
-        // Like, way down
-        private readonly AudioService _service;
-
-        // Remember to add an instance of the AudioService
-        // to your IServiceCollection when you initialize your bot
-        public AudioModule(AudioService service)
+        [Command("Volume"), RequirePlayer]
+        public async Task VolumeAsync(int volume)
         {
-            _service = service;
+            if (volume < 0 || volume > 100)
+            {
+                await ReplyAsync("Volume must be between 0 and 100.");
+                return;
+            }
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player == null || !player.State.IsConnected)
+            {
+                await ReplyAsync("I'm not connected to a voice channel.");
+                return;
+            }
+            try
+            {
+                await player.SetVolumeAsync(lavaNode, volume);
+                await ReplyAsync($"Volume set to {volume}%.");
+            }
+            catch (Exception exception)
+            {
+                await ReplyAsync(exception.Message);
+            }
         }
-
-        /* Get our AudioService from DI */
-        //public AudioService AudioService { get; set; }
-
-        /* All the below commands are ran via Lambda Expressions to keep this file as neat and closed off as possible. 
-              We pass the AudioService Task into the section that would normally require an Embed as that's what all the
-              AudioService Tasks are returning. */
-        /*
-                [Command("Join")]
-                public async Task JoinAndPlay()
-                    => await ReplyAsync("", false,
-                        await AudioService.JoinOrPlayAsync((SocketGuildUser) Context.User, Context.Channel, Context.Guild.Id));
-
-                [Command("Leave")]
-                public async Task Leave()
-                {
-                    if (((SocketGuildUser) Context.User).VoiceChannel.Id == Context.Guild.CurrentUser.VoiceChannel.Id)
-                    {
-                        await ReplyAsync("", false, await AudioService.LeaveAsync(Context.Guild.Id));
-                    }
-                    else
-                    {
-                        var embed = await EmbedHandler.CreateErrorEmbed("Music, Leave", "You need to be in the same voice channel as me!");
-                        await ReplyAsync("", false, embed);
-                    }
-                }
-
-
-                [Command("Play")]
-                public async Task Play([Remainder] string search)
-                    => await ReplyAsync("", false,
-                        await AudioService.JoinOrPlayAsync((SocketGuildUser) Context.User, Context.Channel, Context.Guild.Id,
-                            search));
-
-                [Command("Stop")]
-                public async Task Stop()
-                    => await ReplyAsync("", false, await AudioService.StopAsync(Context.Guild.Id));
-
-                [Command("Queue")]
-                public async Task List()
-                    => await ReplyAsync("", false, await AudioService.ListAsync(Context.Guild.Id));
-
-                [Command("Skip")]
-                public async Task Delist(string id = null)
-                    => await ReplyAsync("", false, await AudioService.SkipTrackAsync(Context.Guild.Id));
-
-                [Command("Volume")]
-                public async Task Volume(int volume)
-                    => await ReplyAsync(await AudioService.VolumeAsync(Context.Guild.Id, volume));
-
-                [Command("Pause")]
-                public async Task Pause()
-                    => await ReplyAsync(await AudioService.Pause(Context.Guild.Id));
-
-                [Command("Resume")]
-                public async Task Resume()
-                    => await ReplyAsync(await AudioService.Pause(Context.Guild.Id));
-
-            }*/
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-// You *MUST* mark these commands with 'RunMode.Async'
-// otherwise the bot will not respond until the Task times out.
-[Command("join", RunMode = RunMode.Async)]
-public async Task JoinCmd()
-{
-    IVoiceChannel channel = (Context.User as IVoiceState).VoiceChannel;
-    if (channel != null)
-    {
-        await _service.JoinAudio(Context.Guild, (Context.User as IVoiceState).VoiceChannel);
-        await Context.Channel.SendMessageAsync("Joined " + (Context.User as IVoiceState).VoiceChannel.Name);
-    }
-    else
-    {
-        await Context.Channel.SendMessageAsync("You need to be in a voice channel first!");
-    }
-}
-// Remember to add preconditions to your commands,
-// this is merely the minimal amount necessary.
-// Adding more commands of your own is also encouraged.
-[Command("leave", RunMode = RunMode.Async)]
-public async Task LeaveCmd()
-{
-    await _service.LeaveAudio(Context.Guild);
-    await Context.Channel.SendMessageAsync("Left " + (Context.User as IVoiceState).VoiceChannel.Name);
-}
-[Command("playtest", RunMode = RunMode.Async)]
-public async Task play(params string[] keywords)
-{
-    try
-    {
-        IVoiceChannel channel = (Context.User as IVoiceState).VoiceChannel;
-        if (channel != null)
+        [Command("Seek"), RequirePlayer]
+        public async Task SeekAsync([Remainder] string time)
         {
-            await _service.JoinAudio(Context.Guild, (Context.User as IVoiceState).VoiceChannel);
-            string searchquery = String.Join(" ", keywords);
-            await Context.Channel.SendMessageAsync($"<:youtube:396008245359149057> **Searching** :mag_right: `{searchquery}`");
-            var items = new VideoSearch();
-            var item = items.SearchQuery(searchquery, 1);
-            string url = item.First().Url;
-            string rawtitle = item.First().Title;
-            var thingy = CodePagesEncodingProvider.Instance.GetEncoding(1252);
-            byte[] bytes = thingy.GetBytes(rawtitle);
-            var title = Encoding.UTF8.GetString(bytes);
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?play with success! (" + searchquery + ") (" + rawtitle + ") (" + Context.Guild.Name + ")");
-
-            if (!queue2.ContainsKey(Context.Guild.Id))
+            if (string.IsNullOrWhiteSpace(time))
             {
-                queue2.Add(Context.Guild.Id, queue);
-                queue2[Context.Guild.Id].Add(url);
+                await ReplyAsync("Please provide a time to seek to (e.g., 00:01:30 or 5:30).\nFormat: [hh:]mm:ss");
+                return;
             }
-            else
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player == null || !player.State.IsConnected)
             {
-                queue2[Context.Guild.Id].Add(url);
+                await ReplyAsync("I'm not connected to a voice channel.");
+                return;
             }
-
-            if (queue2[Context.Guild.Id].Count == 1)
+            if (player.Track == null)
             {
-                await Context.Channel.SendMessageAsync($"**Playing** :notes: `{rawtitle}` - Now! " + item.First().Duration);
+                await ReplyAsync("I'm not currently playing anything.");
+                return;
             }
-            else
+            TimeSpan seekTime = TimeSpan.Zero;
+            string[] formats = { "hh\\:mm\\:ss", "m\\:ss", "mm\\:ss" };
+            bool parsed = false;
+            foreach (var fmt in formats)
             {
-                await ReplyAsync($"Added `{rawtitle}` to the queue");
-            }
-
-            if (queue2[Context.Guild.Id].Count == 1)
-            {
-                foreach (var song in queue2[Context.Guild.Id])
+                if (TimeSpan.TryParseExact(time, fmt, CultureInfo.InvariantCulture, out seekTime))
                 {
-                    await _service.SendLinkAudioAsync(Context.Guild, Context.Channel, song);
-                    queue2[Context.Guild.Id].RemoveAt(0);
+                    parsed = true;
+                    break;
                 }
             }
+            if (!parsed)
+            {
+                await ReplyAsync("Invalid time format. Please use hh:mm:ss or mm:ss (e.g., 5:30 for 5 minutes 30 seconds).");
+                return;
+            }
+            if (seekTime < TimeSpan.Zero || seekTime > player.Track.Duration)
+            {
+                await ReplyAsync($"Seek time must be between 0 and {player.Track.Duration}.");
+                return;
+            }
+            try
+            {
+                await player.SeekAsync(lavaNode, seekTime);
+                await ReplyAsync($"Seeked to {seekTime} in {player.Track.Title}.");
+            }
+            catch (Exception exception)
+            {
+                await ReplyAsync(exception.Message);
+            }
         }
-        else
+        [Command("playerstate"), RequirePlayer]
+        public async Task PlayerStateAsync()
         {
-            await Context.Channel.SendMessageAsync("You need to be in a voice channel first!");
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?play and failed! (NotInVoiceChannelException)" + " (" + Context.Guild.Name + ")");
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player == null)
+            {
+                await ReplyAsync("I'm not connected to a voice channel.");
+                return;
+            }
+            var embed = new EmbedBuilder()
+                .WithTitle("Player State")
+                .AddField("Is Connected", player.State.IsConnected)
+                .AddField("Ping", player.State.Ping)
+                .AddField("Is Paused", player.IsPaused)
+                .AddField("Is Playing", player.Track != null)
+                .AddField("Queue Count", player.GetQueue().Count)
+                .AddField("Player Volume", player.Volume)
+                .AddField("Current Track", player.Track?.Title ?? "No track playing")
+                .WithColor(Color.Blue)
+                .Build();
+            await ReplyAsync(embed: embed);
         }
-    }
-    catch(Exception ex)
-    {
-        Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just cancelled ?play! (" + ex.GetType().ToString() + ") (" + Context.Guild.Name + ")");
-        Console.WriteLine(ex.StackTrace);
+        [Command("ClearQueue"), RequirePlayer]
+        public async Task ClearQueueAsync()
+        {
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player == null || !player.State.IsConnected)
+            {
+                await ReplyAsync("I'm not connected to a voice channel.");
+                return;
+            }
+            player.GetQueue().Clear();
+            await ReplyAsync("Cleared the queue.");
+        }
+        [Command("ShuffleQueue"), RequirePlayer]
+        public async Task ShuffleQueueAsync()
+        {
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player == null || !player.State.IsConnected)
+            {
+                await ReplyAsync("I'm not connected to a voice channel.");
+                return;
+            }
+            var queue = player.GetQueue();
+            if (queue.Count == 0)
+            {
+                await ReplyAsync("The queue is empty, nothing to shuffle.");
+                return;
+            }
+            queue.Shuffle();
+            await ReplyAsync("Shuffled the queue.");
+        }
+        [Command("Remove"), RequirePlayer]
+        public async Task RemoveAtAsync(int index)
+        {
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player == null || !player.State.IsConnected)
+            {
+                await ReplyAsync("I'm not connected to a voice channel.");
+                return;
+            }
+            if (index == 0)
+            {
+                await ReplyAsync("You cannot remove the currently playing track using this command. Use `skip` command to skip current track.");
+                return;
+            }
+            var queue = player.GetQueue();
+            index--; // Convert to 0-based index since queue is 0-based but user input is 1-based from the queue command
+            if (!queue.Any())
+            {
+                await ReplyAsync("The queue is empty, nothing to remove.");
+                return;
+            }
+            if (index < 0 || index >= queue.Count)
+            {
+                await ReplyAsync($"Invalid index. Please provide a number between 1 and {queue.Count - 1}.");
+                return;
+            }
+            var removedTrack = queue.ElementAt(index);
+            queue.RemoveAt(index);
+            await ReplyAsync($"Removed {removedTrack.Title} from the queue at index {index+1}.");
+        }
     }
 }
-[Command("queue", RunMode = RunMode.Async)]
-public async Task queuee()
-{
-    EmbedBuilder builder = new EmbedBuilder()
-    {
-        Title = $"Queue for {Context.Guild.Name}",
-        Color = new Color(0, 0, 255),
-        Description = string.Join("\n", queue2[Context.Guild.Id])
-    };
-    var embed = builder.Build();
-    await ReplyAsync("", false, embed);
-}
-/*public async Task handlequeueAsync()
-{
-    repeat:
-    {
-        if (currentlyplaying == 0)
-        {
-            currentlyplaying = 1;
-
-            queue.RemoveAt(0);
-            currentlyplaying = 0;
-        }
-        else
-        {
-            goto repeat;
-        }
-        goto repeat;
-    }
-}*/
-/*
-[Command("stop", RunMode = RunMode.Async)]
-public async Task stopcmd()
-{
-    await _service.StopAudioAsync(Context.Guild);
-}
-[Command("queue", RunMode = RunMode.Async)]
-public async Task queuelist()
-{
-    string queuelist = String.Join("`\n`", queue.ToArray());
-    await Context.Channel.SendMessageAsync("Queue for " + Context.Guild.Name + "\n" + queuelist);
-}
-private Process CreateLinkStream(string url)
-{
-    Process currentsong = new Process();
-
-    currentsong.StartInfo = new ProcessStartInfo
-    {
-        FileName = "bash",
-        Arguments = $"youtube-dl -o - {url} | ffmpeg -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1",
-        UseShellExecute = false,
-        RedirectStandardOutput = true,
-        CreateNoWindow = true
-    };
-
-    currentsong.Start();
-    return currentsong;
-}
-        [Command("gulag", RunMode = RunMode.Async)]
-    public async Task gulag(IGuildUser user = null)
-    {
-        if (Context.Guild.Id == 377403749754339329)
-        {
-            if (user != null)
-            {
-                var currentVoiceChannel = (user as IGuildUser).VoiceChannel;
-                if (currentVoiceChannel != null)
-                {
-                    await Context.Channel.SendMessageAsync("To the Gulag with you!" +
-                        "\nhttps://cdn.discordapp.com/attachments/415082173759225856/431436282930135040/tenor.gif");
-                    await (user as IGuildUser).ModifyAsync(x => x.ChannelId = 378630009629310976);
-                    await Task.Delay(200);
-                    await _service.JoinAudio(Context.Guild, (Context.User as IGuildUser).VoiceChannel);
-                    await _service.SendLinkAudioAsync(Context.Guild, Context.Channel, "https://www.youtube.com/watch?v=U06jlgpMtQs");
-                    Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?gulag with success!" + " (" + Context.Guild.Name + ")");
-                }
-                else
-                {
-                    await Context.Channel.SendMessageAsync((user as IGuildUser).Username + " is not in a voice channel!");
-                    Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?gulag and failed! (NotInVoiceChannelException)" + " (" + Context.Guild.Name + ")");
-                }
-            }
-            else
-            {
-                user = (Context.User as IGuildUser);
-                var currentVoiceChannel = (user as IGuildUser).VoiceChannel;
-                if (currentVoiceChannel != null)
-                {
-                    await Context.Channel.SendMessageAsync("To the Gulag with you!");
-                    await (user as IGuildUser).ModifyAsync(x => x.ChannelId = 378630009629310976);
-                    await Task.Delay(200);
-                    await _service.JoinAudio(Context.Guild, (Context.User as IGuildUser).VoiceChannel);
-                    await _service.SendLinkAudioAsync(Context.Guild, Context.Channel, "https://www.youtube.com/watch?v=U06jlgpMtQs");
-                    Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?gulag with success!" + " (" + Context.Guild.Name + ")");
-                }
-                else
-                {
-                    await Context.Channel.SendMessageAsync("You are not in a voice channel!");
-                    Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?gulag and failed! (NotInVoiceChannelException)" + " (" + Context.Guild.Name + ")");
-                }
-            }
-        }
-        else
-        {
-            await Context.Channel.SendMessageAsync("Wrong server buddy!");
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?gulag and failed! (WrongServerException)" + " (" + Context.Guild.Name + ")");
-        }
-    }
-[Command("rickroll", RunMode = RunMode.Async)]
-public async Task rickroll(IGuildUser user = null)
-{
-    try
-    {
-        rand = new Random();
-        rickrolls = new string[]
-        {
-            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-            "https://www.youtube.com/watch?v=lXMskKTw3Bc",
-            "https://www.youtube.com/watch?v=gzSxBoxxzVM"
-        };
-        if (user != null)
-        {
-            var currentVoiceChannel = (user as IGuildUser).VoiceChannel;
-            if (currentVoiceChannel != null)
-            {
-                await Context.Channel.SendMessageAsync("Rickrolling...");
-                await _service.JoinAudio(Context.Guild, (user as IGuildUser).VoiceChannel);
-                int randomFileIndex = rand.Next(rickrolls.Length);
-                int pictureNumber = randomFileIndex + 1;
-                string fileToPost = rickrolls[randomFileIndex];
-                await _service.SendLinkAudioAsync(Context.Guild, Context.Channel, fileToPost);
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rickroll with success!" + " (" + Context.Guild.Name + ")");
-            }
-            else
-            {
-                await Context.Channel.SendMessageAsync("your target must be in a voice channel before i can rickroll");
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rickroll and failed! (NotInVoiceChannelException)" + " (" + Context.Guild.Name + ")");
-            }
-        }
-        else
-        {
-            user = (Context.User as IGuildUser);
-            var currentVoiceChannel = (user as IGuildUser).VoiceChannel;
-            if (currentVoiceChannel != null)
-            {
-                await Context.Channel.SendMessageAsync("Rickrolling...");
-                await _service.JoinAudio(Context.Guild, (Context.User as IGuildUser).VoiceChannel);
-                int randomFileIndex = rand.Next(rickrolls.Length);
-                int pictureNumber = randomFileIndex + 1;
-                string fileToPost = rickrolls[randomFileIndex];
-                await _service.SendLinkAudioAsync(Context.Guild, Context.Channel, fileToPost);
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rickroll with success!" + " (" + Context.Guild.Name + ")");
-            }
-            else
-            {
-                await Context.Channel.SendMessageAsync("You must be in a voice channel before i can rickroll!");
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?rickroll and failed! (NotInVoiceChannelException)" + " (" + Context.Guild.Name + ")");
-            }
-        }
-    }
-    catch (Exception)
-    {
-        await Context.Channel.SendMessageAsync("Rickroll canceled!");
-        Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just cancelled rickroll!" + " (" + Context.Guild.Name + ")");
-    }
-}*/

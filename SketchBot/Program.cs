@@ -58,7 +58,6 @@ namespace Sketch_Bot
         ulong _channelid;
 
         public bool _databaseActive;
-        private ILogger _loggerFactory;
 
         private Program()
         {
@@ -73,9 +72,13 @@ namespace Sketch_Bot
                 .AddSingleton(_client)
                 .AddLogging(x => {
                     x.ClearProviders();
+                    x.AddConsole();
                     x.SetMinimumLevel(LogLevel.Trace);
                 })
-                .AddLavaNode()
+                .AddLavaNode(x =>
+                {
+                    x.SelfDeaf = false;
+                })
                 .AddSingleton<AudioService>()
                 .AddSingleton<InteractiveService>()
                 .AddSingleton<TimerService>()

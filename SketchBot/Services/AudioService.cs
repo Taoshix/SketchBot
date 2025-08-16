@@ -16,6 +16,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Victoria;
+using Victoria.Enums;
 using Victoria.WebSocket.EventArgs;
 
 namespace Sketch_Bot.Services
@@ -45,6 +46,14 @@ namespace Sketch_Bot.Services
             _lavaNode.OnPlayerUpdate += OnPlayerUpdateAsync;
             _lavaNode.OnTrackEnd += OnTrackEndAsync;
             _lavaNode.OnTrackStart += OnTrackStartAsync;
+            _lavaNode.OnTrackStuck += OnTrackStuck;
+            _lavaNode.OnTrackException += OnTrackExceptionAsync;
+        }
+
+        private Task OnTrackExceptionAsync(TrackExceptionEventArg arg)
+        {
+            return SendAndLogMessageAsync(arg.GuildId,
+                $"Track {arg.Track.Title} encountered an error: {arg.Exception.Message}");
         }
 
         private Task OnTrackStartAsync(TrackStartEventArg arg)
@@ -53,9 +62,25 @@ namespace Sketch_Bot.Services
                 $"Now playing: {arg.Track.Title}");
         }
 
-        private Task OnTrackEndAsync(TrackEndEventArg arg)
+        private async Task OnTrackEndAsync(TrackEndEventArg arg)
         {
-            return SendAndLogMessageAsync(arg.GuildId, $"{arg.Track.Title} ended with reason: {arg.Reason}");
+
+            if (arg.Reason != TrackEndReason.Finished)
+            {
+                return;
+            }
+
+            LavaTrack track = arg.Track;
+            await SendAndLogMessageAsync(arg.GuildId,$"Track {track.Title} ended!");
+
+            LavaPlayer<LavaTrack> player = await _lavaNode.TryGetPlayerAsync(arg.GuildId);
+            var queue = player.GetQueue();
+            if(queue.Count > 0)
+            {
+                var nextTrack = queue.FirstOrDefault();
+                queue.RemoveAt(0);
+                await player.PlayAsync(_lavaNode, nextTrack);
+            }
         }
 
         private Task OnPlayerUpdateAsync(PlayerUpdateEventArg arg)
@@ -89,6 +114,11 @@ namespace Sketch_Bot.Services
                     .GetGuild(guildId)
                     .GetChannel(textChannelId) as ITextChannel)
                 .SendMessageAsync(message);
+        }
+        private Task OnTrackStuck(TrackStuckEventArg arg)
+        {
+            return SendAndLogMessageAsync(arg.GuildId,
+                $"Track {arg.Track.Title} got stuck. Threshold: {arg.Threshold}");
         }
     }
 }
