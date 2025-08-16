@@ -23,7 +23,7 @@ COPY --from=build-env /out .
 COPY SketchBot/LavaLink ./LavaLink
 
 # Use a shell script to run both processes
-COPY --from=build-env ./start.sh /app/start.sh
+COPY start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
 ENTRYPOINT ["/app/start.sh"]
