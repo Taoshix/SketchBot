@@ -44,7 +44,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireUserPermission(GuildPermission.ManageRoles)]
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("addrole", "Add a role for leveling")]
+        [SlashCommand("Addrole", "Add a role for leveling")]
         public async Task Addrole(IRole role, int level)
         {
             await DeferAsync();
@@ -59,7 +59,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireUserPermission(GuildPermission.ManageRoles)]
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("removerole", "Remove a role for leveing")]
+        [SlashCommand("Removerole", "Remove a role for leveing")]
         public async Task Removerole(IRole role)
         {
             await DeferAsync();
@@ -72,7 +72,7 @@ namespace Sketch_Bot.Modules
             ServerSettingsDB.RemoveRole(Context.Guild.Id.ToString(), role.Id.ToString());
             await FollowupAsync(role.Name + " has been removed");
         }
-        [SlashCommand("youtube", "Searches YouTube and returns the first result")]
+        [SlashCommand("Youtube", "Searches YouTube and returns the first result")]
         public async Task youtube(string searchquery)
         {
             await DeferAsync();
@@ -82,12 +82,12 @@ namespace Sketch_Bot.Modules
             await FollowupAsync(url);
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("roleinfo", "Displays info about a role")]
+        [SlashCommand("Roleinfo", "Displays info about a role")]
         public async Task roleinfo(IRole role)
         {
             await DeferAsync();
             var rolelist = role.Permissions.ToList();
-            string roleliststring = String.Join("\n", rolelist);
+            string roleliststring = string.Join("\n", rolelist);
             var embed = new EmbedBuilder()
             {
                 Color = role.Color
@@ -104,14 +104,14 @@ namespace Sketch_Bot.Modules
             var builtEmbed = embed.Build();
             await FollowupAsync("", embed: builtEmbed);
         }
-        [SlashCommand("rune", "Rune............")]
+        [SlashCommand("Rune", "Rune............")]
         public async Task rune()
         {
             await DeferAsync();
             await FollowupAsync("The man of 2017. The hero we don't need, but deserve.");
         }
         [RequireContext(ContextType.Guild)]
-        [UserCommand("stats")]
+        [UserCommand("Stats")]
         //[Alias("level","profile")]
         public async Task userstatus(IUser user)
         {
@@ -148,8 +148,45 @@ namespace Sketch_Bot.Modules
             await FollowupAsync("", [builtEmbed]);
         }
         [RequireContext(ContextType.Guild)]
+        [SlashCommand("Stats", "Display a user's level and token")]
+        //[Alias("level","profile")]
+        public async Task slashuserstatus(IUser user)
+        {
+            await DeferAsync();
+            if (user.IsBot)
+            {
+                await FollowupAsync("Bots don't have stats");
+                return;
+            }
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
+            var embed = new EmbedBuilder()
+            {
+                Color = new Discord.Color(0, 0, 255)
+            };
+            var name = (user as IGuildUser).Nickname ?? user.Username;
+            Database.CreateTable(Context.Guild.Id.ToString());
+            var result = Database.CheckExistingUser(user as IGuildUser);
+
+            if (!result.Any())
+            {
+                Database.EnterUser(user as IGuildUser);
+            }
+
+            var userTable = Database.GetUserStatus(user as IGuildUser) ?? throw new ArgumentNullException("Database.GetUserStatus(user)");
+            embed.Title = "Stats for " + name;
+            embed.Description = userTable.FirstOrDefault().Tokens + " tokens:small_blue_diamond:" +
+                "\nLevel " + userTable.FirstOrDefault().Level +
+                "\nXP " + userTable.FirstOrDefault().XP + " out of " + XP.caclulateNextLevel(userTable.FirstOrDefault().Level);
+            var builtEmbed = embed.Build();
+            await FollowupAsync("", [builtEmbed]);
+        }
+        [RequireContext(ContextType.Guild)]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
-        [SlashCommand("setwelcome", "Sets the welcome channel for welcome messages")]
+        [SlashCommand("Setwelcome", "Sets the welcome channel for welcome messages")]
         public async Task setwelcome()
         {
             await DeferAsync();
@@ -164,7 +201,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
-        [SlashCommand("unsetwelcome", "Disables welcome messages")]
+        [SlashCommand("Unsetwelcome", "Disables welcome messages")]
         public async Task unsetwelcome()
         {
             await DeferAsync();
@@ -177,7 +214,7 @@ namespace Sketch_Bot.Modules
             await FollowupAsync("Welcome messages has been disabled");
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("disablelevelmsg", "Disables level up messages")]
+        [SlashCommand("Disablelevelmsg", "Disables level up messages")]
         public async Task disableleveling()
         {
             await DeferAsync();
@@ -190,7 +227,7 @@ namespace Sketch_Bot.Modules
             await FollowupAsync("Levelup messages are now disabled!");
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("enablelevelmsg", "Enables level up messages")]
+        [SlashCommand("Enablelevelmsg", "Enables level up messages")]
         public async Task enableleveling()
         {
             await DeferAsync();
@@ -203,7 +240,7 @@ namespace Sketch_Bot.Modules
             await FollowupAsync("Levelup messages are now enabled!");
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("setmodlog", "Sets the modlog channel")]
+        [SlashCommand("Setmodlog", "Sets the modlog channel")]
         public async Task setmodlog()
         {
             await DeferAsync();
@@ -223,7 +260,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("You don't have `ManageChannels` permission");
             }
         }
-        [SlashCommand("duck", "Posts a random picture of a dog")]
+        [SlashCommand("Duck", "Posts a random picture of a dog")]
         public async Task duck()
         {
             await DeferAsync();
@@ -239,7 +276,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync(catImage);
             }
         }
-        [SlashCommand("dog", "Posts a random picture of a dog")]
+        [SlashCommand("Dog", "Posts a random picture of a dog")]
         public async Task dog()
         {
             await DeferAsync();
@@ -256,7 +293,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("unsetmodlog", "Disables the mod logging")]
+        [SlashCommand("Unsetmodlog", "Disables the mod logging")]
         public async Task unsetmodlog()
         {
             await DeferAsync();
@@ -428,14 +465,14 @@ namespace Sketch_Bot.Modules
             }
         }
         */
-        [SlashCommand("activity", "Launch a discord activity in a voice channel!")]
+        [SlashCommand("Activity", "Launch a discord activity in a voice channel!")]
         public async Task Activity(IVoiceChannel chan, DefaultApplications app)
         {
             await DeferAsync();
             var invite = await chan.CreateInviteToApplicationAsync(app);
             await Context.Interaction.FollowupAsync(invite.Url);
         }
-        [SlashCommand("emote", "Enlargens an emote")]
+        [SlashCommand("Emote", "Enlargens an emote")]
         public async Task emote(string emote)
         {
             await DeferAsync();
@@ -453,7 +490,7 @@ namespace Sketch_Bot.Modules
         [RequireBotPermission(GuildPermission.ManageChannels)]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("slowmode", "Sets the slowmode of a channel to the input seconds")]
+        [SlashCommand("Slowmode", "Sets the slowmode of a channel to the input seconds")]
         public async Task slowmode(int seconds)
         {
             if (seconds < 21600)
@@ -467,12 +504,12 @@ namespace Sketch_Bot.Modules
             }
         }
         [Ratelimit(1, 2, Measure.Seconds, RatelimitFlags.None)]
-        [SlashCommand("memegen", "Generates a meme")]
+        [SlashCommand("Memegen", "Generates a meme")]
         public async Task MemeAsync(string templateName, string topText, string bottomText)
         {
             await DeferAsync();
             var service = _service2.GetMemeService();
-            var template = await service.GetMemeTemplateAsync(templateName);
+            var template = await service.GetMemeTemplateAsync(templateName); // TODO: Make a list and auto complete this
             if (template == null)
             {
                 await FollowupAsync("Template not found.\nhttps://api.imgflip.com/popular_meme_ids");

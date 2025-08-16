@@ -56,7 +56,7 @@ namespace Sketch_Bot.Modules
             _interactionService = service5;
         }
 
-        [SlashCommand("repeat", "Echo a message")]
+        [SlashCommand("Repeat", "Echo a message")]
         public async Task testt(string input)
         {
             await DeferAsync();
@@ -64,14 +64,14 @@ namespace Sketch_Bot.Modules
             
         }
         [RequireUserPermission(GuildPermission.SendTTSMessages)]
-        [SlashCommand("repeattts", "Echo a message")]
+        [SlashCommand("Repeattts", "Echo a message")]
         public async Task repeattts(string input)
         {
             await DeferAsync();
             await FollowupAsync($"{Context.User.Mention} < {input}", null, true);
             
         }
-        [SlashCommand("rate", "Rates something out of 100")]
+        [SlashCommand("Rate", "Rates something out of 100")]
         public async Task Rate(string input)
         {
             await DeferAsync();
@@ -116,7 +116,7 @@ namespace Sketch_Bot.Modules
             }
         }
 
-        [SlashCommand("roll", "Rolls between x and y")]
+        [SlashCommand("Roll", "Rolls between x and y")]
         public async Task roll(int min = 1, int max = 100)
         {
             await DeferAsync();
@@ -140,7 +140,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("The number has to be between 0 and 2147483647!");
             }
         }
-        [SlashCommand("hello", "Hello")]
+        [SlashCommand("Hello", "Hello")]
         public async Task hello()
         {
             await DeferAsync();
@@ -154,13 +154,13 @@ namespace Sketch_Bot.Modules
             }
             
         }
-        [SlashCommand("donate", "Sends a link for donations")]
+        [SlashCommand("Donate", "Sends a link for donations")]
         public async Task donate()
         {
             await DeferAsync();
             await FollowupAsync("https://www.patreon.com/Sketch_Bot");
         }
-        [SlashCommand("upvote", "Sends a link for upvoting the bot")]
+        [SlashCommand("Upvote", "Sends a link for upvoting the bot")]
         public async Task upvote()
         {
             await DeferAsync();
@@ -175,7 +175,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("You have not voted today");
             }
         }
-        [SlashCommand("gamble", "Gamble tokens")]
+        [SlashCommand("Gamble", "Gamble tokens")]
         public async Task gamble(long amount)
         {
             await DeferAsync();
@@ -231,7 +231,7 @@ namespace Sketch_Bot.Modules
                 }
             }
         }
-        [SlashCommand("gambleall", "Gambles all of your tokens")]
+        [SlashCommand("Gambleall", "Gambles all of your tokens")]
         public async Task gambleall()
         {
             await DeferAsync();
@@ -287,7 +287,7 @@ namespace Sketch_Bot.Modules
                 }
             }
         }
-        [SlashCommand("ping", "Pong")]
+        [SlashCommand("Ping", "Pong")]
         public async Task ping()
         {
             await DeferAsync();
@@ -311,20 +311,13 @@ namespace Sketch_Bot.Modules
             
         */
         }
-        [SlashCommand("riskage", "Sends you a riskage")]
-        public async Task riskage()
-        {
-            await DeferAsync();
-            await FollowupWithFileAsync("DAB/riskage.jpg");
-            
-        }
-        [UserCommand("avatar")]
+        [UserCommand("Avatar")]
         public async Task avatar(IUser user)
         {
             await DeferAsync();
             await FollowupAsync(user.GetAvatarUrl(ImageFormat.Auto, 256));
         }
-        [SlashCommand("eightball", "Ask the 8ball a question")]
+        [SlashCommand("Eightball", "Ask the 8ball a question")]
         public async Task eightball(string input)
         {
             await DeferAsync();
@@ -347,136 +340,65 @@ namespace Sketch_Bot.Modules
         }
         [RequireBotPermission(GuildPermission.KickMembers)]
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("kick", "Kicks someone from the server")]
+        [SlashCommand("Kick", "Kicks someone from the server")]
         public async Task kick(IGuildUser user, string reason = "No reason")
         {
             await DeferAsync();
-            if (((IGuildUser)Context.User).GuildPermissions.KickMembers)
-            {
-                if (user != null)
-                {
-                    if (user.Id != 135446225565515776 || user.Id != 208624502878371840 || (Context.Client.CurrentUser as IGuildUser).GuildPermissions.KickMembers)
-                    {
-                        if (reason != null)
-                        {
-                            var embed = new EmbedBuilder(); ///starts embed///
-                            embed.WithColor(new Color(0x4900ff)); ///hexacode colours ///
-                            embed.Title = $" {user.Username} has been kicked from {user.Guild.Name}"; ///who was kicked///
-                            embed.Description = $"**Username: **{user.Username}" +
-                                $"\n**Guild Name: **{user.Guild.Name}" +
-                                $"\n**Kicked by: **{Context.User.Mention}!" +
-                                $"\n**Reason: **{reason}"; ///embed values///
-                            var builtEmbed = embed.Build();
-                            await (user as IGuildUser).KickAsync(reason);
-                            await FollowupAsync("", null, false, false, null, null, null, builtEmbed);///sends embed///
-                            /*
-                            if (ServerSettingsDB.GetModlogChannel(Context.Guild.Id.ToString()).FirstOrDefault().ModlogChannel != "(NULL)")
-                            {
-                                var moderationchannel = Context.Guild.GetTextChannel(UInt64.Parse(ServerSettingsDB.GetModlogChannel(Context.Guild.Id.ToString()).FirstOrDefault()?.ModlogChannel));
-                                var embed2 = new EmbedBuilder();
-                                embed2.Color = new Color(244, 66, 66);
-                                //embed2.WithColor(new Color(0xb72707));
-                                embed2.WithAuthor(auther =>
-                                { auther.Name = user.Id.ToString(); });
-                                embed2.Title = "Kick";
-                                embed2.Description = reason;
-                                embed2.AddField("Responsible Moderator", Context.User.Username + " (" + Context.User.Mention + ")")
-                                    .AddField("Victim", user.Username + " (" + user.Mention + ")");
-                                var builtEmbed2 = embed2.Build();
-                                await moderationchannel.SendMessageAsync("", false, builtEmbed2);
-                            }
-                            */
-                        }
-                        else
-                        {
-                            await user.KickAsync(reason);
-                            
-                        }
-                    }
-                    else
-                    {
-                        await FollowupAsync("I don't have the permission to do so!");
-                    }
-                }
-                else
-                {
-                    await FollowupAsync("/kick <user> <reason>");
-                    
-                }
-            }
-            else
+            var currentUser = Context.User as IGuildUser;
+            if (currentUser == null || !currentUser.GuildPermissions.KickMembers)
             {
                 await FollowupAsync("You do not have Guild permission KickMembers");
-                
+                return;
             }
+            if (user == null)
+            {
+                await FollowupAsync("/kick <user> <reason>");
+                return;
+            }
+            if (!(Context.Client.CurrentUser as IGuildUser).GuildPermissions.KickMembers)
+            {
+                await FollowupAsync("I don't have the permission to do so!");
+                return;
+            }
+            var embed = new EmbedBuilder()
+                .WithColor(new Color(0x4900ff))
+                .WithTitle($"{user.Username} has been kicked from {user.Guild.Name}")
+                .WithDescription($"**Username: **{user.Username}\n**Guild Name: **{user.Guild.Name}\n**Kicked by: **{Context.User.Mention}!\n**Reason: **{reason}");
+            await user.KickAsync(reason);
+            await FollowupAsync("", null, false, false, null, null, null, embed.Build());
         }
         [RequireBotPermission(GuildPermission.BanMembers)]
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("ban", "Bans someone from the server")]
+        [SlashCommand("Ban", "Bans someone from the server")]
         public async Task banAsync(IGuildUser user, string reason = "No reason")
         {
             await DeferAsync();
-            if (((IGuildUser)Context.User).GuildPermissions.BanMembers == true)
-            {
-                if (user != null)
-                {
-                    if (user.Id != 135446225565515776 || user.Id != 208624502878371840 || (Context.Client.CurrentUser as IGuildUser).GuildPermissions.BanMembers)
-                    {
-                        if (reason != null)
-                        {
-                            var embed = new EmbedBuilder(); ///starts embed///
-                            embed.WithColor(new Color(0x4900ff)); ///hexacode colours ///
-                            embed.Title = $" {user.Username} has been banned from {user.Guild.Name}"; ///who was kicked///
-                            embed.Description = $"**Username: **{user.Username}" +
-                                $"\n**Guild Name: **{user.Guild.Name}" +
-                                $"\n**banned by: **{Context.User.Mention}!" +
-                                $"\n**Reason: **{reason}"; ///embed values///
-                            var builtEmbed = embed.Build();
-                            await Context.Guild.AddBanAsync(user, 7, reason);
-                            await FollowupAsync("", null, false, false, null, null, null, builtEmbed);///sends embed///
-                            /*
-                            if (ServerSettingsDB.GetModlogChannel(Context.Guild.Id.ToString()).FirstOrDefault()?.ModlogChannel != "(NULL)")
-                            {
-                                var moderationchannel = (Context.Guild.GetTextChannel(UInt64.Parse(ServerSettingsDB.GetSettings(Context.Guild.Id.ToString()).FirstOrDefault().ModlogChannel)));
-                                var embed2 = new EmbedBuilder();
-                                embed2.WithColor(new Color(0xb72707));
-                                embed2.WithAuthor(auther =>
-                                { auther.Name = user.Id.ToString(); });
-                                embed2.Title = "Ban";
-                                embed2.Description = reason;
-                                embed2.AddField("Responsible Moderator", Context.User.Username + " (" + Context.User.Mention + ")")
-                                    .AddField("Victim", user.Username + " (" + user.Mention + ")");
-                                var builtEmbed2 = embed2.Build();
-                                await moderationchannel.SendMessageAsync("", false, builtEmbed2);
-                            }
-                            */
-                        }
-                        else
-                        {
-                            await Context.Guild.AddBanAsync(user, 7, reason);
-                            
-                        }
-                    }
-                    else
-                    {
-                        await FollowupAsync("I don't have the permission to do so!");
-                    }
-                }
-                else
-                {
-                    await FollowupAsync("/ban <user> <reason>");
-                    
-                }
-            }
-            else
+            var currentUser = Context.User as IGuildUser;
+            if (currentUser == null || !currentUser.GuildPermissions.BanMembers)
             {
                 await FollowupAsync("You do not have Guild permission BanMembers");
-                
+                return;
             }
+            if (user == null)
+            {
+                await FollowupAsync("/ban <user> <reason>");
+                return;
+            }
+            if (!(Context.Client.CurrentUser as IGuildUser).GuildPermissions.BanMembers)
+            {
+                await FollowupAsync("I don't have the permission to do so!");
+                return;
+            }
+            var embed = new EmbedBuilder()
+                .WithColor(new Color(0x4900ff))
+                .WithTitle($"{user.Username} has been banned from {user.Guild.Name}")
+                .WithDescription($"**Username: **{user.Username}\n**Guild Name: **{user.Guild.Name}\n**Banned by: **{Context.User.Mention}!\n**Reason: **{reason}");
+            await Context.Guild.AddBanAsync(user, 7, reason);
+            await FollowupAsync("", null, false, false, null, null, null, embed.Build());
         }
         [RequireBotPermission(GuildPermission.BanMembers)]
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("unban", "Unbans someone from the server")]
+        [SlashCommand("Unban", "Unbans someone from the server")]
         public async Task unbanAsync(RestUser user, string reason = "No reason")
         {
             await DeferAsync();
@@ -486,41 +408,9 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync(user.Username + " has been unbanned" +
                     "\n" +
                     "\n" + reason);
-                /*
-                if (Context.Guild.Id == 380670135045849089)
-                {
-                    var moderationchannel = Context.Guild.GetTextChannel(430639577334808576);
-                    var embed2 = new EmbedBuilder();
-                    embed2.WithColor(new Color(0x42f483));
-                    embed2.WithAuthor(auther =>
-                    { auther.Name = user.Id.ToString(); });
-                    embed2.Title = "Unban | Case #" + casenumber;
-                    embed2.Description = reason;
-                    embed2.AddField("Responsible Moderator", Context.User.Username + " (" + Context.User.Mention + ")")
-                        .AddField("Victim", user.Username + " (" + user.Mention + ")");
-                    var builtEmbed2 = embed2.Build();
-                    await moderationchannel.SendMessageAsync("", false, builtEmbed2);
-                    casenumber++;
-                    System.IO.File.WriteAllText("casenumber.json", casenumber.ToString());
-                }
-                */
             }
         }
-        /*
-        [SlashCommand("riskage spil", "Placeholder description")]
-        public async Task riskagespil()
-        {
-            await FollowupAsync("https://scratch.mit.edu/projects/176501177/");
-            
-        }
-        [SlashCommand("pia", "Placeholder description")]
-        public async Task piasko()
-        {
-            await FollowupAsync("http://gonzoft.com/spil/dk/games/kaste_sko_pk/sheepspilley.html");
-            
-        }
-        */
-        [SlashCommand("status", "Checks to see if a website is up")]
+        [SlashCommand("Status", "Checks to see if a website is up")]
         public async Task status(string websiteUrl = "http://sketchbot.xyz")
         {
             await DeferAsync();
@@ -567,42 +457,55 @@ namespace Sketch_Bot.Modules
             }
             Console.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " Command     " + Context.User.Username + " just ran ?status with success!" + " (" + Context.Guild?.Name ?? "DM" + ")");
         }
-        /*
-        [SlashCommand("vuk", "Placeholder description")]
-        public async Task vuk()
-        {
-            await RespondAsync("In memory of Vuk");
-            await Context.Channel.SendFileAsync("DAB/vuk.jpg");
-            
-        }
-        */
         [RequireContext(ContextType.Guild)]
         [SlashCommand("nickname", "Changes your nickname")]
-        public async Task nickname(string input)
+        public async Task nickname(IGuildUser targetUser, string newNickname)
         {
             await DeferAsync();
-            string newNickname = string.Join(" ", input);
+
+            var guild = Context.Guild;
+            var botUser = guild.GetUser(Context.Client.CurrentUser.Id);
+            var commandUser = Context.User as IGuildUser;
+
+            if (!botUser.GuildPermissions.ManageNicknames)
+            {
+                await FollowupAsync("I do not have permission to manage nicknames.");
+                return;
+            }
+
+            // If no target specified, default to self
+            if (targetUser == null)
+                targetUser = commandUser;
+
+            if (!commandUser.GuildPermissions.ManageNicknames)
+            {
+                await FollowupAsync("You do not have permission to manage nicknames.");
+                return;
+            }
+
+            // Check role hierarchy
+            if (botUser.Hierarchy <= targetUser.Hierarchy)
+            {
+                await FollowupAsync("I cannot change the nickname of someone with a higher or equal role than me.");
+                return;
+            }
+            if (commandUser.Hierarchy <= targetUser.Hierarchy && targetUser != commandUser)
+            {
+                await FollowupAsync("You cannot change the nickname of someone with a higher or equal role than you.");
+                return;
+            }
+
             try
             {
-                await (Context.User as IGuildUser)?.ModifyAsync(x => x.Nickname = newNickname);
+                await targetUser.ModifyAsync(x => x.Nickname = newNickname);
+                await FollowupAsync($"Nickname for {targetUser.Mention} changed to **{newNickname}**!");
             }
             catch
             {
-
-            }
-            if ((Context.User as IGuildUser)?.Nickname == newNickname)
-            {
-                await (Context.User as IGuildUser)?.ModifyAsync(x => x.Nickname = newNickname);
-                await FollowupAsync("Your Nickname is now **" + newNickname + "!**");
-                
-            }
-            else
-            {
-                await FollowupAsync("Your role is higher than mine or you already have the same nickname");
-                
+                await FollowupAsync("Failed to change nickname. This may be due to role hierarchy or permissions.");
             }
         }
-        [SlashCommand("cat", "Sends a random cat image")]
+        [SlashCommand("Cat", "Sends a random cat image")]
         public async Task Cat()
         {
             await DeferAsync();
@@ -626,7 +529,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("API didn't return anything");
             }
         }
-        [SlashCommand("fox", "Sends a random fox image")]
+        [SlashCommand("Fox", "Sends a random fox image")]
         public async Task fox()
         {
             await DeferAsync();
@@ -651,7 +554,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("API didn't return anything");
             }
         }
-        [SlashCommand("birb", "Sends a random birb bird image")]
+        [SlashCommand("Birb", "Sends a random birb bird image")]
         public async Task birb()
         {
             await DeferAsync();
@@ -678,7 +581,7 @@ namespace Sketch_Bot.Modules
             }
         }
 
-        [SlashCommand("calculate", "Calculates a math problem")]
+        [SlashCommand("Calculate", "Calculates a math problem")]
         public async Task calculateAsync(HelperFunctions.Calculation expression)
         {
             await DeferAsync();
@@ -693,7 +596,7 @@ namespace Sketch_Bot.Modules
         }
 
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("membercount", "Tells you how many users are in the guild")]
+        [SlashCommand("Membercount", "Tells you how many users are in the guild")]
         public async Task memcount()
         {
             await DeferAsync();
@@ -716,7 +619,7 @@ namespace Sketch_Bot.Modules
             
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("tokens", "Shows you how many tokens you have")]
+        [SlashCommand("Tokens", "Shows you how many tokens you have")]
         public async Task userstatus(IGuildUser user = null)
         {
             await DeferAsync();
@@ -725,10 +628,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            var embed = new EmbedBuilder()
-            {
-                Color = new Color(0, 0, 255)
-            };
+            
             if (user == null)
             {
                 user = Context.User as IGuildUser;
@@ -742,14 +642,17 @@ namespace Sketch_Bot.Modules
             }
 
             var userTable = Database.GetUserStatus(user);
-
-            embed.Description = (user.Mention + " has " + userTable.FirstOrDefault().Tokens + " tokens to spend!:small_blue_diamond:");
+            var embed = new EmbedBuilder()
+            {
+                Color = new Color(0, 0, 255),
+                Description = (user.Mention + " has " + userTable.FirstOrDefault().Tokens + " tokens to spend!:small_blue_diamond:")
+            };
             var builtEmbed = embed.Build();
             await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
             
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("leaderboard", "Server leaderboard of Tokens or Leveling")]
+        [SlashCommand("Leaderboard", "Server leaderboard of Tokens or Leveling")]
         public async Task leaderboard([Summary("Type"), Autocomplete(typeof(LeaderboardAutocompleteHandler))] string type, int index = 1)
         {
             await DeferAsync();
@@ -812,15 +715,7 @@ namespace Sketch_Bot.Modules
                     "\nTokens, Leveling");
             }
         }
-        [RequireContext(ContextType.Guild)]
-        [UserCommand("expose")]
-        public async Task expose(IUser user)
-        {
-            await DeferAsync();
-            await FollowupAsync(user.Mention + " just got exposed <:exposed:357837551886925844>");
-            
-        }
-        [SlashCommand("invite", "Invite me to your server")]
+        [SlashCommand("Invite", "Invite me to your server")]
         public async Task invite()
         {
             await DeferAsync();
@@ -829,7 +724,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireBotPermission(GuildPermission.ManageMessages)]
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("purge", "Purges messages from the channel")]
+        [SlashCommand("Purge", "Purges messages from the channel")]
         public async Task purge(uint amount)
         {
             await DeferAsync();
@@ -846,7 +741,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("award", "Give someone tokens")]
+        [SlashCommand("Award", "Give someone tokens")]
         public async Task Award(IUser user, int tokens, string comment = null)
         {
             await DeferAsync();
@@ -889,7 +784,7 @@ namespace Sketch_Bot.Modules
         }
         [Custom_Preconditions.Ratelimit(1,5,Custom_Preconditions.Measure.Minutes,Custom_Preconditions.RatelimitFlags.ApplyPerGuild)]
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("awardall", "Give everyone on the server some tokens")]
+        [SlashCommand("Awardall", "Give everyone on the server some tokens")]
         public async Task awardall(int tokens, string comment = "")
         {
             await DeferAsync();
@@ -935,7 +830,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("daily", "Claim your daily")]
+        [SlashCommand("Daily", "Claim your daily")]
         public async Task Daily(IGuildUser user = null)
         {
             await DeferAsync();
@@ -996,8 +891,8 @@ namespace Sketch_Bot.Modules
             }
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("pay", "Pay someone else some of your tokens")]
-        public async Task pay(IUser usertopay, int amount, string comment = null)
+        [SlashCommand("Pay", "Pay someone else some of your tokens")]
+        public async Task pay(IUser usertopay, int amount, string comment = "No comment")
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -1016,35 +911,21 @@ namespace Sketch_Bot.Modules
                     if (result2.Count >= 1)
                     {
                         var userTable = Database.GetUserStatus(user);
-                        var userToPay = Database.GetUserStatus(usertopay);
                         if (amount > 0)
                         {
                             if (userTable.FirstOrDefault().Tokens >= amount)
                             {
                                 Database.RemoveTokens(user, amount);
                                 Database.ChangeTokens(usertopay, amount);
-                                if (comment != null)
+                                var embed = new EmbedBuilder()
                                 {
-                                    var embed = new EmbedBuilder()
-                                    {
-                                        Color = new Color(0, 0, 255)
-                                    };
-                                    embed.Description = (user.Mention + " has paid " + usertopay.Mention + " " + amount + " tokens!" +
-                                        "\n" + comment);
-                                    var builtEmbed = embed.Build();
-                                    await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
-                                }
-                                else
-                                {
-                                    var embed = new EmbedBuilder()
-                                    {
-                                        Color = new Color(0, 0, 255)
-                                    };
-                                    embed.Description = (user.Mention + " has paid " + usertopay.Mention + " " + amount + " tokens!");
-                                    var builtEmbed = embed.Build();
-                                    await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
-                                    
-                                }
+                                    Color = new Color(0, 0, 255)
+                                };
+                                embed.Description = (user.Mention + " has paid " + usertopay.Mention + " " + amount + " tokens!" +
+                                    "\n" + comment);
+                                var builtEmbed = embed.Build();
+                                await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
+
                             }
                         }
                         else
@@ -1072,7 +953,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("You can't pay blacklisted users!");
             }
         }
-        [SlashCommand("info", "Displays info about the bot")]
+        [SlashCommand("Info", "Displays info about the bot")]
         public async Task info()
         {
             await DeferAsync();
@@ -1114,7 +995,7 @@ namespace Sketch_Bot.Modules
             await FollowupAsync("", null,false,false,null,null,null,embed);
         }
         [RequireContext(ContextType.Guild)]
-        [SlashCommand("serverinfo", "Displays info about the server")]
+        [SlashCommand("Serverinfo", "Displays info about the server")]
         public async Task serverinfo()
         {
             await DeferAsync();
@@ -1146,7 +1027,7 @@ namespace Sketch_Bot.Modules
             await FollowupAsync("", null,false,false,null,null,null,embed);
         }
         [RequireContext(ContextType.Guild)]
-        [UserCommand("userinfo")]
+        [UserCommand("Userinfo")]
         public async Task userinfo(IUser user)
         {
             await DeferAsync();
@@ -1179,6 +1060,41 @@ namespace Sketch_Bot.Modules
                 .AddField($"Roles [{((IGuildUser)user).RoleIds.Count}]", roles);
             var embed = builder.Build();
             await FollowupAsync("", null,false,false,null,null,null,embed);
+        }
+        [RequireContext(ContextType.Guild)]
+        [SlashCommand("Userinfo", "Displays information about the user")]
+        public async Task slashuserinfo(IUser user)
+        {
+            await DeferAsync();
+            EmbedBuilder builder = new EmbedBuilder()
+            {
+                ThumbnailUrl = user.GetAvatarUrl(),
+                Color = new Color(0, 0, 255),
+                Timestamp = DateTime.Now
+            };
+            builder.WithAuthor(author =>
+            {
+                author.Name = user.Username + user.Discriminator;
+                author.IconUrl = user.GetAvatarUrl();
+            });
+            builder.WithFooter(footer =>
+            {
+                footer.Text = $"ID: {user.Id}";
+            });
+            var users = Context.Guild.Users;
+            var userslist = users.OrderBy(o => o.JoinedAt).ToList();
+            var joinedpos = userslist.FindIndex(x => x.Id == user.Id);
+            var roles = "";
+            foreach (var role in ((IGuildUser)user).RoleIds)
+            {
+                roles += $"<@&{role}>\n";
+            }
+
+            builder.AddField("Joined", ((IGuildUser)user).JoinedAt, true).AddField("Join Position", joinedpos, true)
+                .AddField("Registered", user.CreatedAt)
+                .AddField($"Roles [{((IGuildUser)user).RoleIds.Count}]", roles);
+            var embed = builder.Build();
+            await FollowupAsync("", null, false, false, null, null, null, embed);
         }
         [SlashCommand("jojo", "Sends a random JoJo image")]
         public async Task Jojosbizzareadventure()
