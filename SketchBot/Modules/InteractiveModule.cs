@@ -288,36 +288,7 @@ namespace Sketch_Bot.Modules
                 await PagedReplyAsync(message, reactions);
             }
         }
-        [RequireContext(ContextType.Guild)]
-        [RequireUserPermission(GuildPermission.ManageGuild)]
-        [Command("resetuser", RunMode = RunMode.Async)]
-        public async Task resetuser(IGuildUser user)
-        {
-            if (user.Id == 135446225565515776)
-            {
-                await ReplyAsync("No!" +
-                    "\nMaybe I'll reset your stats instead if you are not careful");
-            }
-            else
-            {
-                await ReplyAsync("You sure?" +
-                    "\ntype `ConfirmReset` to continue");
-                var response = await NextMessageAsync(true, true, TimeSpan.FromSeconds(8));
-                if (response != null)
-                {
-                    if (response.Content == "ConfirmReset")
-                    {
-                        Database.DeleteUser(user);
-                        Database.EnterUser(user);
-                        await ReplyAsync($"{user.Mention} has been reset!");
-                    }
-                }
-                else
-                {
-                    await ReplyAsync("You did not confirm the reset before the timeout");
-                }
-            }
-        }
+
         [RequireContext(ContextType.Guild)]
         [Command("rolemembers", RunMode = RunMode.Async)]
         public async Task rolemembers([Remainder] SocketRole role)

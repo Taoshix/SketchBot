@@ -1,41 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using MoreLinq;
-using MoreLinq.Extensions;
-using System.Text;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
+using Discord.Addons.Interactive;
 using Discord.Audio;
-using Discord.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions;
 using Discord.Commands;
-using System.Reflection;
-using System.Threading;
-using Sketch_Bot.Modules;
-using System.Diagnostics;
-using System.Timers;
-using JikanDotNet;
+using Discord.Interactions;
 using Discord.Net;
 using Discord.Net.Rest;
-using Discord.Addons.Interactive;
-using Sketch_Bot.Services;
-using Sketch_Bot.Models;
-using System.Text.RegularExpressions;
-using OsuSharp;
 using Discord.Rest;
-using Victoria;
+using Discord.WebSocket;
+using JikanDotNet;
+using Microsoft.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using System.Net.Sockets;
-using Newtonsoft.Json;
-using Discord.Interactions;
-using Sketch_Bot.TypeConverters;
-using static Sketch_Bot.Models.HelperFunctions;
 using Microsoft.Extensions.Hosting;
-using OsuSharp.Extensions;
 using Microsoft.Extensions.Logging;
+using MoreLinq;
+using MoreLinq.Extensions;
+using MySqlX.XDevAPI;
+using Newtonsoft.Json;
+using OsuSharp;
+using OsuSharp.Extensions;
+using Sketch_Bot.Models;
+using Sketch_Bot.Modules;
+using Sketch_Bot.Services;
+using Sketch_Bot.TypeConverters;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
+using System.Net.Sockets;
+using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Timers;
+using Victoria;
+using static Sketch_Bot.Models.HelperFunctions;
 
 namespace Sketch_Bot
 {
@@ -128,6 +129,8 @@ namespace Sketch_Bot
             _client.MessageReceived += HandleCommandAsync;
             _client.UserUpdated += UpdateProfilePictures;
             _client.InteractionCreated += HandleInteraction;
+            _client.ButtonExecuted += MyButtonHandler;
+            _client.SelectMenuExecuted += MyMenuHandler;
             //_commands.CommandExecuted += OnCommandExecutedAsync;
         }
 
@@ -249,6 +252,34 @@ namespace Sketch_Bot
             });
             return Task.CompletedTask;
         }
+        public async Task MyButtonHandler(SocketMessageComponent component)
+        {
+            var baseId = component.Data.CustomId.Split(':').FirstOrDefault();
+            var args = component.Data.CustomId.Split(':').Skip(1).ToArray();
+            switch (baseId)
+            {
+                case "reset-user":
+                    if (!_provider.GetRequiredService<CachingService>()._dbConnected)
+                    {
+                        await component.RespondAsync("Database is not connected!");
+                        return;
+                    }
+                    if (component.User.Id != ulong.Parse(args.FirstOrDefault()))
+                    {
+                        await component.RespondAsync("You can only reset your own user data!", ephemeral: true);
+                        return;
+                    }
+                    Database.DeleteUser(component.User as SocketGuildUser);
+                    Database.EnterUser(component.User as SocketGuildUser);
+                    await component.RespondAsync("Your user data has been reset!");
+                    break;
+            }
+        }
+        public async Task MyMenuHandler(SocketMessageComponent arg)
+        {
+            var text = string.Join(", ", arg.Data.Values);
+            await arg.RespondAsync($"You have selected {text}");
+        }
         public int TotalMembers() => _client.Guilds.Sum(x => x.MemberCount);
         private Task GuildCountReady()
         {
@@ -312,87 +343,54 @@ namespace Sketch_Bot
             }
             CommandLine();
         }
-        public async Task CreateNewTable(SocketGuild socketGuild)
-        {
-            if (_provider.GetRequiredService<CachingService>()._dbConnected)
-            {
-                var cache = _provider.GetRequiredService<CachingService>();
-                var tablename = socketGuild.Id;
-                Database.CreateTable(tablename.ToString());
-                var castedguild = socketGuild as IGuild;
-                var socketusers = await castedguild.GetUsersAsync();
-                var castedusers = socketusers;
-                foreach (var users in castedusers)
-                {
-                    if (!users.IsBot && !cache.IsInDatabase(tablename, users.Id))
-                    {
-                        var result = Database.CheckExistingUser(users);
-
-                        if (!result.Any())
-                        {
-                            Database.EnterUser(users);
-                            cache.AddUser(tablename, users.Id);
-                        }
-                    }
-                }
-            }
-        }
         public async Task JoinedNewServer(SocketGuild socketGuild)
         {
-            if (_provider.GetRequiredService<CachingService>()._dbConnected)
+            if (!_provider.GetRequiredService<CachingService>()._dbConnected)
+                return;
+
+            try
             {
-                try
+                var guildId = socketGuild.Id.ToString();
+                var settings = ServerSettingsDB.GetSettings(guildId);
+                int levelup = socketGuild.MemberCount >= 100 ? 0 : 1;
+
+                if (!settings.Any())
+                    ServerSettingsDB.MakeSettings(guildId, levelup);
+
+                ServerSettingsDB.CreateTableWords(guildId);
+                Database.CreateTable(guildId);
+
+                foreach (var channel in socketGuild.TextChannels)
                 {
-                    var guildId = socketGuild.Id.ToString();
-                    //await Task.Delay(50);
-                    var prefix = ServerSettingsDB.GetSettings(socketGuild.Id.ToString());
-                    int levelup = 1;
-                    if (socketGuild.MemberCount >= 100)
+                    try
                     {
-                        levelup = 0;
-                    }
-                    if (!prefix.Any())
-                    {
-                        ServerSettingsDB.MakeSettings(guildId, levelup);
-                    }
-                    //await Task.Delay(50);
-                    ServerSettingsDB.CreateTableWords(guildId);
-                    //await Task.Delay(50);
-                    Database.CreateTable(guildId);
-                    //await Task.Delay(50);
-                    foreach (var channel in socketGuild.TextChannels)
-                    {
-                        try
-                        {
-                            await channel.SendMessageAsync("Thanks for inviting me to your server!" +
-                            "\nIf you want a channel for welcome messages, go to the channel and type " + "`/setwelcome`, to remove it type `/unsetwelcome`" +
+                        await channel.SendMessageAsync(
+                            "Thanks for inviting me to your server!" +
+                            "\nIf you want a channel for welcome messages, go to the channel and type `/setwelcome`, to remove it type `/unsetwelcome`" +
                             "\nIf you want to kick/bans logged in a channel when you use the kick/ban command, go to the channel and type `/setmodlog`, to remove it type `/unsetmodlog`" +
                             "\nIf you need help or have any questions, join my support server" +
                             "\nhttps://discord.gg/UPG8Vqb" +
                             "\nhttp://sketchbot.xyz" +
-                            "\n" +
                             "\n**If you are one of these people that hates levelup messages, then you disable them with `/DisableLevelMsg`**" +
-                            "\n**Levelup messages are disabled by default if your server has more than 100 members**");
-                            break;
-                        }
-                        catch (HttpException)
-                        {
-                            continue;
-                        }
+                            "\n**Levelup messages are disabled by default if your server has more than 100 members**"
+                        );
+                        break;
+                    }
+                    catch (HttpException)
+                    {
+                        // Try next channel
                     }
                 }
-                catch (Exception ex)
-                {
-                    var Taoshi = _client.GetUser(135446225565515776);
-                    EmbedBuilder builder = new EmbedBuilder()
-                    {
-                        Title = "Unable to do setup!",
-                        Description = ex.ToString(),
-                        Color = new Color(255, 0, 0)
-                    };
-                    var embed = builder.Build();
-                    await Taoshi.SendMessageAsync("", false, embed);
-                }
+            }
+            catch (Exception ex)
+            {
+                var taoshiUser = _client.GetUser(135446225565515776);
+                var embed = new EmbedBuilder()
+                    .WithTitle("Unable to do setup!")
+                    .WithDescription(ex.ToString())
+                    .WithColor(new Color(255, 0, 0))
+                    .Build();
+                await taoshiUser.SendMessageAsync("", false, embed);
             }
         }
         private Task giveXP(SocketMessage msg)
@@ -492,41 +490,45 @@ namespace Sketch_Bot
         {
             _ = Task.Run(async () =>
             {
-                if (_provider.GetRequiredService<CachingService>()._dbConnected)
-                {
-                    if (!user.IsBot)
-                    {
-                        var result = Database.CheckExistingUser(user);
-                        if (!result.Any())
-                        {
-                            Database.EnterUser(user);
-                        }
-                    }
-                    rand = new Random();
-                    var id = user.Guild.Id;
-                    var guildName = _client.GetGuild(id) as IGuild;
-                    var inviteUsed = await guildName.GetInvitesAsync();
-                    var orderedInviteUsed = inviteUsed.OrderBy(x => x.CreatedAt.Value.ToUnixTimeMilliseconds()).ThenBy(x => x.Uses).FirstOrDefault();
-                    var userTable = ServerSettingsDB.GetSettings(user.Guild.Id.ToString());
-                    await Task.Delay(100);
-                    var channell = userTable.FirstOrDefault().WelcomeChannel;
-                    await Task.Delay(100);
-                    if (channell == "(NULL)" || channell == null) return;
-                    await Task.Delay(100);
-                    var channelid = ulong.Parse(channell);
-                    await Task.Delay(100);
-                    var channel = user.Guild.GetTextChannel(channelid);
-                    await Task.Delay(100);
-                    var builder = new EmbedBuilder()
+                var cachingService = _provider.GetRequiredService<CachingService>();
+                if (!cachingService._dbConnected || user.IsBot)
+                    return;
+
+                // Ensure user is in database
+                if (!Database.CheckExistingUser(user).Any())
+                    Database.EnterUser(user);
+
+                // Get welcome channel
+                var settings = ServerSettingsDB.GetSettings(user.Guild.Id.ToString()).FirstOrDefault();
+                if (settings == null || string.IsNullOrEmpty(settings.WelcomeChannel) || settings.WelcomeChannel == "(NULL)")
+                    return;
+
+                if (!ulong.TryParse(settings.WelcomeChannel, out var channelId))
+                    return;
+
+                var channel = user.Guild.GetTextChannel(channelId);
+                if (channel == null)
+                    return;
+
+                // Get invite info
+                var guild = _client.GetGuild(user.Guild.Id) as IGuild;
+                var invites = await guild.GetInvitesAsync();
+                var invite = invites.OrderBy(x => x.CreatedAt?.UtcDateTime ?? DateTime.MinValue)
+                                    .ThenBy(x => x.Uses)
+                                    .FirstOrDefault();
+
+                var inviteUrl = invite?.Url ?? "N/A";
+                var inviter = invite?.Inviter?.ToString() ?? "Unknown";
+
+                // Build and send embed
+                var embed = new EmbedBuilder()
                     .WithTitle("Member Joined")
-                    .WithDescription($"Welcome {user.Mention} to {user.Guild.Name} Enjoy your stay!\nJoined with: {orderedInviteUsed.Url}\nReferred by: {orderedInviteUsed.Inviter}")
+                    .WithDescription($"Welcome {user.Mention} to {user.Guild.Name}! Enjoy your stay!\nJoined with: {inviteUrl}\nReferred by: {inviter}")
                     .WithColor(new Color(0x26E4A2))
-                    .WithThumbnailUrl(user.GetAvatarUrl());
-                    await Task.Delay(100);
-                    var embed = builder.Build();
-                    await Task.Delay(100);
-                    await channel.SendMessageAsync("", false, embed);
-                }
+                    .WithThumbnailUrl(user.GetAvatarUrl())
+                    .Build();
+
+                await channel.SendMessageAsync(embed: embed);
             });
             return Task.CompletedTask;
         }
@@ -534,60 +536,31 @@ namespace Sketch_Bot
         {
             _ = Task.Run(async () =>
             {
-                if (_provider.GetRequiredService<CachingService>()._dbConnected)
+                var cachingService = _provider.GetRequiredService<CachingService>();
+                if (!cachingService._dbConnected) return;
+
+                var author = socketMessage.Author;
+                var socketGuild = (author as SocketGuildUser)?.Guild;
+                if (socketGuild == null) return;
+
+                cachingService.SetupBadWords(socketGuild);
+                var badWords = cachingService.GetBadWords(socketGuild.Id).ToArray();
+
+                string embedDesc = socketMessage.Embeds?.FirstOrDefault()?.Description ?? string.Empty;
+
+                bool containsBadWord = badWords.Any(word => socketMessage.Content.Contains(word)) ||
+                                       badWords.Any(word => embedDesc.Contains(word));
+
+                if (!containsBadWord) return;
+
+                bool authorIsBot = author.IsBot;
+                bool authorHasManageMessages = (author as SocketGuildUser)?.GuildPermissions.ManageMessages ?? false;
+
+
+                if (!authorHasManageMessages && !authorIsBot)
                 {
-                    var auther = socketMessage.Author;
-                    var socketguild = (auther as SocketGuildUser)?.Guild;
-                    if (socketguild != null)
-                    {
-                        var cachingservice = _provider.GetRequiredService<CachingService>();
-                        cachingservice.SetupBadWords(socketguild);
-                        var words = cachingservice.GetBadWords(socketguild.Id);
-                        var stringarray = words.ToArray();
-                        string embedDesc;
-                        if (socketMessage.Embeds == null)
-                        {
-                            embedDesc = socketMessage.Embeds?.FirstOrDefault().Description;
-                        }
-                        else
-                        {
-                            embedDesc = "";
-                        }
-                        if (stringarray.Any(socketMessage.Content.Contains) || stringarray.Any(embedDesc.Contains))
-                        {
-                            if (socketguild.Id == 448335330534359061)
-                            {
-                                if (auther.IsBot)
-                                {
-                                    if (auther.Id != 369865463670374400)
-                                    {
-                                        if (socketMessage.Content != "")
-                                        {
-                                            Console.WriteLine(socketMessage.Content);
-                                        }
-                                        else
-                                        {
-                                            Console.WriteLine("Embed Deleted");
-                                        }
-                                        await socketMessage.DeleteAsync();
-                                    }
-                                }
-                                else if (!((SocketGuildUser)auther).GuildPermissions.ManageMessages)
-                                {
-                                    Console.WriteLine(socketMessage.Content);
-                                    await socketMessage.DeleteAsync();
-                                }
-                            }
-                            else
-                            {
-                                if (!((SocketGuildUser)auther).GuildPermissions.ManageMessages && !((SocketGuildUser)auther).IsBot)
-                                {
-                                    Console.WriteLine(socketMessage.Content);
-                                    await socketMessage.DeleteAsync();
-                                }
-                            }
-                        }
-                    }
+                    Console.WriteLine(socketMessage.Content);
+                    await socketMessage.DeleteAsync();
                 }
             });
             return Task.CompletedTask;

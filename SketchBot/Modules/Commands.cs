@@ -1,34 +1,34 @@
 ﻿using Discord;
+using Discord.Addons.Interactive;
+using Discord.Addons.Preconditions;
+using Discord.Interactions;
+using Discord.Rest;
 //using Discord.Commands;
 using Discord.WebSocket;
-using Discord.Rest;
+using DiscordBotsList;
+using DiscordBotsList.Api;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Microsoft.CodeAnalysis.Scripting;
 using Newtonsoft.Json.Linq;
+using Sketch_Bot.Custom_Preconditions;
+using Sketch_Bot.Models;
+using Sketch_Bot.Services;
+using SketchBot.Handlers;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using UrbanDictionnet;
-using System.Diagnostics;
-using Discord.Addons.Interactive;
-using Discord.Addons.Preconditions;
-using Sketch_Bot.Custom_Preconditions;
-using Microsoft.CodeAnalysis.CSharp.Scripting;
-using System.Text.RegularExpressions;
-using Microsoft.CodeAnalysis.Scripting;
-using Microsoft.CodeAnalysis;
-using System.Reflection;
-using Sketch_Bot.Models;
-using Sketch_Bot.Services;
-using DiscordBotsList;
-using DiscordBotsList.Api;
-using System.Threading;
-using Discord.Interactions;
-using System.Data;
-using System.IO;
-using SketchBot.Handlers;
 
 namespace Sketch_Bot.Modules
 {
@@ -904,6 +904,25 @@ namespace Sketch_Bot.Modules
                 TimeSpan di = new TimeSpan(23 - diff.Hours, 60 - diff.Minutes, 60 - diff.Seconds);
 
                 await FollowupAsync($"Your tokens refresh in {di} !");
+            }
+        }
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [SlashCommand("resetuser", "Resets a user's stats")]
+        public async Task resetuser(IUser user)
+        {
+            await DeferAsync();
+            if (user.Id == 135446225565515776)
+            {
+                await FollowupAsync("No!" +
+                    "\nMaybe I'll reset your stats instead if you are not careful");
+            }
+            else
+            {
+                var builder = new ComponentBuilder()
+                    .WithButton("Confirm", $"reset-user:{Context.User.Id}");
+                await FollowupAsync("You sure?", components: builder.Build());
+                
             }
         }
         [RequireContext(ContextType.Guild)]
