@@ -180,6 +180,7 @@ namespace Sketch_Bot
                 var welcomechannel = (string)table["welcomechannel"];
                 var modlogchannel = (string)table["modlogchannel"];
                 var xprate = (int)table["xpmultiplier"];
+                var levelupmessages = (int)table["LevelupMessages"];
 
                 result.Add(new Serversettings
                 {
@@ -187,25 +188,6 @@ namespace Sketch_Bot
                     ModlogChannel = modlogchannel,
                     WelcomeChannel = welcomechannel,
                     XpMultiplier = xprate,
-                });
-            }
-
-            database.CloseConnection();
-
-            return result;
-        }
-        public static List<Serversettings> GetLevelupMessageBool(string guildid)
-        {
-            var result = new List<Serversettings>();
-            var database = new Database();
-            var str = string.Format("SELECT * FROM `server_settings` WHERE id = {0}", guildid);
-            var table = database.FireCommand(str);
-
-            while (table.Read())
-            {
-                var levelupmessages = (int)table["LevelupMessages"];
-                result.Add(new Serversettings
-                {
                     LevelupMessages = levelupmessages == 1
                 });
             }
@@ -223,48 +205,6 @@ namespace Sketch_Bot
             database.CloseConnection();
 
             return;
-        }
-        public static List<Serversettings> GetModlogChannel(string guildid)
-        {
-            var result = new List<Serversettings>();
-            var database = new Database();
-            var str = string.Format("SELECT * FROM `server_settings` WHERE id = {0}", guildid);
-            var table = database.FireCommand(str);
-
-            while (table.Read())
-            {
-                var modlogchannel = (string)table["modlogchannel"];
-
-                result.Add(new Serversettings
-                {
-                    ModlogChannel = modlogchannel,
-                });
-            }
-
-            database.CloseConnection();
-
-            return result;
-        }
-        public static List<Serversettings> GetPrefix(string guildid)
-        {
-            var result = new List<Serversettings>();
-            var database = new Database();
-            var str = string.Format("SELECT * FROM `server_settings` WHERE id = {0}", guildid);
-            var table = database.FireCommand(str);
-
-            while (table.Read())
-            {
-                var prefix = (string)table["prefix"];
-
-                result.Add(new Serversettings
-                {
-                    Prefix = prefix,
-                });
-            }
-
-            database.CloseConnection();
-
-            return result;
         }
         public static List<string> CheckPrefix(SocketUser user)
         {
@@ -302,48 +242,6 @@ namespace Sketch_Bot
             database.CloseConnection();
 
             
-        }
-        public static List<Serversettings> GetWelcomeChannel(string guildid)
-        {
-            var result = new List<Serversettings>();
-            var database = new Database();
-            var str = string.Format("SELECT * FROM `server_settings` WHERE id = {0}", guildid);
-            var table = database.FireCommand(str);
-
-            while (table.Read())
-            {
-                var welcomechannel = (string)table["welcomechannel"];
-
-                result.Add(new Serversettings
-                {
-                    WelcomeChannel = welcomechannel,
-                });
-            }
-
-            database.CloseConnection();
-
-            return result;
-        }
-        public static List<Serversettings> GetXpRate(string guildid)
-        {
-            var result = new List<Serversettings>();
-            var database = new Database();
-            var str = string.Format("SELECT * FROM `server_settings` WHERE id = {0}", guildid);
-            var table = database.FireCommand(str);
-
-            while (table.Read())
-            {
-                var xprate = (int)table["xprate"];
-
-                result.Add(new Serversettings
-                {
-                    XpMultiplier = xprate,
-                });
-            }
-
-            database.CloseConnection();
-
-            return result;
         }
         public static List<Serversettings> GetRole(string guildid, long level)
         {

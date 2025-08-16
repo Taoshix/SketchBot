@@ -86,7 +86,7 @@ namespace Sketch_Bot.Modules
         {
             if (Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
-                string prefix = ServerSettingsDB.GetPrefix(Context.Guild.Id.ToString()).FirstOrDefault().Prefix;  /* put your chosen prefix here */
+                string prefix = ServerSettingsDB.GetSettings(Context.Guild.Id.ToString()).FirstOrDefault().Prefix;  /* put your chosen prefix here */
                 var builder = new EmbedBuilder()
                 {
                     Color = new Discord.Color(114, 137, 218),
@@ -267,7 +267,7 @@ namespace Sketch_Bot.Modules
         [Command("welcomechannel", RunMode = RunMode.Async)]
         public async Task welcomechannel()
         {
-            var userTable = ServerSettingsDB.GetWelcomeChannel(Context.Guild.Id.ToString());
+            var userTable = ServerSettingsDB.GetSettings(Context.Guild.Id.ToString());
             var channel = userTable.FirstOrDefault()?.WelcomeChannel;
             if (channel == "(NULL)" || channel == null)
             {
@@ -283,7 +283,7 @@ namespace Sketch_Bot.Modules
         [Command("modlogchannel", RunMode = RunMode.Async)]
         public async Task modlogchannel()
         {
-            var usertable = ServerSettingsDB.GetModlogChannel(Context.Guild.Id.ToString());
+            var usertable = ServerSettingsDB.GetSettings(Context.Guild.Id.ToString());
             var channel = usertable.FirstOrDefault()?.ModlogChannel;
             if (channel == "(NULL)" || channel == null)
             {
@@ -463,7 +463,7 @@ namespace Sketch_Bot.Modules
             }
             catch(IndexOutOfRangeException)
             {
-                await ReplyAsync($"Usage: {ServerSettingsDB.GetPrefix(Context.Guild.Id.ToString()).FirstOrDefault().Prefix ?? "?"}meme <template name>, <top text>, <bottom text>\nEach argument is seperated by comma ,\nhttps://api.imgflip.com/popular_meme_ids for a list of templates");
+                await ReplyAsync($"Usage: {ServerSettingsDB.GetSettings(Context.Guild.Id.ToString()).FirstOrDefault().Prefix ?? "?"}meme <template name>, <top text>, <bottom text>\nEach argument is seperated by comma ,\nhttps://api.imgflip.com/popular_meme_ids for a list of templates");
             }
 
         }

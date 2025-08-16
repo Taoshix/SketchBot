@@ -42,7 +42,7 @@ namespace Sketch_Bot.Services
             int levelup = guild.MemberCount >= 100 ? 0 : 1;
             try
             {
-                var result = ServerSettingsDB.GetPrefix(guild.Id.ToString());
+                var result = ServerSettingsDB.GetSettings(guild.Id.ToString());
                 if (result.Count > 0)
                 {
                     _prefixes.Add(guild.Id, result.First().Prefix);
@@ -50,7 +50,7 @@ namespace Sketch_Bot.Services
                 }
 
                 CreateGuildTablesAndSettings(guild.Id.ToString(), levelup);
-                var gottenPrefix = ServerSettingsDB.GetPrefix(guild.Id.ToString());
+                var gottenPrefix = ServerSettingsDB.GetSettings(guild.Id.ToString());
                 var prefix = gottenPrefix.FirstOrDefault()?.Prefix ?? "?";
                 Console.WriteLine($"Prefix: {prefix}");
                 Console.WriteLine("Prefix has been set up");
@@ -62,7 +62,7 @@ namespace Sketch_Bot.Services
                 if (ex.Message.Contains(guild.Id.ToString()))
                 {
                     CreateGuildTablesAndSettings(guild.Id.ToString(), levelup);
-                    var gottenPrefix = ServerSettingsDB.GetPrefix(guild.Id.ToString());
+                    var gottenPrefix = ServerSettingsDB.GetSettings(guild.Id.ToString());
                     var prefix = gottenPrefix.FirstOrDefault()?.Prefix ?? "?";
                     Console.WriteLine($"Prefix: {prefix}");
                     Console.WriteLine("Prefix has been set up");

@@ -293,9 +293,9 @@ namespace Sketch_Bot.Modules
                         + (user as IGuildUser).Username + " with the reason: " + (reason) + " (" + Context.Guild.Name + ")");
                     await (user as IGuildUser).KickAsync(reason);
                     await Context.Channel.SendMessageAsync("", false, builtEmbed);///sends embed///
-                    if (ServerSettingsDB.GetModlogChannel(Context.Guild.Id.ToString()).FirstOrDefault().ModlogChannel != "(NULL)")
+                    if (ServerSettingsDB.GetSettings(Context.Guild.Id.ToString()).FirstOrDefault().ModlogChannel != "(NULL)")
                     {
-                        var moderationchannel = Context.Guild.GetTextChannel(UInt64.Parse(ServerSettingsDB.GetModlogChannel(Context.Guild.Id.ToString()).FirstOrDefault()?.ModlogChannel));
+                        var moderationchannel = Context.Guild.GetTextChannel(UInt64.Parse(ServerSettingsDB.GetSettings(Context.Guild.Id.ToString()).FirstOrDefault()?.ModlogChannel));
                         var embed2 = new EmbedBuilder();
                         embed2.Color = new Color(244, 66, 66);
                         //embed2.WithColor(new Color(0xb72707));
@@ -346,7 +346,7 @@ namespace Sketch_Bot.Modules
                     await Context.Guild.AddBanAsync(user, 7, reason);
                     await Context.Channel.SendMessageAsync("", false, builtEmbed);///sends embed///
 
-                    if (ServerSettingsDB.GetModlogChannel(Context.Guild.Id.ToString()).FirstOrDefault()?.ModlogChannel != "(NULL)")
+                    if (ServerSettingsDB.GetSettings(Context.Guild.Id.ToString()).FirstOrDefault()?.ModlogChannel != "(NULL)")
                     {
                         var moderationchannel = (Context.Guild.GetTextChannel(UInt64.Parse(ServerSettingsDB.GetSettings(Context.Guild.Id.ToString()).FirstOrDefault().ModlogChannel)));
                         var embed2 = new EmbedBuilder();
@@ -959,7 +959,7 @@ namespace Sketch_Bot.Modules
                 }
                 else
                 {
-                    await ReplyAsync("Usage: " + ServerSettingsDB.GetPrefix(Context.Guild.Id.ToString()).FirstOrDefault().Prefix + "leaderboard <type> <page>" +
+                    await ReplyAsync("Usage: " + ServerSettingsDB.GetSettings(Context.Guild.Id.ToString()).FirstOrDefault().Prefix + "leaderboard <type> <page>" +
                         "\nAvailable types:" +
                         "\nTokens, Leveling");
                 }
@@ -1157,7 +1157,7 @@ namespace Sketch_Bot.Modules
                 }
                 else
                 {
-                    await ReplyAsync($"You would have gotten 4x more tokens if you have voted today. See {ServerSettingsDB.GetPrefix(Context.Guild.Id.ToString()).FirstOrDefault()?.Prefix}upvote");
+                    await ReplyAsync($"You would have gotten 4x more tokens if you have voted today. See {ServerSettingsDB.GetSettings(Context.Guild.Id.ToString()).FirstOrDefault()?.Prefix}upvote");
                 }
                 Database.ChangeDaily(Context.User);
                 if (user != Context.User as IGuildUser)

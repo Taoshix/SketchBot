@@ -345,7 +345,7 @@ namespace Sketch_Bot
                 {
                     var guildId = socketGuild.Id.ToString();
                     //await Task.Delay(50);
-                    var prefix = ServerSettingsDB.GetPrefix(socketGuild.Id.ToString());
+                    var prefix = ServerSettingsDB.GetSettings(socketGuild.Id.ToString());
                     int levelup = 1;
                     if (socketGuild.MemberCount >= 100)
                     {
@@ -460,7 +460,7 @@ namespace Sketch_Bot
                             newRoles.AddRange(roles.Where(r => r != null));
                         }
 
-                        bool showLevelupMsg = ServerSettingsDB.GetLevelupMessageBool(socketGuild.Id.ToString()).FirstOrDefault().LevelupMessages;
+                        bool showLevelupMsg = ServerSettingsDB.GetSettings(socketGuild.Id.ToString()).FirstOrDefault().LevelupMessages;
                         if (showLevelupMsg)
                         {
                             var embed = new EmbedBuilder().WithColor(new Color(0x4d006d));
@@ -507,7 +507,7 @@ namespace Sketch_Bot
                     var guildName = _client.GetGuild(id) as IGuild;
                     var inviteUsed = await guildName.GetInvitesAsync();
                     var orderedInviteUsed = inviteUsed.OrderBy(x => x.CreatedAt.Value.ToUnixTimeMilliseconds()).ThenBy(x => x.Uses).FirstOrDefault();
-                    var userTable = ServerSettingsDB.GetWelcomeChannel(user.Guild.Id.ToString());
+                    var userTable = ServerSettingsDB.GetSettings(user.Guild.Id.ToString());
                     await Task.Delay(100);
                     var channell = userTable.FirstOrDefault().WelcomeChannel;
                     await Task.Delay(100);

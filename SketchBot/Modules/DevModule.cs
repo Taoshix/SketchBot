@@ -202,7 +202,7 @@ namespace Sketch_Bot.Modules
                 try
                 {
                     Database.CreateTable(guild.Id.ToString());
-                    var gottenprefix = ServerSettingsDB.GetPrefix(guild.Id.ToString());
+                    var gottenprefix = ServerSettingsDB.GetSettings(guild.Id.ToString());
                     if (!gottenprefix.Any())
                     {
                         ServerSettingsDB.MakeSettings(guild.Id.ToString(), 1);
