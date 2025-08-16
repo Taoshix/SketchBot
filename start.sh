@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /app/Lavalink
+cd /app/LavaLink
 java -jar lavalink.jar &
 cd /app
 dotnet SketchBot.dll
