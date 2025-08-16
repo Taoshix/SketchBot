@@ -912,18 +912,28 @@ namespace Sketch_Bot.Modules
         public async Task resetuser(IUser user)
         {
             await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
             if (user.Id == 135446225565515776)
             {
                 await FollowupAsync("No!" +
                     "\nMaybe I'll reset your stats instead if you are not careful");
+                return;
             }
-            else
+            var builder = new ComponentBuilder()
+                .WithButton("Confirm Reset", $"reset-user:{Context.User.Id}", ButtonStyle.Danger);
+            var promptMessage = await FollowupAsync("You sure?", components: builder.Build());
+            await Task.Delay(8000);
+            var disabledBuilder = new ComponentBuilder()
+                .WithButton("Confirm Reset", $"reset-user:{Context.User.Id}", ButtonStyle.Danger, disabled: true);
+            await promptMessage.ModifyAsync(msg => 
             {
-                var builder = new ComponentBuilder()
-                    .WithButton("Confirm", $"reset-user:{Context.User.Id}");
-                await FollowupAsync("You sure?", components: builder.Build());
-                
-            }
+                msg.Components = disabledBuilder.Build();
+            });
+
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("pay", "Pay someone else some of your tokens")]
@@ -935,59 +945,69 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
+
             var user = Context.User as SocketGuildUser;
             var userToPay = usertopay as SocketGuildUser;
-            var result = Database.CheckExistingUser(user);
-            var result2 = Database.CheckExistingUser(userToPay);
-            var result3 = _cachingService.GetBlackList();
-            if (!result3.Contains(user.Id))
+            if (user == null || userToPay == null)
             {
-                if (result.Any())
-                {
-                    if (result2.Count >= 1)
-                    {
-                        var userTable = Database.GetUserStatus(user);
-                        if (amount > 0)
-                        {
-                            if (userTable.FirstOrDefault().Tokens >= amount)
-                            {
-                                Database.RemoveTokens(user, amount);
-                                Database.ChangeTokens(userToPay, amount);
-                                var embed = new EmbedBuilder()
-                                {
-                                    Color = new Color(0, 0, 255)
-                                };
-                                embed.Description = (user.Mention + " has paid " + usertopay.Mention + " " + amount + " tokens!" +
-                                    "\n" + comment);
-                                var builtEmbed = embed.Build();
-                                await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
-
-                            }
-                        }
-                        else
-                        {
-                            await FollowupAsync("Dont attempt to steal tokens from people!");
-                            
-                        }
-                    }
-                    else
-                    {
-                        await FollowupAsync("Target user not in the database! adding user...");
-                        Database.EnterUser((IGuildUser)usertopay);
-                        await FollowupAsync("User added! try running the command again");
-                    }
-                }
-                else
-                {
-                    await FollowupAsync("User not in the database! adding user...");
-                    Database.EnterUser(user);
-                    await FollowupAsync("User added! try running the command again");
-                }
+                await FollowupAsync("Both users must be members of this server.");
+                return;
             }
-            else
+
+            if (_cachingService.GetBlackList().Contains(usertopay.Id))
             {
                 await FollowupAsync("You can't pay blacklisted users!");
+                return;
             }
+
+            bool userInDb = _cachingService.IsInDatabase(Context.Guild.Id, user.Id);
+            bool userToPayInDb = _cachingService.IsInDatabase(Context.Guild.Id, userToPay.Id);
+
+            if (!userInDb)
+            {
+                var followup = await FollowupAsync("User not in the database! Adding user...");
+                Database.EnterUser(user);
+                await followup.ModifyAsync(msg => 
+                {
+                    msg.Content = "User added! Try running the command again.";
+                });
+                return;
+            }
+
+            if (!userToPayInDb)
+            {
+                var followup = await FollowupAsync("Target user not in the database! Adding user...");
+                Database.EnterUser(userToPay);
+                await followup.ModifyAsync(msg => 
+                {
+                    msg.Content = "Target user added! Try running the command again.";
+                });
+                return;
+            }
+
+            var userTable = Database.GetUserStatus(user);
+            if (amount <= 0)
+            {
+                await FollowupAsync("Don't attempt to steal tokens from people!");
+                return;
+            }
+
+            if (userTable.FirstOrDefault().Tokens < amount)
+            {
+                await FollowupAsync("You don't have enough tokens to pay.");
+                return;
+            }
+
+            Database.RemoveTokens(user, amount);
+            Database.ChangeTokens(userToPay, amount);
+
+            var embed = new EmbedBuilder()
+            {
+                Color = new Color(0, 0, 255),
+                Description = $"{user.Mention} has paid {usertopay.Mention} {amount} tokens!\n{comment}"
+            }.Build();
+
+            await FollowupAsync("", null, false, false, null, null, null, embed);
         }
         [SlashCommand("info", "Displays info about the bot")]
         public async Task info()

@@ -271,7 +271,7 @@ namespace Sketch_Bot
                     }
                     Database.DeleteUser(component.User as SocketGuildUser);
                     Database.EnterUser(component.User as SocketGuildUser);
-                    await component.RespondAsync("Your user data has been reset!");
+                    await component.RespondAsync($"{component.User.Mention} Your user data has been reset!");
                     break;
             }
         }

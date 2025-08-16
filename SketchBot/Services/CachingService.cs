@@ -98,7 +98,7 @@ namespace Sketch_Bot.Services
             if (!IsInDatabase(guild.Id, user.Id))
             {
                 var result = Database.CheckExistingUser(user);
-                if (result.Count == 0 && !user.IsBot)
+                if (!result.Any() && !user.IsBot)
                 {
                     Database.EnterUser(user);
                 }
