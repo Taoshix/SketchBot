@@ -139,7 +139,7 @@ namespace Sketch_Bot
                 Console.WriteLine(ex);
             }
         }
-        public static string EnterUser(IGuildUser user)
+        public static void EnterUser(IGuildUser user)
         {
             //Console.WriteLine($"Entering User {user} {user.Guild.Name}");
             var database = new Database();
@@ -148,18 +148,14 @@ namespace Sketch_Bot
             var table = database.FireCommand(str);
 
             database.CloseConnection();
-
-            return null;
         }
-        public static string CreateTable(string guildid)
+        public static void CreateTable(string guildid)
         {
             var database = new Database();
             var str = string.Format("CREATE TABLE IF NOT EXISTS `{0}` (user_id varchar(50), tokens bigint(20), daily datetime DEFAULT '0001-01-01 00:00:00', level bigint(20) DEFAULT '1', xp bigint(20) DEFAULT '1', PRIMARY KEY (user_id))", guildid);
             var table = database.FireCommand(str);
 
             database.CloseConnection();
-
-            return null;
         }
         public static List<userTable> GetUserStatus(IUser user)
         {
@@ -354,7 +350,7 @@ namespace Sketch_Bot
                 return;
             }
         }
-        public static string BlacklistAdd(RestUser user, string reason, IUser blacklister)
+        public static void BlacklistAdd(RestUser user, string reason, IUser blacklister)
         {
             var database = new Database();
 
@@ -362,10 +358,8 @@ namespace Sketch_Bot
             var table = database.FireCommand(str);
 
             database.CloseConnection();
-
-            return null;
         }
-        public static string BlacklistDel(ulong Id)
+        public static void BlacklistDel(ulong Id)
         {
             var database = new Database();
 
@@ -373,8 +367,6 @@ namespace Sketch_Bot
             var table = database.FireCommand(str);
 
             database.CloseConnection();
-
-            return null;
         }
         public static List<blacklist> BlacklistCheck(ulong Id)
         {
