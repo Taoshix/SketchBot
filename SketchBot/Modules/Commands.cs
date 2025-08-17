@@ -185,52 +185,47 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
+
+            var user = Context.User as IGuildUser;
+            var userStatus = Database.GetUserStatus(user).FirstOrDefault();
+            long currentTokens = userStatus?.Tokens ?? 0;
+
+            if (amount > currentTokens)
+            {
+                await FollowupAsync("You don't have enough tokens");
+                return;
+            }
+            if (amount < 1)
+            {
+                await FollowupAsync("The minimum amount of tokens is 1");
+                return;
+            }
+
             _rand = new Random();
-            var currentTokens = Database.GetUserStatus(Context.User as IGuildUser).FirstOrDefault().Tokens;
-            if (amount > currentTokens) await FollowupAsync("You don't have enough tokens");
-            else if (amount < 1) await FollowupAsync("The minimum amount of tokens is 1");
+            bool won = _rand.Next(0, 100) >= 53;
+
+            if (won)
+            {
+                Database.ChangeTokens(user, amount);
+            }
             else
             {
-                var RNG = _rand.Next(0, 100);
-                if (RNG >= 53)
-                {
-                    Database.ChangeTokens(Context.User as IGuildUser, amount);
-                    currentTokens = Database.GetUserStatus(Context.User as IGuildUser).FirstOrDefault().Tokens;
-                    EmbedBuilder builder = new EmbedBuilder()
-                    {
-                        Title = "You won!",
-                        Description = $"You gambled {amount} tokens and won!\n" +
-                        $"You now have {currentTokens} tokens!",
-                        Color = new Color(0, 0, 255)
-                    }.WithAuthor(author =>
-                    {
-                        author.Name = "Gambling results - " + Context.User.Username;
-                        author.WithIconUrl(Context.User.GetAvatarUrl());
-                    }
-                    );
-                    var embed = builder.Build();
-                    await FollowupAsync("", null, false, false, null, null, null, embed);
-                }
-                else
-                {
-                    Database.RemoveTokens(Context.User as IGuildUser, amount);
-                    currentTokens = Database.GetUserStatus(Context.User as IGuildUser).FirstOrDefault().Tokens;
-                    EmbedBuilder builder = new EmbedBuilder()
-                    {
-                        Title = "You lost!",
-                        Description = $"You gambled {amount} tokens and lost!\n" +
-                        $"You now have {currentTokens} tokens!",
-                        Color = new Color(0, 0, 255)
-                    }.WithAuthor(auther =>
-                    {
-                        auther.Name = "Gambling results - " + Context.User.Username;
-                        auther.WithIconUrl(Context.User.GetAvatarUrl());
-                    }
-                    );
-                    var embed = builder.Build();
-                    await FollowupAsync("", null, false, false, null, null, null, embed);
-                }
+                Database.RemoveTokens(user, amount);
             }
+
+            currentTokens = Database.GetUserStatus(user).FirstOrDefault()?.Tokens ?? 0;
+            var builder = new EmbedBuilder()
+            {
+                Title = won ? "You won!" : "You lost!",
+                Description = $"You gambled {amount} tokens and {(won ? "won" : "lost")}!\nYou now have {currentTokens} tokens!",
+                Color = new Color(0, 0, 255)
+            }.WithAuthor(author =>
+            {
+                author.Name = $"Gambling results - {Context.User.Username}";
+                author.IconUrl = Context.User.GetAvatarUrl();
+            });
+
+            await FollowupAsync("", null, false, false, null, null, null, builder.Build());
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("gambleall", "Gambles all of your tokens")]
@@ -242,52 +237,42 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            long amount = Database.GetUserStatus(Context.User as IGuildUser).FirstOrDefault().Tokens;
+
+            var user = Context.User as IGuildUser;
+            var userStatus = Database.GetUserStatus(user).FirstOrDefault();
+            long amount = userStatus?.Tokens ?? 0;
+
+            if (amount < 1)
+            {
+                await FollowupAsync("The minimum amount of tokens is 1");
+                return;
+            }
+
             _rand = new Random();
-            var currentTokens = Database.GetUserStatus(Context.User as IGuildUser).FirstOrDefault().Tokens;
-            if (amount < 1) await FollowupAsync("The minimum amount of tokens is 1");
+            bool won = _rand.Next(0, 100) >= 53;
+
+            if (won)
+            {
+                Database.ChangeTokens(user, amount);
+            }
             else
             {
-                var RNG = _rand.Next(0, 100);
-                if (RNG >= 53)
-                {
-                    Database.ChangeTokens(Context.User as IGuildUser, amount);
-                    currentTokens = Database.GetUserStatus(Context.User as IGuildUser).FirstOrDefault().Tokens;
-                    EmbedBuilder builder = new EmbedBuilder()
-                    {
-                        Title = "You won!",
-                        Description = $"You gambled {amount} tokens and won!\n" +
-                        $"You now have {currentTokens} tokens!",
-                        Color = new Color(0, 0, 255)
-                    }.WithAuthor(author =>
-                    {
-                        author.Name = "Gambling results - " + Context.User.Username;
-                        author.WithIconUrl(Context.User.GetAvatarUrl());
-                    }
-                    );
-                    var embed = builder.Build();
-                    await FollowupAsync("", null, false, false, null, null, null, embed);
-                }
-                else
-                {
-                    Database.RemoveTokens(Context.User as IGuildUser, amount);
-                    currentTokens = Database.GetUserStatus(Context.User as IGuildUser).FirstOrDefault().Tokens;
-                    EmbedBuilder builder = new EmbedBuilder()
-                    {
-                        Title = "You lost!",
-                        Description = $"You gambled {amount} tokens and lost!\n" +
-                        $"You now have {currentTokens} tokens!",
-                        Color = new Color(0, 0, 255)
-                    }.WithAuthor(auther =>
-                    {
-                        auther.Name = "Gambling results - " + Context.User.Username;
-                        auther.WithIconUrl(Context.User.GetAvatarUrl());
-                    }
-                    );
-                    var embed = builder.Build();
-                    await FollowupAsync("", null, false, false, null, null, null, embed);
-                }
+                Database.RemoveTokens(user, amount);
             }
+
+            var currentTokens = Database.GetUserStatus(user).FirstOrDefault()?.Tokens ?? 0;
+            var builder = new EmbedBuilder()
+            {
+                Title = won ? "You won!" : "You lost!",
+                Description = $"You gambled {amount} tokens and {(won ? "won" : "lost")}!\nYou now have {currentTokens} tokens!",
+                Color = new Color(0, 0, 255)
+            }.WithAuthor(author =>
+            {
+                author.Name = $"Gambling results - {Context.User.Username}";
+                author.IconUrl = Context.User.GetAvatarUrl();
+            });
+
+            await FollowupAsync("", null, false, false, null, null, null, builder.Build());
         }
         [SlashCommand("ping", "Pong")]
         public async Task ping()
@@ -337,8 +322,8 @@ namespace Sketch_Bot.Modules
         public async Task eightball(string input)
         {
             await DeferAsync();
-            string[] predictionsTexts = new string[]
-            {
+            string[] predictionsTexts =
+            [
                 "It is very unlikely.",
                 "I don't think so...",
                 "Yes !",
@@ -347,7 +332,7 @@ namespace Sketch_Bot.Modules
                 "Without a doubt",
                 "Pls don't",
                 "Just give me your money!"
-            };
+            ];
             _rand = new Random();
             int randomIndex = _rand.Next(predictionsTexts.Length);
             string text = predictionsTexts[randomIndex];
@@ -430,23 +415,8 @@ namespace Sketch_Bot.Modules
         public async Task status(string websiteUrl = "http://sketchbot.xyz")
         {
             await DeferAsync();
-            async Task SendStatusEmbed(string url, string status, string description)
-            {
-                var embed = new EmbedBuilder
-                {
-                    Title = "Status",
-                    Description = $"{url} \n\n{description}",
-                    Timestamp = DateTime.Now,
-                    ThumbnailUrl = Context.Client.CurrentUser.GetAvatarUrl(ImageFormat.Auto, 1024)
-                };
-                embed.WithFooter(footer =>
-                {
-                    footer
-                        .WithText("Requested by " + Context.User.Username)
-                        .WithIconUrl(Context.User.GetAvatarUrl());
-                });
-                await FollowupAsync("", null, false, false, null, null, null, embed.Build());
-            }
+
+            string description;
 
             try
             {
@@ -459,18 +429,34 @@ namespace Sketch_Bot.Modules
                     HttpResponseMessage response = await httpClient.GetAsync(websiteUrl);
                     if (response.IsSuccessStatusCode)
                     {
-                        await SendStatusEmbed(websiteUrl, "online", "server is **online**");
+                        description = "server is **online**";
                     }
                     else
                     {
-                        await SendStatusEmbed(websiteUrl, "offline", "server is **offline**");
+                        description = "server is **offline**";
                     }
                 }
             }
             catch (WebException)
             {
-                await SendStatusEmbed(websiteUrl, "not available", "connection is **not available**");
+                description = "connection is **not available**";
             }
+
+            var embed = new EmbedBuilder
+            {
+                Title = "Status",
+                Description = $"{websiteUrl} \n\n{description}",
+                Timestamp = DateTime.Now,
+                ThumbnailUrl = Context.Client.CurrentUser.GetAvatarUrl(ImageFormat.Auto, 1024)
+            };
+            embed.WithFooter(footer =>
+            {
+                footer
+                    .WithText("Requested by " + Context.User.Username)
+                    .WithIconUrl(Context.User.GetAvatarUrl());
+            });
+            await FollowupAsync("", null, false, false, null, null, null, embed.Build());
+
             Console.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " Command     " + Context.User.Username + " just ran ?status with success!" + " (" + Context.Guild?.Name ?? "DM" + ")");
         }
         [RequireContext(ContextType.Guild)]
