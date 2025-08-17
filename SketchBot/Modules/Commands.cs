@@ -957,7 +957,7 @@ namespace Sketch_Bot.Modules
                     components: builder.Build()
                 );
                 await Task.Delay(8000);
-                if ((promptMessage.Components.FirstOrDefault() as ButtonComponent).Style != ButtonStyle.Success)
+                if (!(promptMessage.Components.FirstOrDefault() as ButtonComponent).IsDisabled)
                 {
                     var disabledBuilder = new ComponentBuilder().WithButton("Claim Daily Tokens", $"daily-confirm:{Context.User.Id}", ButtonStyle.Primary, disabled: true);
                     await promptMessage.ModifyAsync(msg =>
