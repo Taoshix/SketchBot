@@ -20,13 +20,17 @@ namespace Sketch_Bot.Services
         public CachingService(DiscordSocketClient client)
         {
             _client = client;
-            _dbConnected = UpdateDBStatus();
+            UpdateDBStatus();
         }
-        public bool UpdateDBStatus()
+        public void UpdateDBStatus()
         {
             var db = new Database();
             var status = db.isDatabaseConnected();
-            return status;
+            _dbConnected = status;
+        }
+        public bool GetDBStatus()
+        {
+            return _dbConnected;
         }
         public void SetupPrefixes(SocketGuild guild)
         {
@@ -43,7 +47,7 @@ namespace Sketch_Bot.Services
             try
             {
                 var result = ServerSettingsDB.GetSettings(guild.Id.ToString());
-                if (result.Count > 0)
+                if (result.Any())
                 {
                     _prefixes.Add(guild.Id, result.First().Prefix);
                     return;
@@ -89,20 +93,16 @@ namespace Sketch_Bot.Services
                 return;
             }
 
-            if (!_usersInDatabase.TryGetValue(guild.Id, out var userList))
+            if (!_usersInDatabase.ContainsKey(guild.Id))
             {
-                userList = new List<ulong>();
-                _usersInDatabase[guild.Id] = userList;
+                // Initialize the user list for this guild if not present
+                _usersInDatabase[guild.Id] = new List<ulong>();
             }
 
-            if (!IsInDatabase(guild.Id, user.Id))
+            if (!IsInDatabase(guild.Id, user.Id) && !user.IsBot)
             {
-                var result = Database.CheckExistingUser(user);
-                if (!result.Any() && !user.IsBot)
-                {
-                    Database.EnterUser(user);
-                }
-                userList.Add(user.Id);
+                Database.EnterUser(user);
+                _usersInDatabase[guild.Id].Add(user.Id);
             }
         }
         public Dictionary<ulong, List<ulong>> GetDatabaseUsers()
@@ -143,19 +143,38 @@ namespace Sketch_Bot.Services
         }
         public bool IsInDatabase(ulong guildId, ulong userId)
         {
-            var user = _client.GetUser(userId);
+            // Check if the user is a bot
+            var user = _client.Guilds.FirstOrDefault(x => x.Id == guildId).GetUser(userId);
             if (user == null || user.IsBot)
             {
-                return true; // Bots are always considered to be in the database so we don't track them
+                return false; // Ignore bots
             }
 
-            if (!_usersInDatabase.TryGetValue(guildId, out var userList))
+            // Check if the user is already cached for this guild
+            if (_usersInDatabase.TryGetValue(guildId, out var userList))
             {
-                userList = new List<ulong>();
-                _usersInDatabase[guildId] = userList;
+                if (userList.Contains(userId))
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                // Initialize the user list for this guild if not present
+                _usersInDatabase[guildId] = new List<ulong>();
             }
 
-            return userList.Contains(userId);
+            // Check if the user exists in the database
+            var result = Database.CheckExistingUser(user);
+            if (!result.Any())
+            {
+                return false;
+            }
+
+            // Optionally, add the user to the cache if found in the database
+            _usersInDatabase[guildId].Add(userId);
+
+            return true;
         }
         public void SetupBadWords(SocketGuild guild)
         {
@@ -181,12 +200,17 @@ namespace Sketch_Bot.Services
                 return;
             }
 
-            var userTable = Database.GetAllBlacklistedUsers();
-            foreach (var element in userTable)
+            _blacklist.Clear();
+
+            var blacklistTable = Database.GetAllBlacklistedUsers();
+            foreach (var element in blacklistTable)
             {
                 if (ulong.TryParse(element.UserId, out var userId))
                 {
-                    _blacklist.Add(userId);
+                    if (!_blacklist.Contains(userId))
+                    {
+                        _blacklist.Add(userId);
+                    }
                 }
             }
         }
@@ -218,6 +242,13 @@ namespace Sketch_Bot.Services
         public void UpdateBadWords(ulong Id, List<string> words)
         {
             _badWords[Id] = words;
+        }
+        public void ClearCache()
+        {
+            _prefixes.Clear();
+            _badWords.Clear();
+            _usersInDatabase.Clear();
+            _blacklist.Clear();
         }
     }
 }

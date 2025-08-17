@@ -16,7 +16,7 @@ namespace Sketch_Bot
     public class ServerSettingsDB
     {
 
-        private MySqlConnection dbConnection;
+        private MySqlConnection? dbConnection;
         private Config config;
         public ServerSettingsDB()
         {
@@ -34,14 +34,12 @@ namespace Sketch_Bot
 
             dbConnection = new MySqlConnection(connectionString);
 
-            var ping = dbConnection.Ping();
-            if (ping)
+            try
             {
                 dbConnection.Open();
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine("Cant connect to database");
                 dbConnection = null;
             }
         }
@@ -58,7 +56,7 @@ namespace Sketch_Bot
         {
             if (dbConnection == null)
             {
-                Console.WriteLine("Cant connect (FireCommand)");
+                Console.WriteLine("Cant connect (FireCommand) Server Settings");
                 return null;
             }
 
@@ -171,16 +169,16 @@ namespace Sketch_Bot
         {
             var result = new List<Serversettings>();
             var database = new Database();
-            var str = string.Format("SELECT * FROM `server_settings` where id = {0}", guildid);
+            var str = $"SELECT * FROM `server_settings` WHERE id = {guildid}";
             var table = database.FireCommand(str);
 
             while (table.Read())
             {
-                var prefix = (string)table["prefix"];
-                var welcomechannel = (string)table["welcomechannel"];
-                var modlogchannel = (string)table["modlogchannel"];
-                var xprate = (int)table["xpmultiplier"];
-                var levelupmessages = (int)table["LevelupMessages"];
+                var prefix = table["prefix"] == DBNull.Value ? string.Empty : (string)table["prefix"];
+                var welcomechannel = table["welcomechannel"] == DBNull.Value ? string.Empty : (string)table["welcomechannel"];
+                var modlogchannel = table["modlogchannel"] == DBNull.Value ? string.Empty : (string)table["modlogchannel"];
+                var xprate = table["xpmultiplier"] == DBNull.Value ? 1 : Convert.ToInt32(table["xpmultiplier"]);
+                var levelupmessages = table["LevelupMessages"] == DBNull.Value ? 1 : Convert.ToInt32(table["LevelupMessages"]);
 
                 result.Add(new Serversettings
                 {
@@ -193,7 +191,6 @@ namespace Sketch_Bot
             }
 
             database.CloseConnection();
-
             return result;
         }
         public static void UpdateLevelupMessagesBool(string guildid, int boool)

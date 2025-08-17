@@ -19,7 +19,7 @@ namespace Sketch_Bot
         private string database;
         private string username;
         private string password;
-        private MySqlConnection dbConnection;
+        private MySqlConnection? dbConnection;
         
         public TempDB()
         {
@@ -41,14 +41,12 @@ namespace Sketch_Bot
 
             dbConnection = new MySqlConnection(connectionString);
 
-            var ping = dbConnection.Ping();
-            if (ping)
+            try
             {
                 dbConnection.Open();
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine("Cant connect to database");
                 dbConnection = null;
             }
         }
@@ -56,7 +54,7 @@ namespace Sketch_Bot
         {
             if (dbConnection == null)
             {
-                Console.WriteLine("Cant connect (FireCommand)");
+                Console.WriteLine("Cant connect (FireCommand) TempDB");
                 return null;
             }
 

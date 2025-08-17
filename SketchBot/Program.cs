@@ -185,7 +185,7 @@ namespace Sketch_Bot
         }
         async Task SlashCommandExecuted(SlashCommandInfo arg1, Discord.IInteractionContext arg2, Discord.Interactions.IResult arg3)
         {
-            Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture)} {arg2.User.Username} Ran /{arg1.Name}");
+            Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture)} {arg2.User.Username} ran /{arg1.Name}");
             if (!arg3.IsSuccess)
             {
                 Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture)} {arg2.User.Username} Failed to run /{arg1.Name} due to {arg3.ErrorReason}");
@@ -413,8 +413,7 @@ namespace Sketch_Bot
                     if (user.IsBot || user.IsWebhook || socketGuild == null || cachingService.GetBlackList().Contains(user.Id))
                         return;
 
-                    if (!cachingService.IsInDatabase(socketGuild.Id, user.Id))
-                        cachingService.SetupUserInDatabase(socketGuild, (SocketGuildUser)user);
+                    cachingService.SetupUserInDatabase(socketGuild, (SocketGuildUser)user);
 
                     ServerSettingsDB.CreateTableRole(socketGuild.Id.ToString());
 
@@ -499,8 +498,13 @@ namespace Sketch_Bot
                     Database.EnterUser(user);
 
                 // Get welcome channel
+                var settingsTable = ServerSettingsDB.GetSettings(user.Guild.Id.ToString());
+                if (!settingsTable.Any())
+                {
+                    ServerSettingsDB.MakeSettings(user.Guild.Id.ToString(), user.Guild.MemberCount >= 100 ? 0 : 1);
+                }
                 var settings = ServerSettingsDB.GetSettings(user.Guild.Id.ToString()).FirstOrDefault();
-                if (settings == null || string.IsNullOrEmpty(settings.WelcomeChannel) || settings.WelcomeChannel == "(NULL)")
+                if (settings == null || string.IsNullOrEmpty(settings.WelcomeChannel))
                     return;
 
                 if (!ulong.TryParse(settings.WelcomeChannel, out var channelId))

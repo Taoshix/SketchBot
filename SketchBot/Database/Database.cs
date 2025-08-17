@@ -16,7 +16,7 @@ namespace Sketch_Bot
     public class Database
     {
 
-        private MySqlConnection dbConnection;
+        private MySqlConnection? dbConnection;
         private Config config;
 
         public Database()
@@ -35,14 +35,12 @@ namespace Sketch_Bot
 
             dbConnection = new MySqlConnection(connectionString);
 
-            var ping = dbConnection.Ping();
-            if (ping)
+            try
             {
                 dbConnection.Open();
             }
-            else
+            catch(Exception ex)
             {
-                Console.WriteLine("Cant connect to database");
                 dbConnection = null;
             }
         }
@@ -60,7 +58,7 @@ namespace Sketch_Bot
         {
             if (dbConnection == null)
             {
-                Console.WriteLine("Cant connect (FireCommand)");
+                Console.WriteLine("Cant connect (FireCommand) Sketchbot");
                 return null;
             }
 
@@ -81,7 +79,7 @@ namespace Sketch_Bot
         {
             MySqlConnection.ClearAllPools();
         }
-        public static List<string> CheckExistingUser(IGuildUser user)
+        public static List<string> CheckExistingUser(IGuildUser user) // TODO refactor to boolean return
         {
             var result = new List<string>();
             var database = new Database();

@@ -52,11 +52,22 @@ namespace Sketch_Bot.Services
             TimeSpan.FromMinutes(30))); // 5) Time after which message should repeat (use `Timeout.Infinite` for no repeat));
             timers.Add("Database", new Timer(async _ =>
             {
+                bool dbStatusBefore = _cachingService.GetDBStatus();
                 _cachingService.UpdateDBStatus();
+                bool dbStatusAfter = _cachingService.GetDBStatus();
+                if (dbStatusBefore != dbStatusAfter)
+                {
+                    Console.WriteLine($"Database status changed: {dbStatusBefore} -> {dbStatusAfter}");
+                    if (dbStatusAfter)
+                    {
+                        _cachingService.ClearCache();
+                        _cachingService.SetupBlackList();
+                    }
+                }
             },
             null,
             TimeSpan.FromMinutes(0),  // 4) Time that message should fire after the timer is created
-            TimeSpan.FromMinutes(1))); // 5) Time after which message should repeat (use `Timeout.Infinite` for no repeat));
+            TimeSpan.FromSeconds(10))); // 5) Time after which message should repeat (use `Timeout.Infinite` for no repeat));
         }
 
         public void Stop() // 6) Example to make the timer stop running

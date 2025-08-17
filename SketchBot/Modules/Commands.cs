@@ -721,6 +721,7 @@ namespace Sketch_Bot.Modules
                     embed.Description = ($"```css\n{longstring}\n```");
                     embed.WithFooter($"Page {index}/{celing}");
                     var builtEmbed = embed.Build();
+                    await FollowupAsync(embed: builtEmbed);
                 }
             }
             else
@@ -924,11 +925,11 @@ namespace Sketch_Bot.Modules
                 return;
             }
             var builder = new ComponentBuilder()
-                .WithButton("Confirm Reset", $"reset-user:{Context.User.Id}", ButtonStyle.Danger);
+                .WithButton("Confirm Reset", $"reset-user:{user.Id}", ButtonStyle.Danger);
             var promptMessage = await FollowupAsync("You sure?", components: builder.Build());
             await Task.Delay(8000);
             var disabledBuilder = new ComponentBuilder()
-                .WithButton("Confirm Reset", $"reset-user:{Context.User.Id}", ButtonStyle.Danger, disabled: true);
+                .WithButton("Confirm Reset", $"reset-user:{user.Id}", ButtonStyle.Danger, disabled: true);
             await promptMessage.ModifyAsync(msg => 
             {
                 msg.Components = disabledBuilder.Build();
