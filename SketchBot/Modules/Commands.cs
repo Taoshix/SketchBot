@@ -140,6 +140,26 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("The number has to be between 0 and 2147483647!");
             }
         }
+        [SlashCommand("choose", "Makes the choice for you between a bunch of listed things")]
+        public async Task choose([Summary("Choices")] string choices)
+        {
+            await DeferAsync();
+            if (string.IsNullOrWhiteSpace(choices))
+            {
+                await FollowupAsync("You need to give me at least one choice!");
+                return;
+            }
+            var splitChoices = choices.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (splitChoices.Length == 0)
+            {
+                await FollowupAsync("You need to give me at least one choice!");
+                return;
+            }
+            _rand = new Random();
+            int randomIndex = _rand.Next(splitChoices.Length);
+            string chosen = splitChoices[randomIndex];
+            await FollowupAsync($"I choose: **{chosen}**");
+        }
         [SlashCommand("hello", "Hello")]
         public async Task hello()
         {
