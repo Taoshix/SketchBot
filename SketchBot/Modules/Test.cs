@@ -260,38 +260,6 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("You don't have `ManageChannels` permission");
             }
         }
-        [SlashCommand("duck", "Posts a random picture of a dog")]
-        public async Task duck()
-        {
-            await DeferAsync();
-            using (var client = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate }))//This is like the 'webbrowser' (?)
-            {
-                string websiteUrl = "https://random-d.uk/api/v1/random";
-                client.BaseAddress = new Uri(websiteUrl);
-                HttpResponseMessage response = client.GetAsync("").Result;
-                response.EnsureSuccessStatusCode();
-                string result = await response.Content.ReadAsStringAsync();
-                var json = JObject.Parse(result);
-                string catImage = json["url"].ToString();
-                await FollowupAsync(catImage);
-            }
-        }
-        [SlashCommand("dog", "Posts a random picture of a dog")]
-        public async Task dog()
-        {
-            await DeferAsync();
-            using (var client = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate }))//This is like the 'webbrowser' (?)
-            {
-                string websiteurl = "https://random.dog/woof.json";
-                client.BaseAddress = new Uri(websiteurl);
-                HttpResponseMessage response = client.GetAsync("").Result;
-                response.EnsureSuccessStatusCode();
-                string result = await response.Content.ReadAsStringAsync();
-                var json = JObject.Parse(result);
-                string catImage = json["url"].ToString();
-                await FollowupAsync(catImage);
-            }
-        }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("unsetmodlog", "Disables the mod logging")]
         public async Task unsetmodlog()

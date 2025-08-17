@@ -71,7 +71,7 @@ namespace Sketch_Bot.Modules
                 await ReplyAsync("Usage: ?removerole leveling <role>");
             }
         }
-        [Command("youtube",RunMode = RunMode.Async)]
+        [Command("youtube", RunMode = RunMode.Async)]
         [Alias("yt")]
         public async Task youtube([Remainder] string searchquery)
         {
@@ -119,7 +119,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireContext(ContextType.Guild)]
         [Command("roleinfo", RunMode = RunMode.Async)]
-        public async Task roleinfo([Remainder]SocketRole role)
+        public async Task roleinfo([Remainder] SocketRole role)
         {
             var rolelist = role.Permissions.ToList();
             string roleliststring = String.Join("\n", rolelist);
@@ -132,7 +132,7 @@ namespace Sketch_Bot.Modules
             embed.AddField("Position", role.Position, true);
             embed.AddField("Members", role.Members.Count(), true);
             embed.AddField("Mentionable?", role.IsMentionable);
-            embed.AddField("Hoisted?",role.IsHoisted, true);
+            embed.AddField("Hoisted?", role.IsHoisted, true);
             embed.AddField("Permissions", roleliststring);
             embed.AddField("Color", role.Color, true);
             embed.AddField("Role creation date", role.CreatedAt.DateTime.ToString("dd/MM/yy HH:mm:ss"), true);
@@ -146,7 +146,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireContext(ContextType.Guild)]
         [Command("stats", RunMode = RunMode.Async)]
-        [Alias("level","profile")]
+        [Alias("level", "profile")]
         public async Task userstatus([Remainder] IGuildUser user = null)
         {
             var embed = new EmbedBuilder()
@@ -179,7 +179,7 @@ namespace Sketch_Bot.Modules
         [Command("setwelcome", RunMode = RunMode.Async)]
         public async Task setwelcome()
         {
-            if (((IGuildUser) Context.User).GuildPermissions.ManageChannels || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
+            if (((IGuildUser)Context.User).GuildPermissions.ManageChannels || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
                 var channel = Context.Channel;
                 ServerSettingsDB.SetWelcomeChannel(channel.Id.ToString(), Context.Guild.Id.ToString());
@@ -194,7 +194,7 @@ namespace Sketch_Bot.Modules
         [Command("unsetwelcome", RunMode = RunMode.Async)]
         public async Task unsetwelcome()
         {
-            if (((IGuildUser) Context.User).GuildPermissions.ManageChannels || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
+            if (((IGuildUser)Context.User).GuildPermissions.ManageChannels || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
                 var channel = Context.Channel;
                 ServerSettingsDB.SetWelcomeChannel("(NULL)", Context.Guild.Id.ToString());
@@ -226,7 +226,7 @@ namespace Sketch_Bot.Modules
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageMessages)]
         [Command("unbanword", RunMode = RunMode.Async)]
-        public async Task unbanword([Remainder]string word)
+        public async Task unbanword([Remainder] string word)
         {
             if (word.Contains("'") || word.Contains(";") || word.Contains("#"))
             {
@@ -252,8 +252,8 @@ namespace Sketch_Bot.Modules
                 EmbedBuilder builder = new EmbedBuilder()
                 {
                     Title = $"List of banned words on {Context.Guild.Name}",
-                    Description = $"{string.Join("\n",bannedWords)}",
-                    Color = new Discord.Color(255,0,0)
+                    Description = $"{string.Join("\n", bannedWords)}",
+                    Color = new Discord.Color(255, 0, 0)
                 };
                 var embed = builder.Build();
                 await ReplyAsync("", false, embed);
@@ -285,7 +285,7 @@ namespace Sketch_Bot.Modules
         {
             var usertable = ServerSettingsDB.GetSettings(Context.Guild.Id.ToString());
             var channel = usertable.FirstOrDefault()?.ModlogChannel;
-            if (channel == "(NULL)" || channel == null)
+            if (channel == "(NULL)" || string.IsNullOrEmpty(channel))
             {
                 await ReplyAsync("Mod-log is not enabled. use `?setmodlog` in a channel to enable it");
             }

@@ -542,6 +542,7 @@ namespace Sketch_Bot.Modules
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 await FollowupAsync("API didn't return anything");
             }
         }
@@ -565,8 +566,9 @@ namespace Sketch_Bot.Modules
                     await FollowupAsync($"{catImage}");
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 await FollowupAsync("API didn't return anything");
             }
         }
@@ -591,12 +593,62 @@ namespace Sketch_Bot.Modules
                     await FollowupAsync($"{websitee}{CatImage}");
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 await FollowupAsync("API didn't return anything");
             }
         }
+        [SlashCommand("duck", "Posts a random picture of a dog")]
+        public async Task duck()
+        {
+            await DeferAsync();
+            try
+            {
 
+                using (var client = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate }))//This is like the 'webbrowser' (?)
+                {
+                    string websiteUrl = "https://random-d.uk/api/v1/random";
+                    client.BaseAddress = new Uri(websiteUrl);
+                    HttpResponseMessage response = client.GetAsync("").Result;
+                    response.EnsureSuccessStatusCode();
+                    string result = await response.Content.ReadAsStringAsync();
+                    var json = JObject.Parse(result);
+                    string duckImage = json["url"].ToString();
+                    await FollowupAsync(duckImage);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                await FollowupAsync("API didn't return anything");
+            }
+        }
+        [SlashCommand("dog", "Posts a random picture of a dog")]
+        public async Task dog()
+        {
+            await DeferAsync();
+            try
+            {
+
+                using (var client = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate }))//This is like the 'webbrowser' (?)
+                {
+                    string websiteurl = "https://random.dog/woof.json";
+                    client.BaseAddress = new Uri(websiteurl);
+                    HttpResponseMessage response = client.GetAsync("").Result;
+                    response.EnsureSuccessStatusCode();
+                    string result = await response.Content.ReadAsStringAsync();
+                    var json = JObject.Parse(result);
+                    string catImage = json["url"].ToString();
+                    await FollowupAsync(catImage);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                await FollowupAsync("API didn't return anything");
+            }
+        }
         [SlashCommand("calculate", "Calculates a math problem")]
         public async Task calculateAsync(HelperFunctions.Calculation expression)
         {
