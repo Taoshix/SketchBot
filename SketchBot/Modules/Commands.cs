@@ -140,7 +140,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("The number has to be between 0 and 2147483647!");
             }
         }
-        [SlashCommand("choose", "Makes the choice for you between a bunch of listed things")]
+        [SlashCommand("choose", "Makes the choice for you between a bunch of listed things seperated by , (comma)")]
         public async Task choose([Summary("Choices")] string choices)
         {
             await DeferAsync();
@@ -904,7 +904,6 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("You do not have permission!");
             }
         }
-        [RequireContext(ContextType.Guild)]
         [SlashCommand("daily", "Claim your daily")]
         public async Task Daily(IGuildUser user = null)
         {
@@ -918,57 +917,76 @@ namespace Sketch_Bot.Modules
             {
                 user = Context.User as IGuildUser;
             }
-            // These lines checks if the user exits, if not we add him into the database
             var result = Database.CheckExistingUser(user);
             if (!result.Any())
             {
                 Database.EnterUser(user);
             }
-            var tableName = Database.GetUserStatus(Context.User as IGuildUser); // We get the user status
-
-            DateTime now = DateTime.Now; // We get the actual time
+            var tableName = Database.GetUserStatus(user);
+            DateTime now = DateTime.Now;
             DateTime daily = tableName.FirstOrDefault().Daily;
             int difference = DateTime.Compare(daily, now);
-            if ((tableName.FirstOrDefault()?.Daily.ToString() == "0001-01-01 00:00:00") || (daily.DayOfYear < now.DayOfYear && difference < 0 || difference >= 0 || daily.Year < now.Year))
+
+            bool canClaim = (tableName.FirstOrDefault()?.Daily.ToString() == "0001-01-01 00:00:00") ||
+                            (daily.DayOfYear < now.DayOfYear && difference < 0) ||
+                            (difference >= 0) ||
+                            (daily.Year < now.Year);
+
+            if (!canClaim)
             {
-                int amount = 50; // The amount of credits the user is gonna receive, in uint of you followed BossDarkReaper advises or in int
-                if (await _discordBotListService.DblApi().HasVoted(Context.User.Id)) // TODO: Make a confirmation system if the user has not voted today
-                {
-                    amount *= 4;
-                    await FollowupAsync("Thanks for voting today, here is a bonus");
-                }
-                else
-                {
-                    await FollowupAsync($"You would have gotten 4x more tokens if you have voted today. See /upvote"); 
-                }
-                Database.ChangeDaily(Context.User as IGuildUser);
-                if (user != Context.User as IGuildUser)
-                {
-                    _rand = new Random();
-                    amount += _rand.Next(amount * 2);
-                    await FollowupAsync($"You have given {user.Nickname ?? user.Username} {amount} daily tokens!");
-                    Database.ChangeTokens(user, amount);
-                }
-                else
-                {
-                    Database.ChangeTokens(user, amount); // We add the tokens to the user
-                    await FollowupAsync($"You received your {amount} tokens!");
-                }
+                TimeSpan diff = now - daily;
+                TimeSpan di = new TimeSpan(23 - diff.Hours, 60 - diff.Minutes, 60 - diff.Seconds);
+                await FollowupAsync($"Your tokens refresh in {di} !");
+                return;
+            }
+            int amount = 50;
+            var dblApi = _discordBotListService.DblApi();
+            bool hasVoted = await dblApi.HasVoted(Context.User.Id);
+
+            if (hasVoted)
+            {
+                amount *= 4;
+                await FollowupAsync("Thanks for voting today, here is a bonus");
             }
             else
             {
-                TimeSpan diff = now - daily; // This line compute the difference of time between the two dates
+                var builder = new ComponentBuilder()
+                    .WithButton("Claim Daily Tokens", $"daily-confirm:{Context.User.Id}", ButtonStyle.Primary);
+                var promptMessage = await FollowupAsync(
+                    $"You would have gotten 4x more tokens if you have voted today. See /upvote\nDo you want to claim your daily anyway?",
+                    components: builder.Build()
+                );
+                await Task.Delay(8000);
+                if ((promptMessage.Components.FirstOrDefault() as ButtonComponent).Style != ButtonStyle.Success)
+                {
+                    var disabledBuilder = new ComponentBuilder().WithButton("Claim Daily Tokens", $"daily-confirm:{Context.User.Id}", ButtonStyle.Primary, disabled: true);
+                    await promptMessage.ModifyAsync(msg =>
+                    {
+                        msg.Components = disabledBuilder.Build();
+                    });
+                }
 
-                // This line prevents "Your credits refresh in 00:18:57.0072170 !"
-                TimeSpan di = new TimeSpan(23 - diff.Hours, 60 - diff.Minutes, 60 - diff.Seconds);
+                return;
+            }
 
-                await FollowupAsync($"Your tokens refresh in {di} !");
+            Database.ChangeDaily(user);
+            if (user != Context.User as IGuildUser)
+            {
+                _rand = new Random();
+                amount += _rand.Next(amount * 2);
+                await FollowupAsync($"You have given {user.Nickname ?? user.Username} {amount} daily tokens!");
+                Database.ChangeTokens(user, amount);
+            }
+            else
+            {
+                Database.ChangeTokens(user, amount);
+                await FollowupAsync($"You received your {amount} tokens!");
             }
         }
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageGuild)]
         [SlashCommand("resetuser", "Resets a user's stats")]
-        public async Task resetuser(IUser user)
+        public async Task resetuser(IGuildUser user)
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -982,16 +1000,21 @@ namespace Sketch_Bot.Modules
                     "\nMaybe I'll reset your stats instead if you are not careful");
                 return;
             }
+            var nukeEmoji = new Emoji("💣");
             var builder = new ComponentBuilder()
-                .WithButton("Confirm Reset", $"reset-user:{user.Id}", ButtonStyle.Danger);
+                .WithButton("Confirm Reset", $"reset-user:{Context.User.Id}:{user.Id}", ButtonStyle.Danger, nukeEmoji);
             var promptMessage = await FollowupAsync("You sure?", components: builder.Build());
             await Task.Delay(8000);
-            var disabledBuilder = new ComponentBuilder()
-                .WithButton("Confirm Reset", $"reset-user:{user.Id}", ButtonStyle.Danger, disabled: true);
-            await promptMessage.ModifyAsync(msg => 
+            if (!(promptMessage.Components.FirstOrDefault() as ButtonComponent).IsDisabled)
             {
-                msg.Components = disabledBuilder.Build();
-            });
+                var disabledBuilder = new ComponentBuilder()
+                    .WithButton("Confirm Reset", $"reset-user:{Context.User.Id}:{user.Id}", ButtonStyle.Danger, nukeEmoji, disabled: true);
+                await promptMessage.ModifyAsync(msg => 
+                {
+                    msg.Components = disabledBuilder.Build();
+                });
+                return;
+            }
 
         }
         [RequireContext(ContextType.Guild)]

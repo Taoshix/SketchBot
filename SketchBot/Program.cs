@@ -269,9 +269,59 @@ namespace Sketch_Bot
                         await component.RespondAsync("You can only reset your own user data!", ephemeral: true);
                         return;
                     }
-                    Database.DeleteUser(component.User as SocketGuildUser);
-                    Database.EnterUser(component.User as SocketGuildUser);
-                    await component.RespondAsync($"{component.User.Mention} Your user data has been reset!");
+                    SocketGuildUser target = _client.Guilds.FirstOrDefault(x => x.Id == component.GuildId).GetUser(ulong.Parse(args[1]));
+                    Database.DeleteUser(target);
+                    Database.EnterUser(target);
+                    await component.RespondAsync($"{target.Mention} Your user data has been reset by {component.User.Mention}!");
+                    await component.Message.ModifyAsync(msg =>
+                    {
+                        msg.Components = new ComponentBuilder()
+                            .WithButton("Reset User", $"reset-user:{component.User.Id}:{target.Id}", ButtonStyle.Danger, disabled: true)
+                            .Build();
+                    });
+                    break;
+                case "daily-confirm":
+                    if (!_provider.GetRequiredService<CachingService>()._dbConnected)
+                    {
+                        await component.RespondAsync("Database is not connected!");
+                        return;
+                    }
+                    if (component.User.Id != ulong.Parse(args.FirstOrDefault()))
+                    {
+                        await component.RespondAsync("If you want to claim your daily tokens do /daily", ephemeral: true);
+                        return;
+                    }
+                    var user = component.User as SocketGuildUser;
+                    var tableName = Database.GetUserStatus(user);
+                    DateTime now = DateTime.Now;
+                    DateTime daily = tableName.FirstOrDefault().Daily;
+                    int difference = DateTime.Compare(daily, now);
+
+                    bool canClaim = (tableName.FirstOrDefault()?.Daily.ToString() == "0001-01-01 00:00:00") ||
+                                    (daily.DayOfYear < now.DayOfYear && difference < 0) ||
+                                    (difference >= 0) ||
+                                    (daily.Year < now.Year);
+
+                    if (!canClaim)
+                    {
+                        TimeSpan diff = now - daily;
+                        TimeSpan di = new TimeSpan(23 - diff.Hours, 60 - diff.Minutes, 60 - diff.Seconds);
+                        await component.RespondAsync($"Your tokens refresh in {di} !", ephemeral: true);
+                        return;
+                    }
+                    int dailyReward = 50;
+                    Database.ChangeDaily(user);
+                    Database.ChangeTokens(user, dailyReward);
+                    await component.RespondAsync($"{user.Mention} You have received {dailyReward} tokens for your daily reward!");
+                    await component.Message.ModifyAsync(msg =>
+                    {
+                        msg.Components = new ComponentBuilder()
+                            .WithButton("Claim Daily Tokens", $"daily-confirm:{component.User.Id}", ButtonStyle.Success, disabled: true)
+                            .Build();
+                    });
+                    break;
+                default:
+                    await component.RespondAsync("Unknown button interaction!", ephemeral: true);
                     break;
             }
         }
