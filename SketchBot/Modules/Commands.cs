@@ -789,6 +789,92 @@ namespace Sketch_Bot.Modules
                     "\nTokens, Leveling");
             }
         }
+        [RequireContext(ContextType.Guild)]
+        [UserCommand("stats")]
+        //[Alias("level","profile")]
+        public async Task userstatus(IUser user)
+        {
+            await DeferAsync();
+            if (user.IsBot)
+            {
+                await FollowupAsync("Bots don't have stats");
+                return;
+            }
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
+            var blacklistCheck = _cachingService.GetBlacklistCheck(user.Id);
+            if (blacklistCheck != null)
+            {
+                await FollowupAsync("This user is blacklisted from using this command.");
+                return;
+            }
+            var embed = new EmbedBuilder()
+            {
+                Color = new Color(0, 0, 255)
+            };
+            var name = (user as IGuildUser).Nickname ?? user.Username;
+            Database.CreateTable(Context.Guild.Id);
+            var result = Database.CheckExistingUser(user as IGuildUser);
+
+            if (!result.Any())
+            {
+                _cachingService.SetupUserInDatabase((SocketGuild)(user as IGuildUser).Guild, user as SocketGuildUser);
+            }
+
+            var userTable = Database.GetUserStatus(user as IGuildUser);
+            embed.Title = "Stats for " + name;
+            embed.Description = userTable.FirstOrDefault().Tokens + " tokens:small_blue_diamond:" +
+                "\nLevel " + userTable.FirstOrDefault().Level +
+                "\nXP " + userTable.FirstOrDefault().XP + " out of " + XP.caclulateNextLevel(userTable.FirstOrDefault().Level);
+            var builtEmbed = embed.Build();
+            await FollowupAsync("", [builtEmbed]);
+        }
+        [RequireContext(ContextType.Guild)]
+        [SlashCommand("stats", "Display a user's level and token")]
+        //[Alias("level","profile")]
+        public async Task slashuserstatus(IUser user)
+        {
+            await DeferAsync();
+            if (user.IsBot)
+            {
+                await FollowupAsync("Bots don't have stats");
+                return;
+            }
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
+            var blacklistCheck = _cachingService.GetBlacklistCheck(user.Id);
+            if (blacklistCheck != null)
+            {
+                await FollowupAsync("This user is blacklisted from using this command.");
+                return;
+            }
+            var embed = new EmbedBuilder()
+            {
+                Color = new Color(0, 0, 255)
+            };
+            var name = (user as IGuildUser).Nickname ?? user.Username;
+            Database.CreateTable(Context.Guild.Id);
+            var result = Database.CheckExistingUser(user as IGuildUser);
+
+            if (!result.Any())
+            {
+                Database.EnterUser(user as IGuildUser);
+            }
+
+            var userTable = Database.GetUserStatus(user as IGuildUser) ?? throw new ArgumentNullException("Database.GetUserStatus(user)");
+            embed.Title = "Stats for " + name;
+            embed.Description = userTable.FirstOrDefault().Tokens + " tokens:small_blue_diamond:" +
+                "\nLevel " + userTable.FirstOrDefault().Level +
+                "\nXP " + userTable.FirstOrDefault().XP + " out of " + XP.caclulateNextLevel(userTable.FirstOrDefault().Level);
+            var builtEmbed = embed.Build();
+            await FollowupAsync("", [builtEmbed]);
+        }
         [SlashCommand("invite", "Invite me to your server")]
         public async Task invite()
         {

@@ -196,7 +196,42 @@ namespace Sketch_Bot
                 await context.Interaction.RespondAsync("", [embed], ephemeral: true);
                 return;
             }
-            await _interactionService.ExecuteCommandAsync(context, _provider);
+            if (context.Interaction is SocketSlashCommand slashCommandTarget)
+            {
+                if (slashCommandTarget.Data.Options.Any(x => x.Type == ApplicationCommandOptionType.User))
+                {
+                    var userOptions = slashCommandTarget.Data.Options.Where(x => x.Type == ApplicationCommandOptionType.User);
+                    var blacklistedUsers = _provider.GetRequiredService<CachingService>().GetBlackList();
+                    foreach (var userOption in userOptions)
+                    {
+                        if (blacklistedUsers.Contains((userOption.Value as SocketGuildUser).Id))
+                        {
+                            var embed = new EmbedBuilder()
+                                .WithTitle("Blacklisted User")
+                                .WithDescription($"You cannot use this command on blacklisted users!")
+                                .WithColor(new Color(255, 0, 0))
+                                .Build();
+                            await context.Interaction.RespondAsync("", [embed]);
+                            return;
+                        }
+                    }
+                }
+            }
+            else if (context.Interaction is SocketUserCommand userCommandTarget)
+            {
+                var target = userCommandTarget.Data.Member;
+                if (_provider.GetRequiredService<CachingService>().GetBlackList().Contains(target.Id))
+                {
+                    var embed = new EmbedBuilder()
+                        .WithTitle("Blacklisted User")
+                        .WithDescription($"You cannot use this command on blacklisted users!")
+                        .WithColor(new Color(255, 0, 0))
+                        .Build();
+                    await context.Interaction.RespondAsync("", [embed]);
+                    return;
+                }
+            }
+                await _interactionService.ExecuteCommandAsync(context, _provider);
             
         }
         async Task SlashCommandExecuted(SlashCommandInfo arg1, Discord.IInteractionContext arg2, Discord.Interactions.IResult arg3)
