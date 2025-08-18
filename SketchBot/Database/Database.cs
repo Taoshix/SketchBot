@@ -147,7 +147,7 @@ namespace Sketch_Bot
 
             database.CloseConnection();
         }
-        public static void CreateTable(string guildid)
+        public static void CreateTable(ulong guildid)
         {
             var database = new Database();
             var str = string.Format("CREATE TABLE IF NOT EXISTS `{0}` (user_id varchar(50), tokens bigint(20), daily datetime DEFAULT '0001-01-01 00:00:00', level bigint(20) DEFAULT '1', xp bigint(20) DEFAULT '1', PRIMARY KEY (user_id))", guildid);

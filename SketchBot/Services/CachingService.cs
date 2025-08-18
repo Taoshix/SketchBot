@@ -46,15 +46,19 @@ namespace Sketch_Bot.Services
             int levelup = guild.MemberCount >= 100 ? 0 : 1;
             try
             {
-                var result = ServerSettingsDB.GetSettings(guild.Id.ToString());
+                var result = ServerSettingsDB.GetSettings(guild.Id);
                 if (result.Any())
                 {
                     _prefixes.Add(guild.Id, result.First().Prefix);
                     return;
                 }
+                else
+                {
+                    ServerSettingsDB.MakeSettings(guild.Id, levelup);
+                }
 
-                CreateGuildTablesAndSettings(guild.Id.ToString(), levelup);
-                var gottenPrefix = ServerSettingsDB.GetSettings(guild.Id.ToString());
+                    CreateGuildTables(guild.Id, levelup);
+                var gottenPrefix = ServerSettingsDB.GetSettings(guild.Id);
                 var prefix = gottenPrefix.FirstOrDefault()?.Prefix ?? "?";
                 Console.WriteLine($"Prefix: {prefix}");
                 Console.WriteLine("Prefix has been set up");
@@ -65,8 +69,8 @@ namespace Sketch_Bot.Services
                 Console.WriteLine(ex);
                 if (ex.Message.Contains(guild.Id.ToString()))
                 {
-                    CreateGuildTablesAndSettings(guild.Id.ToString(), levelup);
-                    var gottenPrefix = ServerSettingsDB.GetSettings(guild.Id.ToString());
+                    CreateGuildTables(guild.Id, levelup);
+                    var gottenPrefix = ServerSettingsDB.GetSettings(guild.Id);
                     var prefix = gottenPrefix.FirstOrDefault()?.Prefix ?? "?";
                     Console.WriteLine($"Prefix: {prefix}");
                     Console.WriteLine("Prefix has been set up");
@@ -75,15 +79,12 @@ namespace Sketch_Bot.Services
             }
         }
 
-        private void CreateGuildTablesAndSettings(string guildId, int levelup)
+        private void CreateGuildTables(ulong guildId, int levelup)
         {
             Console.WriteLine("Creating Role Table...");
             ServerSettingsDB.CreateTableRole(guildId);
             Console.WriteLine("Creating Words Table...");
             ServerSettingsDB.CreateTableWords(guildId);
-            Console.WriteLine("Making Settings...");
-            ServerSettingsDB.MakeSettings(guildId, levelup);
-            Console.WriteLine("Gettings Prefix...");
         }
         public void SetupUserInDatabase(SocketGuild guild, SocketGuildUser user)
         {
@@ -187,7 +188,7 @@ namespace Sketch_Bot.Services
             if (_badWords.ContainsKey(guild.Id))
                 return;
 
-            var userTable = ServerSettingsDB.GetWords(guild.Id.ToString());
+            var userTable = ServerSettingsDB.GetWords(guild.Id);
             var words = userTable.Select(w => w.Words).Where(w => !string.IsNullOrWhiteSpace(w)).ToList();
 
             _badWords.Add(guild.Id, words);

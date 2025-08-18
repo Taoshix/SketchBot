@@ -400,7 +400,7 @@ namespace Sketch_Bot
 
             try
             {
-                var guildId = socketGuild.Id.ToString();
+                var guildId = socketGuild.Id;
                 var settings = ServerSettingsDB.GetSettings(guildId);
                 int levelup = socketGuild.MemberCount >= 100 ? 0 : 1;
 
@@ -465,7 +465,7 @@ namespace Sketch_Bot
 
                     cachingService.SetupUserInDatabase(socketGuild, (SocketGuildUser)user);
 
-                    ServerSettingsDB.CreateTableRole(socketGuild.Id.ToString());
+                    ServerSettingsDB.CreateTableRole(socketGuild.Id);
 
                     var guildUser = (SocketGuildUser)user;
                     var xpService = _provider.GetService<XpService>();
@@ -495,7 +495,7 @@ namespace Sketch_Bot
                         Database.levelUp(guildUser, xp, addLevels);
 
                         var newLevel = userData.Level + addLevels;
-                        var rolesToAward = ServerSettingsDB.GetRoles(socketGuild.Id.ToString());
+                        var rolesToAward = ServerSettingsDB.GetRoles(socketGuild.Id);
                         var rolesBefore = guildUser.Roles;
                         List<SocketRole> newRoles = new();
 
@@ -507,7 +507,7 @@ namespace Sketch_Bot
                             newRoles.AddRange(roles.Where(r => r != null));
                         }
 
-                        bool showLevelupMsg = ServerSettingsDB.GetSettings(socketGuild.Id.ToString()).FirstOrDefault().LevelupMessages;
+                        bool showLevelupMsg = ServerSettingsDB.GetSettings(socketGuild.Id).FirstOrDefault().LevelupMessages;
                         if (showLevelupMsg)
                         {
                             var embed = new EmbedBuilder().WithColor(new Color(0x4d006d));
@@ -530,7 +530,7 @@ namespace Sketch_Bot
                 }
                 catch (Exception ex)
                 {
-                    Database.CreateTable((msg.Author as SocketGuildUser)?.Guild.Id.ToString());
+                    Database.CreateTable((msg.Author as SocketGuildUser).Guild.Id);
                 }
             });
             return Task.CompletedTask;
@@ -548,12 +548,12 @@ namespace Sketch_Bot
                     Database.EnterUser(user);
 
                 // Get welcome channel
-                var settingsTable = ServerSettingsDB.GetSettings(user.Guild.Id.ToString());
+                var settingsTable = ServerSettingsDB.GetSettings(user.Guild.Id);
                 if (!settingsTable.Any())
                 {
-                    ServerSettingsDB.MakeSettings(user.Guild.Id.ToString(), user.Guild.MemberCount >= 100 ? 0 : 1);
+                    ServerSettingsDB.MakeSettings(user.Guild.Id, user.Guild.MemberCount >= 100 ? 0 : 1);
                 }
-                var settings = ServerSettingsDB.GetSettings(user.Guild.Id.ToString()).FirstOrDefault();
+                var settings = ServerSettingsDB.GetSettings(user.Guild.Id).FirstOrDefault();
                 if (settings == null || string.IsNullOrEmpty(settings.WelcomeChannel))
                     return;
 

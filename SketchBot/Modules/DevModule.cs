@@ -173,16 +173,16 @@ namespace Sketch_Bot.Modules
             {
                 try
                 {
-                    ServerSettingsDB.UpdateAllTables(guild.Id.ToString());
+                    ServerSettingsDB.UpdateAllTables(guild.Id);
                     await Task.Delay(50);
                 }
                 catch (Exception e)
                 {
                     await ReplyAsync(e.Message +
                         "\nCreating table if not exists...");
-                    ServerSettingsDB.CreateTableWords(guild.Id.ToString());
+                    ServerSettingsDB.CreateTableWords(guild.Id);
                     await Task.Delay(50);
-                    ServerSettingsDB.MakeSettings(guild.Id.ToString(), 1);
+                    ServerSettingsDB.MakeSettings(guild.Id, 1);
                     await Task.Delay(50);
                     continue;
                 }
@@ -201,12 +201,12 @@ namespace Sketch_Bot.Modules
             {
                 try
                 {
-                    Database.CreateTable(guild.Id.ToString());
-                    var gottenprefix = ServerSettingsDB.GetSettings(guild.Id.ToString());
+                    Database.CreateTable(guild.Id);
+                    var gottenprefix = ServerSettingsDB.GetSettings(guild.Id);
                     if (!gottenprefix.Any())
                     {
-                        ServerSettingsDB.MakeSettings(guild.Id.ToString(), 1);
-                        ServerSettingsDB.CreateTableWords(guild.Id.ToString());
+                        ServerSettingsDB.MakeSettings(guild.Id, 1);
+                        ServerSettingsDB.CreateTableWords(guild.Id);
                     }
                 }
                 catch (Exception ex)

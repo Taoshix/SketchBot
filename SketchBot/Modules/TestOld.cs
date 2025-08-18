@@ -47,8 +47,8 @@ namespace Sketch_Bot.Modules
         {
             if (type.ToLower() == "leveling")
             {
-                ServerSettingsDB.CreateTableRole(Context.Guild.Id.ToString());
-                ServerSettingsDB.AddRole(Context.Guild.Id.ToString(), role.Id.ToString(), level);
+                ServerSettingsDB.CreateTableRole(Context.Guild.Id);
+                ServerSettingsDB.AddRole(Context.Guild.Id, role.Id, level);
                 await ReplyAsync(role.Name + " has been added! If anyone reaches level " + level + " they will recieve the role!");
             }
             else
@@ -62,8 +62,8 @@ namespace Sketch_Bot.Modules
         {
             if (type.ToLower() == "leveling") //if i ever wanted shoplist to work, i would have to add a new if statement here
             {
-                ServerSettingsDB.CreateTableRole(Context.Guild.Id.ToString());
-                ServerSettingsDB.RemoveRole(Context.Guild.Id.ToString(), role.Id.ToString());
+                ServerSettingsDB.CreateTableRole(Context.Guild.Id);
+                ServerSettingsDB.RemoveRole(Context.Guild.Id, role.Id);
                 await ReplyAsync(role.Name + " has been removed");
             }
             else
@@ -86,7 +86,7 @@ namespace Sketch_Bot.Modules
         {
             if (Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
-                string prefix = ServerSettingsDB.GetSettings(Context.Guild.Id.ToString()).FirstOrDefault().Prefix;  /* put your chosen prefix here */
+                string prefix = ServerSettingsDB.GetSettings(Context.Guild.Id).FirstOrDefault().Prefix;  /* put your chosen prefix here */
                 var builder = new EmbedBuilder()
                 {
                     Color = new Discord.Color(114, 137, 218),
@@ -158,7 +158,7 @@ namespace Sketch_Bot.Modules
                 user = Context.User as IGuildUser;
             }
             var name = user.Nickname ?? user.Username;
-            Database.CreateTable(Context.Guild.Id.ToString());
+            Database.CreateTable(Context.Guild.Id);
             var result = Database.CheckExistingUser(user);
 
             if (!result.Any())
@@ -182,7 +182,7 @@ namespace Sketch_Bot.Modules
             if (((IGuildUser)Context.User).GuildPermissions.ManageChannels || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
                 var channel = Context.Channel;
-                ServerSettingsDB.SetWelcomeChannel(channel.Id.ToString(), Context.Guild.Id.ToString());
+                ServerSettingsDB.SetWelcomeChannel(channel.Id, Context.Guild.Id);
                 await ReplyAsync("This will be the new welcome channel 👍");
             }
             else
@@ -197,7 +197,7 @@ namespace Sketch_Bot.Modules
             if (((IGuildUser)Context.User).GuildPermissions.ManageChannels || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
                 var channel = Context.Channel;
-                ServerSettingsDB.SetWelcomeChannel("(NULL)", Context.Guild.Id.ToString());
+                ServerSettingsDB.SetWelcomeChannel(0, Context.Guild.Id);
                 await ReplyAsync("Welcome messages has been disabled");
             }
             else
@@ -220,7 +220,7 @@ namespace Sketch_Bot.Modules
                 var words = _service3.GetBadWords(Context.Guild.Id);
                 words.Add(word);
                 _service3.UpdateBadWords(Context.Guild.Id, words);
-                ServerSettingsDB.AddWord(Context.Guild.Id.ToString(), word);
+                ServerSettingsDB.AddWord(Context.Guild.Id, word);
             }
         }
         [RequireContext(ContextType.Guild)]
@@ -234,7 +234,7 @@ namespace Sketch_Bot.Modules
             }
             else
             {
-                ServerSettingsDB.DelWord(Context.Guild.Id.ToString(), word);
+                ServerSettingsDB.DelWord(Context.Guild.Id, word);
                 var words = _service3.GetBadWords(Context.Guild.Id);
                 words.Remove(word);
                 _service3.UpdateBadWords(Context.Guild.Id, words);
@@ -245,7 +245,7 @@ namespace Sketch_Bot.Modules
         [Command("bannedwords", RunMode = RunMode.Async)]
         public async Task bannedwordlist()
         {
-            var words = ServerSettingsDB.GetWords(Context.Guild.Id.ToString());
+            var words = ServerSettingsDB.GetWords(Context.Guild.Id);
             var bannedWords = words.Select(x => x.Words);
             if (words.Any())
             {
@@ -267,7 +267,7 @@ namespace Sketch_Bot.Modules
         [Command("welcomechannel", RunMode = RunMode.Async)]
         public async Task welcomechannel()
         {
-            var userTable = ServerSettingsDB.GetSettings(Context.Guild.Id.ToString());
+            var userTable = ServerSettingsDB.GetSettings(Context.Guild.Id);
             var channel = userTable.FirstOrDefault()?.WelcomeChannel;
             if (channel == "(NULL)" || channel == null)
             {
@@ -283,7 +283,7 @@ namespace Sketch_Bot.Modules
         [Command("modlogchannel", RunMode = RunMode.Async)]
         public async Task modlogchannel()
         {
-            var usertable = ServerSettingsDB.GetSettings(Context.Guild.Id.ToString());
+            var usertable = ServerSettingsDB.GetSettings(Context.Guild.Id);
             var channel = usertable.FirstOrDefault()?.ModlogChannel;
             if (channel == "(NULL)" || string.IsNullOrEmpty(channel))
             {
@@ -340,14 +340,14 @@ namespace Sketch_Bot.Modules
         [Command("DisableLevelMsg", RunMode = RunMode.Async)]
         public async Task disableleveling()
         {
-            ServerSettingsDB.UpdateLevelupMessagesBool(Context.Guild.Id.ToString(), 0);
+            ServerSettingsDB.UpdateLevelupMessagesBool(Context.Guild.Id, 0);
             await ReplyAsync("Levelup messages are now disabled!");
         }
         [RequireContext(ContextType.Guild)]
         [Command("EnableLevelMsg", RunMode = RunMode.Async)]
         public async Task enableleveling()
         {
-            ServerSettingsDB.UpdateLevelupMessagesBool(Context.Guild.Id.ToString(), 1);
+            ServerSettingsDB.UpdateLevelupMessagesBool(Context.Guild.Id, 1);
             await ReplyAsync("Levelup messages are now enabled!");
         }
         [RequireContext(ContextType.Guild)]
@@ -357,7 +357,7 @@ namespace Sketch_Bot.Modules
             if (((IGuildUser) Context.User).GuildPermissions.ManageChannels || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
                 var channel = Context.Channel;
-                ServerSettingsDB.SetModlogChannel(channel.Id.ToString(), Context.Guild.Id.ToString());
+                ServerSettingsDB.SetModlogChannel(channel.Id, Context.Guild.Id);
                 await ReplyAsync("This will be the new mod-log channel 👍");
             }
             else
@@ -401,7 +401,7 @@ namespace Sketch_Bot.Modules
         {
             if (((IGuildUser) Context.User).GuildPermissions.ManageChannels || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
-                ServerSettingsDB.SetModlogChannel("(NULL)", Context.Guild.Id.ToString());
+                ServerSettingsDB.SetModlogChannel(0, Context.Guild.Id);
                 await ReplyAsync("Mod-log disabled");
             }
             else
@@ -463,7 +463,7 @@ namespace Sketch_Bot.Modules
             }
             catch(IndexOutOfRangeException)
             {
-                await ReplyAsync($"Usage: {ServerSettingsDB.GetSettings(Context.Guild.Id.ToString()).FirstOrDefault().Prefix ?? "?"}meme <template name>, <top text>, <bottom text>\nEach argument is seperated by comma ,\nhttps://api.imgflip.com/popular_meme_ids for a list of templates");
+                await ReplyAsync($"Usage: {ServerSettingsDB.GetSettings(Context.Guild.Id).FirstOrDefault().Prefix ?? "?"}meme <template name>, <top text>, <bottom text>\nEach argument is seperated by comma ,\nhttps://api.imgflip.com/popular_meme_ids for a list of templates");
             }
 
         }

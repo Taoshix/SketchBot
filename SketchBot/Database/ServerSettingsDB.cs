@@ -73,7 +73,7 @@ namespace Sketch_Bot
                 dbConnection.Close();
             }
         }
-        public static void CreateTableRole(string guildid)
+        public static void CreateTableRole(ulong guildid)
         {
             var database = new ServerSettingsDB();
             var str = string.Format("CREATE TABLE IF NOT EXISTS `{0}_roles` (roleId varchar(50), level int, PRIMARY KEY (roleId))", guildid);
@@ -81,7 +81,7 @@ namespace Sketch_Bot
 
             database.CloseConnection();
         }
-        public static void CreateTableWords(string guildid)
+        public static void CreateTableWords(ulong guildid)
         {
             var database = new ServerSettingsDB();
             var str = string.Format("CREATE TABLE IF NOT EXISTS `{0}_words` (words text)", guildid);
@@ -89,7 +89,7 @@ namespace Sketch_Bot
 
             database.CloseConnection();
         }
-        public static void MakeSettings(string guildid, int levelup)
+        public static void MakeSettings(ulong guildid, int levelup)
         {
             var database = new Database();
             var str = string.Format("INSERT INTO `server_settings` (id, prefix, welcomechannel, modlogchannel, xpmultiplier, LevelupMessages) VALUES ({0}, '?', NULL, NULL, 1, {1})", guildid, levelup);
@@ -97,7 +97,7 @@ namespace Sketch_Bot
 
             database.CloseConnection();
         }
-        public static void UpdateAllTables(string guilid)
+        public static void UpdateAllTables(ulong guilid)
         {
             var database = new ServerSettingsDB();
             var str = string.Format("ALTER TABLE `{0}` ADD COLUMN `LevelupMessages` INT NOT NULL DEFAULT '1' AFTER `xpmultiplier`; ", guilid);
@@ -105,7 +105,7 @@ namespace Sketch_Bot
 
             database.CloseConnection();
         }
-        public static void UpdateXprate(string guildid, int rate)
+        public static void UpdateXprate(ulong guildid, int rate)
         {
             var database = new Database();
             var str = string.Format("UPDATE `server_settings` SET xpmultiplier = '{1}' WHERE id = {0}", guildid, rate);
@@ -115,7 +115,7 @@ namespace Sketch_Bot
 
             return;
         }
-        public static void AddWord(string guildid, string words)
+        public static void AddWord(ulong guildid, string words)
         {
             var database = new ServerSettingsDB();
             var str = string.Format("INSERT INTO `{0}_words` (words) VALUES ('{1}')", guildid, words);
@@ -125,7 +125,7 @@ namespace Sketch_Bot
 
             
         }
-        public static void AddRole(string guildid, string roleId, int level)
+        public static void AddRole(ulong guildid, ulong roleId, int level)
         {
             var database = new ServerSettingsDB();
             var str = string.Format("INSERT INTO `{0}_roles` (roleId, level) VALUES ('{1}', {2})", guildid, roleId, level);
@@ -135,7 +135,7 @@ namespace Sketch_Bot
 
             
         }
-        public static void RemoveRole(string guildid, string roleId)
+        public static void RemoveRole(ulong guildid, ulong roleId)
         {
             var database = new ServerSettingsDB();
             var str = string.Format("DELETE FROM `{0}_roles` WHERE roleId = '{1}'", guildid, roleId);
@@ -145,7 +145,7 @@ namespace Sketch_Bot
 
             
         }
-        public static void DelWord(string guildid, string words)
+        public static void DelWord(ulong guildid, string words)
         {
             var database = new ServerSettingsDB();
             var str = string.Format("DELETE FROM `{0}_words` WHERE words = ('{1}')", guildid, words);
@@ -155,7 +155,7 @@ namespace Sketch_Bot
 
             
         }
-        public static void UpdatePrefix(string guildid, string newprefix)
+        public static void UpdatePrefix(ulong guildid, string newprefix)
         {
             var database = new Database();
             var str = string.Format("UPDATE `server_settings` SET prefix = ('{1}') WHERE id = {0}", guildid, newprefix);
@@ -165,7 +165,7 @@ namespace Sketch_Bot
 
             return;
         }
-        public static List<Serversettings> GetSettings(string guildid)
+        public static List<Serversettings> GetSettings(ulong guildid)
         {
             var result = new List<Serversettings>();
             var database = new Database();
@@ -193,7 +193,7 @@ namespace Sketch_Bot
             database.CloseConnection();
             return result;
         }
-        public static void UpdateLevelupMessagesBool(string guildid, int boool)
+        public static void UpdateLevelupMessagesBool(ulong guildid, int boool)
         {
             var database = new ServerSettingsDB();
             var str = string.Format("UPDATE `server_settings` SET LevelupMessages = ('{1}') WHERE id = {0}", guildid, boool);
@@ -220,7 +220,7 @@ namespace Sketch_Bot
             database.CloseConnection();
             return result;
         }
-        public static void SetWelcomeChannel(string id, string guildid)
+        public static void SetWelcomeChannel(ulong id, ulong guildid)
         {
             var database = new Database();
             var str = string.Format("UPDATE `server_settings` SET welcomechannel = '{1}' WHERE id = {0}", guildid, id);
@@ -230,7 +230,7 @@ namespace Sketch_Bot
 
             
         }
-        public static void SetModlogChannel(string id, string guildid)
+        public static void SetModlogChannel(ulong id, ulong guildid)
         {
             var database = new Database();
             var str = string.Format("UPDATE `server_settings` SET modlogchannel = '{1}' WHERE id = {0}", guildid, id);
@@ -240,7 +240,7 @@ namespace Sketch_Bot
 
             
         }
-        public static List<Serversettings> GetRole(string guildid, long level)
+        public static List<Serversettings> GetRole(ulong guildid, long level)
         {
             var result = new List<Serversettings>();
             var database = new ServerSettingsDB();
@@ -261,7 +261,7 @@ namespace Sketch_Bot
 
             return result;
         }
-        public static List<Serversettings> GetRoles(string guildid)
+        public static List<Serversettings> GetRoles(ulong guildid)
         {
             var result = new List<Serversettings>();
             var database = new ServerSettingsDB();
@@ -284,7 +284,7 @@ namespace Sketch_Bot
 
             return result;
         }
-        public static List<Serversettings> GetWords(string guildid)
+        public static List<Serversettings> GetWords(ulong guildid)
         {
             var result = new List<Serversettings>();
             var database = new ServerSettingsDB();

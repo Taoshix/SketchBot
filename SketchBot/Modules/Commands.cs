@@ -707,7 +707,7 @@ namespace Sketch_Bot.Modules
             {
                 user = Context.User as IGuildUser;
             }
-            Database.CreateTable(Context.Guild.Id.ToString());
+            Database.CreateTable(Context.Guild.Id);
             var result = Database.CheckExistingUser(user);
 
             if (!result.Any())

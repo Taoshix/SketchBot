@@ -53,8 +53,8 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            ServerSettingsDB.CreateTableRole(Context.Guild.Id.ToString());
-            ServerSettingsDB.AddRole(Context.Guild.Id.ToString(), role.Id.ToString(), level);
+            ServerSettingsDB.CreateTableRole(Context.Guild.Id);
+            ServerSettingsDB.AddRole(Context.Guild.Id, role.Id, level);
             await FollowupAsync(role.Name + " has been added! If anyone reaches level " + level + " they will recieve the role!");
         }
         [RequireUserPermission(GuildPermission.ManageRoles)]
@@ -68,8 +68,8 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            ServerSettingsDB.CreateTableRole(Context.Guild.Id.ToString());
-            ServerSettingsDB.RemoveRole(Context.Guild.Id.ToString(), role.Id.ToString());
+            ServerSettingsDB.CreateTableRole(Context.Guild.Id);
+            ServerSettingsDB.RemoveRole(Context.Guild.Id, role.Id);
             await FollowupAsync(role.Name + " has been removed");
         }
         [SlashCommand("youtube", "Searches YouTube and returns the first result")]
@@ -131,7 +131,7 @@ namespace Sketch_Bot.Modules
                 Color = new Discord.Color(0, 0, 255)
             };
             var name = (user as IGuildUser).Nickname ?? user.Username;
-            Database.CreateTable(Context.Guild.Id.ToString());
+            Database.CreateTable(Context.Guild.Id);
             var result = Database.CheckExistingUser(user as IGuildUser);
 
             if (!result.Any())
@@ -168,7 +168,7 @@ namespace Sketch_Bot.Modules
                 Color = new Discord.Color(0, 0, 255)
             };
             var name = (user as IGuildUser).Nickname ?? user.Username;
-            Database.CreateTable(Context.Guild.Id.ToString());
+            Database.CreateTable(Context.Guild.Id);
             var result = Database.CheckExistingUser(user as IGuildUser);
 
             if (!result.Any())
@@ -196,7 +196,7 @@ namespace Sketch_Bot.Modules
                 return;
             }
             var channel = Context.Channel;
-            ServerSettingsDB.SetWelcomeChannel(channel.Id.ToString(), Context.Guild.Id.ToString());
+            ServerSettingsDB.SetWelcomeChannel(channel.Id, Context.Guild.Id);
             await FollowupAsync("This will be the new welcome channel 👍");
         }
         [RequireContext(ContextType.Guild)]
@@ -210,7 +210,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            ServerSettingsDB.SetWelcomeChannel("(NULL)", Context.Guild.Id.ToString());
+            ServerSettingsDB.SetWelcomeChannel(0, Context.Guild.Id);
             await FollowupAsync("Welcome messages has been disabled");
         }
         [RequireContext(ContextType.Guild)]
@@ -223,7 +223,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            ServerSettingsDB.UpdateLevelupMessagesBool(Context.Guild.Id.ToString(), 0);
+            ServerSettingsDB.UpdateLevelupMessagesBool(Context.Guild.Id, 0);
             await FollowupAsync("Levelup messages are now disabled!");
         }
         [RequireContext(ContextType.Guild)]
@@ -236,7 +236,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            ServerSettingsDB.UpdateLevelupMessagesBool(Context.Guild.Id.ToString(), 1);
+            ServerSettingsDB.UpdateLevelupMessagesBool(Context.Guild.Id, 1);
             await FollowupAsync("Levelup messages are now enabled!");
         }
         [RequireContext(ContextType.Guild)]
@@ -252,7 +252,7 @@ namespace Sketch_Bot.Modules
             if (((IGuildUser) Context.User).GuildPermissions.ManageChannels)
             {
                 var channel = Context.Channel;
-                ServerSettingsDB.SetModlogChannel(channel.Id.ToString(), Context.Guild.Id.ToString());
+                ServerSettingsDB.SetModlogChannel(channel.Id, Context.Guild.Id);
                 await FollowupAsync("This will be the new mod-log channel 👍");
             }
             else
@@ -272,7 +272,7 @@ namespace Sketch_Bot.Modules
             }
             if (((IGuildUser) Context.User).GuildPermissions.ManageChannels || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
-                ServerSettingsDB.SetModlogChannel("(NULL)", Context.Guild.Id.ToString());
+                ServerSettingsDB.SetModlogChannel(0, Context.Guild.Id);
                 await FollowupAsync("Mod-log disabled");
             }
             else
