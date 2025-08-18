@@ -175,8 +175,8 @@ namespace Sketch_Bot
             while (table.Read())
             {
                 var prefix = table["prefix"] == DBNull.Value ? string.Empty : (string)table["prefix"];
-                var welcomechannel = table["welcomechannel"] == DBNull.Value ? 0 : (ulong)table["welcomechannel"];
-                var modlogchannel = table["modlogchannel"] == DBNull.Value ? 0 : (ulong)table["modlogchannel"];
+                var welcomechannel = table["welcomechannel"] == DBNull.Value ? 0ul : (ulong)table["welcomechannel"];
+                var modlogchannel = table["modlogchannel"] == DBNull.Value ? 0ul : (ulong)table["modlogchannel"];
                 var xprate = table["xpmultiplier"] == DBNull.Value ? 1 : (int)table["xpmultiplier"];
                 var levelupmessages = table["LevelupMessages"] == DBNull.Value ? 1 : (int)table["LevelupMessages"];
 
