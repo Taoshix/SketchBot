@@ -268,14 +268,14 @@ namespace Sketch_Bot.Modules
         public async Task welcomechannel()
         {
             var userTable = ServerSettingsDB.GetSettings(Context.Guild.Id);
-            var channel = userTable.FirstOrDefault()?.WelcomeChannel;
-            if (channel == 0 || channel == null)
+            var channel = userTable.FirstOrDefault().WelcomeChannel;
+            if (channel == 0)
             {
                 await ReplyAsync("Welcome channel is not enabled. use `?setwelcome` in a channel to enable it");
             }
             else
             {
-                var parsedChannel = await Context.Guild.GetTextChannelAsync(UInt64.Parse(channel));
+                var parsedChannel = await Context.Guild.GetTextChannelAsync(channel);
                 await ReplyAsync(parsedChannel.Mention);
             }
         }
@@ -284,14 +284,14 @@ namespace Sketch_Bot.Modules
         public async Task modlogchannel()
         {
             var usertable = ServerSettingsDB.GetSettings(Context.Guild.Id);
-            var channel = usertable.FirstOrDefault()?.ModlogChannel;
-            if (channel == 0 || string.IsNullOrEmpty(channel))
+            var channel = usertable.FirstOrDefault().ModlogChannel;
+            if (channel == 0)
             {
-                await ReplyAsync("Mod-log is not enabled. use `?setmodlog` in a channel to enable it");
+                await ReplyAsync("Modlog is not enabled. use `?setmodlog` in a channel to enable it");
             }
             else
             {
-                var parsedchannel = await Context.Guild.GetTextChannelAsync(ulong.Parse(channel));
+                var parsedchannel = await Context.Guild.GetTextChannelAsync(channel);
                 await ReplyAsync(parsedchannel.Mention);
             }
         }
