@@ -175,8 +175,8 @@ namespace Sketch_Bot
             while (table.Read())
             {
                 var prefix = table["prefix"] == DBNull.Value ? string.Empty : (string)table["prefix"];
-                var welcomechannel = table["welcomechannel"] == DBNull.Value ? 0ul : (ulong)table["welcomechannel"];
-                var modlogchannel = table["modlogchannel"] == DBNull.Value ? 0ul : (ulong)table["modlogchannel"];
+                var welcomechannel = table["welcomechannel"] == DBNull.Value ? 0ul : Convert.ToUInt64(table["welcomechannel"]);
+                var modlogchannel = table["modlogchannel"] == DBNull.Value ? 0ul : Convert.ToUInt64(table["modlogchannel"]);
                 var xprate = table["xpmultiplier"] == DBNull.Value ? 1 : (int)table["xpmultiplier"];
                 var levelupmessages = table["LevelupMessages"] == DBNull.Value ? 1 : (int)table["LevelupMessages"];
 
@@ -249,7 +249,7 @@ namespace Sketch_Bot
 
             while (table.Read())
             {
-                var roleId = (ulong)table["roleId"];
+                var roleId = Convert.ToUInt64(table["roleId"]);
 
                 result.Add(new Serversettings
                 {
@@ -270,7 +270,7 @@ namespace Sketch_Bot
 
             while (table.Read())
             {
-                var roleId = (ulong)table["roleId"];
+                var roleId = Convert.ToUInt64(table["roleId"]);
                 var roleLevel = (int)table["level"];
 
                 result.Add(new Serversettings

@@ -96,10 +96,11 @@ namespace Sketch_Bot.Modules
             {
                 var embed
                     = new EmbedBuilder()
-                    .WithTitle($"Guilds Owned by User ({guilds.Count})")
+                    .WithTitle($"Guilds Owned by {Context.Client.GetUser(id)?.Username ?? id.ToString()} ({guilds.Count})")
                     .WithDescription(string.Join("\n", guilds.Select(g => $"{g.Name} - {g.Id}")))
                     .WithColor(new Color(0, 255, 0))
                     .Build();
+                await Context.Channel.SendMessageAsync("", false, embed);
             }
             else
             {
@@ -123,15 +124,32 @@ namespace Sketch_Bot.Modules
                 .Select(guild => $"{guild.Name} - {guild.Id}")
                 .ToList();
 
+            // Discord embed description max length is 4096
+            var descriptionBuilder = new StringBuilder();
+            int count = 0;
+            foreach (var server in foundServers)
+            {
+                if (descriptionBuilder.Length + server.Length + 1 > 4096)
+                    break;
+                descriptionBuilder.AppendLine(server);
+                count++;
+            }
+
             var user = await Context.Client.GetUserAsync(id);
             var embed = new EmbedBuilder()
-                .WithTitle($"{mutualGuilds.Count} mutual servers found")
-                .WithDescription(string.Join("\n", foundServers))
+                .WithTitle($"{count} mutual servers found")
+                .WithDescription(descriptionBuilder.ToString())
                 .WithColor(new Color(0, 0, 255))
                 .WithAuthor(user?.Username ?? id.ToString(), user?.GetAvatarUrl())
                 .Build();
 
             await Context.Channel.SendMessageAsync("", false, embed);
+
+            // If there are more servers, notify user
+            if (count < foundServers.Count)
+            {
+                await Context.Channel.SendMessageAsync($"Note: Only the first {count} servers are shown due to embed description length limit.");
+            }
         }
         [RequireDevelopers]
         [Command("updatepfp", RunMode = RunMode.Async)]
@@ -435,7 +453,7 @@ namespace Sketch_Bot.Modules
             if (blacklist.Contains(user.Id))
             {
                 Database.BlacklistDel(id);
-                embedBuilder.Description =  $"{user?.Mention ?? id.ToString()} has been removed from the blacklist!";
+                embedBuilder.Description = $"{user?.Mention ?? id.ToString()} has been removed from the blacklist!";
                 _cachingService.RemoveFromBlacklist(id);
             }
             else
@@ -503,6 +521,25 @@ namespace Sketch_Bot.Modules
             }
 
             await Context.Channel.SendMessageAsync("", false, embedBuilder.Build());
+        }
+        [RequireDevelopers]
+        [Command("topservers", RunMode = RunMode.Async)]
+        public async Task TopServersAsync()
+        {
+            var servers = Context.Client.Guilds.OrderByDescending(x => x.MemberCount).ToList();
+            List<string> myList = new List<string>();
+            foreach (var server in servers.Take(20))
+            {
+                var percentage = Math.Round(server.Users.Count(x => x.IsBot) / (double)server.MemberCount * 100D, 2);
+                myList.Add($"{server.Name} - {server.MemberCount} members ({percentage}% bots)");
+            }
+            var output = string.Join("\n", myList);
+            var embed = new EmbedBuilder()
+                .WithTitle("Top 20 Servers")
+                .WithDescription(output)
+                .WithColor(new Color(0, 0, 255))
+                .Build();
+            await ReplyAsync("", false, embed);
         }
     }
 }
