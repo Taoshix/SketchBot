@@ -352,7 +352,7 @@ namespace Sketch_Bot
         {
             var database = new Database();
 
-            var str = string.Format("INSERT INTO blacklist (user_id, username, reason, blacklister ) VALUES ('{0}', '{1}', '{2}', '{3}')", user.Id, user.Username, reason, blacklister.Username);
+            var str = string.Format("INSERT INTO blacklist (user_id, username, reason, blacklister ) VALUES ('{0}', '{1}', '{2}', '{3}')", user.Id, HelperFunctions.CapitalizeFirstLetter(user.Username), reason, HelperFunctions.CapitalizeFirstLetter(blacklister.Username));
             var table = database.FireCommand(str);
 
             database.CloseConnection();

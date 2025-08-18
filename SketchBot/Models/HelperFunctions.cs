@@ -63,7 +63,7 @@ namespace Sketch_Bot.Models
                 }
                 return result;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return ex.Message;
             }
@@ -290,6 +290,13 @@ namespace Sketch_Bot.Models
                 return $"{(bytes / 1024.0):0}KB";
             else
                 return $"{(bytes / 1024.0 / 1024.0):0.00}MB";
+        }
+        public static string CapitalizeFirstLetter(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            return char.ToUpper(input[0]) + input.Substring(1);
         }
     }
 }

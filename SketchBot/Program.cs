@@ -428,7 +428,7 @@ namespace Sketch_Bot
                     }
                     catch (HttpException)
                     {
-                        // Try next channel
+                        continue;
                     }
                 }
             }

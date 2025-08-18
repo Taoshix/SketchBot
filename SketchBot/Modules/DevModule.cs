@@ -18,6 +18,7 @@ using Discord.WebSocket;
 using System.IO;
 using System.Net;
 using Discord.Rest;
+using System.Net.Http;
 
 namespace Sketch_Bot.Modules
 {
@@ -90,14 +91,15 @@ namespace Sketch_Bot.Modules
         [Command("checkowner")]
         public async Task checkowner(ulong id)
         {
-            var guilds = Context.Client.Guilds;
-            var guilds2 = guilds.Where(x => x.OwnerId == id).ToList();
-            if (guilds2.Any())
+            var guilds = Context.Client.Guilds.Where(g => g.OwnerId == id).ToList();
+            if (guilds.Any())
             {
-                foreach (var guildd in guilds2)
-                {
-                    await Context.Channel.SendMessageAsync(guildd.Name + "    " + guildd.Id);
-                }
+                var embed
+                    = new EmbedBuilder()
+                    .WithTitle($"Guilds Owned by User ({guilds.Count})")
+                    .WithDescription(string.Join("\n", guilds.Select(g => $"{g.Name} - {g.Id}")))
+                    .WithColor(new Color(0, 255, 0))
+                    .Build();
             }
             else
             {
@@ -109,35 +111,27 @@ namespace Sketch_Bot.Modules
         public async Task mutualservers(ulong id)
         {
             var guilds = Context.Client.Guilds;
-            var castedguilds = guilds.Cast<SocketGuild>();
-            var guilds2 = castedguilds.Where(x => x.Users.FirstOrDefault(z => z.Id == id)?.Id == id).ToList();
-            List<string> foundservers = new List<string>();
-            if (guilds2.Any())
-            {
-                foreach (var guildd in guilds2)
-                {
-                    foundservers.Add(guildd.Name + " - " + guildd.Id);
-                }
-                var fulltext = string.Join("\n", foundservers);
-                var user = await Context.Client.GetUserAsync(id);
-                EmbedBuilder builder = new EmbedBuilder()
-                {
-                    Title = $"{guilds2.Count} mutual servers found",
-                    Description = fulltext,
-                    Color = new Discord.Color(0, 0, 255),
-                    Author = new EmbedAuthorBuilder()
-                    {
-                        Name = user.Username,
-                        IconUrl = user.GetAvatarUrl()
-                    }
-                };
-                var embed = builder.Build();
-                await Context.Channel.SendMessageAsync("", false, embed);
-            }
-            else
+            var mutualGuilds = guilds.Where(guild => guild.Users.Any(user => user.Id == id)).ToList();
+
+            if (!mutualGuilds.Any())
             {
                 await Context.Channel.SendMessageAsync("No servers found!");
+                return;
             }
+
+            var foundServers = mutualGuilds
+                .Select(guild => $"{guild.Name} - {guild.Id}")
+                .ToList();
+
+            var user = await Context.Client.GetUserAsync(id);
+            var embed = new EmbedBuilder()
+                .WithTitle($"{mutualGuilds.Count} mutual servers found")
+                .WithDescription(string.Join("\n", foundServers))
+                .WithColor(new Color(0, 0, 255))
+                .WithAuthor(user?.Username ?? id.ToString(), user?.GetAvatarUrl())
+                .Build();
+
+            await Context.Channel.SendMessageAsync("", false, embed);
         }
         [RequireDevelopers]
         [Command("updatepfp", RunMode = RunMode.Async)]
@@ -147,13 +141,27 @@ namespace Sketch_Bot.Modules
             {
                 if (Context.Message.Attachments.Any())
                 {
-                    url = Context.Message.Attachments.FirstOrDefault().Url;
+                    url = Context.Message.Attachments.First().Url;
                 }
-                WebClient client = new WebClient();
-                Stream stream = client.OpenRead(url);
-                await Context.Client.CurrentUser.ModifyAsync(x => x.Avatar = new Discord.Image(stream));
+
+                if (string.IsNullOrWhiteSpace(url))
+                {
+                    await ReplyAsync("No URL or attachment provided.");
+                    return;
+                }
+
+                using (var httpClient = new HttpClient())
+                using (var stream = await httpClient.GetStreamAsync(url))
+                {
+                    if (stream == null)
+                    {
+                        await ReplyAsync("Unable to download/verify the URL");
+                        return;
+                    }
+                    await Context.Client.CurrentUser.ModifyAsync(x => x.Avatar = new Discord.Image(stream));
+                }
             }
-            catch (Exception ex)
+            catch
             {
                 await ReplyAsync("Unable to download/verify the URL");
             }
@@ -250,7 +258,7 @@ namespace Sketch_Bot.Modules
 
             List<string> guildNames = new List<string>();
             var guilds = Context.Client.Guilds;
-            foreach (var guild in guilds.Where(x => x.Name.ToLower().Contains(search.ToLower())).Take(20))
+            foreach (var guild in guilds.Where(x => x.Name.Contains(search, StringComparison.CurrentCultureIgnoreCase)).Take(20))
             {
                 guildNames.Add(guild.Name + " - " + guild.Id);
             }
@@ -271,39 +279,32 @@ namespace Sketch_Bot.Modules
         }
         [RequireDevelopers]
         [Command("Reply", RunMode = RunMode.Async)]
-        public async Task replyasync(ulong id, [Remainder] string message)
+        public async Task ReplyToDMAsync(ulong id, [Remainder] string message)
         {
-            if (Context.User.Id == 135446225565515776)
+            var user = Context.Client.GetUser(id);
+            if (user == null)
             {
-                var user = Context.Client.GetUser(id);
-                await user.SendMessageAsync(message);
-                var embedbuilder = new EmbedBuilder()
-                {
-                    Title = "Message sent",
-                    Description = "Taoshi replied to " + user.Id + " (" + user.Username + ")" +
-                    "\n\n" + message,
-                    Color = new Color(0, 0, 255)
-                };
-                var embed = embedbuilder.Build();
-                await ReplyAsync("Message sent!");
-                await Context.Client.GetUser(208624502878371840).SendMessageAsync("", false, embed);
-            }
-            else
-            {
-                var user = Context.Client.GetUser(id);
-                await user.SendMessageAsync(message);
-                var embedbuilder = new EmbedBuilder()
-                {
-                    Title = "Message sent",
-                    Description = "Tjampen replied to " + user.Id + " (" + user.Username + ")" +
-                    "\n\n" + message,
-                    Color = new Color(0, 0, 255)
-                };
-                var embed = embedbuilder.Build();
-                await ReplyAsync("Message sent!");
-                await Context.Client.GetUser(135446225565515776).SendMessageAsync("", false, embed);
+                await ReplyAsync("User not found.");
+                return;
             }
 
+            await user.SendMessageAsync(message);
+
+            string senderName = Context.User.Id == 135446225565515776 ? "Taoshi" : "Tjampen";
+            var notifyId = Context.User.Id == 135446225565515776 ? 208624502878371840 : 135446225565515776;
+
+            var embed = new EmbedBuilder()
+                .WithTitle("Message sent")
+                .WithDescription($"{senderName} replied to {user.Id} ({user.Username})\n\n{message}")
+                .WithColor(new Color(0, 0, 255))
+                .Build();
+
+            await ReplyAsync("Message sent!");
+            var notifyUser = Context.Client.GetUser((ulong)notifyId);
+            if (notifyUser != null)
+            {
+                await notifyUser.SendMessageAsync("", false, embed);
+            }
         }
         [RequireDevelopers]
         [Command("blacklist", RunMode = RunMode.Async)]
@@ -314,36 +315,36 @@ namespace Sketch_Bot.Modules
                 await ReplyAsync("Database is down, please try again later");
                 return;
             }
-            if (user.Id != 135446225565515776 && user.Id != 208624502878371840)
-            {
-                if (Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
-                {
-                    var result = _cachingService.GetBlackList();
-                    if (!result.Contains(user.Id))
-                    {
-                        Database.BlacklistAdd(user, reason, Context.User);
-                        var embedraw = new EmbedBuilder()
-                        {
-                            Color = new Color(0, 0, 0)
-                        };
-                        embedraw.Title = "Blacklist";
-                        embedraw.Description = user.Mention + " has been blacklisted!" +
-                            "\n" +
-                            "\nReason: " + reason;
-                        var embed = embedraw.Build();
-                        await Context.Channel.SendMessageAsync("", false, embed);
-                        _cachingService.AddToBlacklist(user.Id);
-                    }
-                }
-                else
-                {
-                    await ReplyAsync("You have to be a developer to do that!");
-                }
-            }
-            else
+
+            // Prevent blacklisting the bot owners
+            var ownerIds = new[] { 135446225565515776UL, 208624502878371840UL };
+            if (ownerIds.Contains(user.Id))
             {
                 await Context.Channel.SendMessageAsync("Nice try");
+                return;
             }
+
+            var blacklist = _cachingService.GetBlackList();
+            if (blacklist.Contains(user.Id))
+            {
+                var blacklistCheck = Database.BlacklistCheck(user.Id);
+                var alreadyEmbed = new EmbedBuilder()
+                    .WithTitle("Blacklist")
+                    .WithDescription($"{user.Mention} is already blacklisted by {blacklistCheck.FirstOrDefault().Blacklister}.")
+                    .WithColor(new Color(0, 0, 0))
+                    .AddField("Reason", blacklistCheck.FirstOrDefault().Reason)
+                    .Build();
+                return;
+            }
+
+            Database.BlacklistAdd(user, reason, Context.User);
+            var embed = new EmbedBuilder()
+                .WithTitle("Blacklist")
+                .WithDescription($"{user.Mention} has been blacklisted!\n\nReason: {reason}")
+                .WithColor(new Color(0, 0, 0))
+                .Build();
+            await Context.Channel.SendMessageAsync("", false, embed);
+            _cachingService.AddToBlacklist(user.Id);
         }
         [RequireDevelopers]
         [Command("blacklistid", RunMode = RunMode.Async)]
@@ -354,38 +355,39 @@ namespace Sketch_Bot.Modules
                 await ReplyAsync("Database is down, please try again later");
                 return;
             }
-            var user = await Context.Client.Rest.GetUserAsync(id);
-            if (user.Id != 135446225565515776 && user.Id != 208624502878371840)
-            {
-                if (Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
-                {
-                    var result = _cachingService.GetBlackList();
-                    if (!result.Contains(user.Id))
-                    {
-                        Database.BlacklistAdd(user, reason, Context.User);
-                        var embedraw = new EmbedBuilder()
-                        {
-                            Color = new Color(0, 0, 0)
-                        };
-                        embedraw.Title = ("Blacklist");
-                        embedraw.Description = user.Mention + " has been blacklisted!" +
-                            "\n" +
-                            "\nReason: " + reason;
-                        var embed = embedraw.Build();
-                        await Context.Channel.SendMessageAsync("", false, embed);
-                        _cachingService.AddToBlacklist(user.Id);
-                    }
 
-                }
-                else
-                {
-                    await ReplyAsync("You have be a developer to do that!");
-                }
-            }
-            else
+            var user = await Context.Client.Rest.GetUserAsync(id);
+            var ownerIds = new[] { 135446225565515776UL, 208624502878371840UL };
+
+            if (ownerIds.Contains(user.Id))
             {
                 await Context.Channel.SendMessageAsync("Nice try");
+                return;
             }
+
+            var blacklist = _cachingService.GetBlackList();
+            if (blacklist.Contains(user.Id))
+            {
+                var blacklistCheck = Database.BlacklistCheck(user.Id);
+                var alreadyEmbed = new EmbedBuilder()
+                    .WithTitle("Blacklist")
+                    .WithDescription($"{user.Mention} is already blacklisted by {blacklistCheck.FirstOrDefault().Blacklister}.")
+                    .WithColor(new Color(0, 0, 0))
+                    .AddField("Reason", blacklistCheck.FirstOrDefault().Reason)
+                    .Build();
+                return;
+            }
+
+            Database.BlacklistAdd(user, reason, Context.User);
+
+            var embed = new EmbedBuilder()
+                .WithTitle("Blacklist")
+                .WithDescription($"{user.Mention} has been blacklisted!\n\nReason: {reason}")
+                .WithColor(new Color(0, 0, 0))
+                .Build();
+
+            await Context.Channel.SendMessageAsync("", false, embed);
+            _cachingService.AddToBlacklist(user.Id);
         }
         [RequireDevelopers]
         [Command("unblacklist", RunMode = RunMode.Async)]
@@ -396,38 +398,23 @@ namespace Sketch_Bot.Modules
                 await ReplyAsync("Database is down, please try again later");
                 return;
             }
-            if (Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
+
+            var blacklist = _cachingService.GetBlackList();
+            var embedBuilder = new EmbedBuilder { Color = new Color(0, 0, 0), Title = "Blacklist" };
+
+            if (blacklist.Contains(user.Id))
             {
-                var result = _cachingService.GetBlackList();
-                if (result.Contains(user.Id))
-                {
-                    Database.BlacklistDel(user.Id);
-                    var embedRaw = new EmbedBuilder()
-                    {
-                        Color = new Color(0, 0, 0)
-                    };
-                    embedRaw.Title = "Blacklist";
-                    embedRaw.Description = user.Mention + " has been removed from the blacklist!";
-                    var embed = embedRaw.Build();
-                    await Context.Channel.SendMessageAsync("", false, embed);
-                    _cachingService.RemoveFromBlacklist(user.Id);
-                }
-                else
-                {
-                    var embedRaw = new EmbedBuilder()
-                    {
-                        Color = new Color(0, 0, 0)
-                    };
-                    embedRaw.Title = "Blacklist";
-                    embedRaw.Description = user.Mention + " is not on the blacklist";
-                    var embed = embedRaw.Build();
-                    await Context.Channel.SendMessageAsync("", false, embed);
-                }
+                Database.BlacklistDel(user.Id);
+                embedBuilder.Description = $"{user.Mention} has been removed from the blacklist!";
+                _cachingService.RemoveFromBlacklist(user.Id);
             }
             else
             {
-                await ReplyAsync("You have be a developer to do that!");
+                embedBuilder.Description = $"{user.Mention} is not on the blacklist";
             }
+
+            var embed = embedBuilder.Build();
+            await Context.Channel.SendMessageAsync("", false, embed);
         }
         [RequireDevelopers]
         [Command("unblacklistid", RunMode = RunMode.Async)]
@@ -438,39 +425,25 @@ namespace Sketch_Bot.Modules
                 await ReplyAsync("Database is down, please try again later");
                 return;
             }
+
             var user = await Context.Client.Rest.GetUserAsync(id);
-            if (Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
+            var blacklist = _cachingService.GetBlackList();
+            var embedBuilder = new EmbedBuilder()
+                .WithColor(new Color(0, 0, 0))
+                .WithTitle("Blacklist");
+
+            if (blacklist.Contains(user.Id))
             {
-                var result = _cachingService.GetBlackList();
-                if (result.Contains(user.Id))
-                {
-                    Database.BlacklistDel(id);
-                    var embedraw = new EmbedBuilder()
-                    {
-                        Color = new Color(0, 0, 0)
-                    };
-                    embedraw.Title = "Blacklist";
-                    embedraw.Description = user?.Mention ?? id + " has been removed from the blacklist!";
-                    var embed = embedraw.Build();
-                    await Context.Channel.SendMessageAsync("", false, embed);
-                    _cachingService.RemoveFromBlacklist(id);
-                }
-                else
-                {
-                    var embedraw = new EmbedBuilder()
-                    {
-                        Color = new Color(0, 0, 0)
-                    };
-                    embedraw.Title = "Blacklist";
-                    embedraw.Description = user?.Mention ?? id + " is not on the blacklist";
-                    var embed = embedraw.Build();
-                    await Context.Channel.SendMessageAsync("", false, embed);
-                }
+                Database.BlacklistDel(id);
+                embedBuilder.Description =  $"{user?.Mention ?? id.ToString()} has been removed from the blacklist!";
+                _cachingService.RemoveFromBlacklist(id);
             }
             else
             {
-                await ReplyAsync("You have be a developer to do that!");
+                embedBuilder.Description = $"{user?.Mention ?? id.ToString()} is not on the blacklist";
             }
+
+            await Context.Channel.SendMessageAsync("", false, embedBuilder.Build());
         }
         [RequireDevelopers]
         [Command("Blacklistcheck", RunMode = RunMode.Async)]
@@ -481,32 +454,25 @@ namespace Sketch_Bot.Modules
                 await ReplyAsync("Database is down, please try again later");
                 return;
             }
+
             var result = Database.BlacklistCheck(user.Id);
+            var embedBuilder = new EmbedBuilder()
+                .WithColor(new Color(0, 0, 0))
+                .WithTitle("Blacklist Check");
+
             if (!result.Any())
             {
-                var embedraw = new EmbedBuilder()
-                {
-                    Color = new Color(0, 0, 0)
-                };
-                embedraw.Title = "Blacklist Check";
-                embedraw.Description = user.Username + " is not on the blacklist!";
-                var embed = embedraw.Build();
-                await Context.Channel.SendMessageAsync("", false, embed);
+                embedBuilder.Description = $"{user.Mention} is not on the blacklist!";
             }
             else
             {
-                var embedraw = new EmbedBuilder()
-                {
-                    Color = new Color(0, 0, 0)
-                };
-                embedraw.Title = "Blacklist Check";
-                embedraw.Description = user.Username + " is blacklisted!" +
-                    "\n" +
-                    "\n*Reason:* " + result.FirstOrDefault().Reason +
-                    "\n\nBlacklisted by " + result.FirstOrDefault().Blacklister;
-                var embed = embedraw.Build();
-                await Context.Channel.SendMessageAsync("", false, embed);
+                var entry = result.FirstOrDefault();
+                embedBuilder.Description = $"{user.Mention} is blacklisted!" +
+                    $"\n\n*Reason:* {entry.Reason}" +
+                    $"\n\nBlacklisted by {entry.Blacklister}";
             }
+
+            await Context.Channel.SendMessageAsync("", false, embedBuilder.Build());
         }
         [RequireDevelopers]
         [Command("Blacklistcheckid", RunMode = RunMode.Async)]
@@ -517,33 +483,26 @@ namespace Sketch_Bot.Modules
                 await ReplyAsync("Database is down, please try again later");
                 return;
             }
+
             var user = await Context.Client.Rest.GetUserAsync(id);
             var result = Database.BlacklistCheck(id);
+            var embedBuilder = new EmbedBuilder()
+                .WithColor(new Color(0, 0, 0))
+                .WithTitle("Blacklist Check");
+
             if (!result.Any())
             {
-                var embedraw = new EmbedBuilder()
-                {
-                    Color = new Color(0, 0, 0)
-                };
-                embedraw.Title = "Blacklist Check";
-                embedraw.Description = user?.Username ?? id + " is not on the blacklist!";
-                var embed = embedraw.Build();
-                await Context.Channel.SendMessageAsync("", false, embed);
+                embedBuilder.Description = $"{user?.Username ?? id.ToString()} is not on the blacklist!";
             }
             else
             {
-                var embedraw = new EmbedBuilder()
-                {
-                    Color = new Color(0, 0, 0)
-                };
-                embedraw.Title = "Blacklist Check";
-                embedraw.Description = user?.Username ?? id + " is blacklisted!" +
-                    "\n" +
-                    "\n*Reason:* " + result.FirstOrDefault().Reason +
-                    "\n\nBlacklisted by " + result.FirstOrDefault().Blacklister;
-                var embed = embedraw.Build();
-                await Context.Channel.SendMessageAsync("", false, embed);
+                var entry = result.FirstOrDefault();
+                embedBuilder.Description = $"{user?.Username ?? id.ToString()} is blacklisted!" +
+                    $"\n\n*Reason:* {entry.Reason}" +
+                    $"\n\nBlacklisted by {entry.Blacklister}";
             }
+
+            await Context.Channel.SendMessageAsync("", false, embedBuilder.Build());
         }
     }
 }
