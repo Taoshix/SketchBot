@@ -175,6 +175,13 @@ namespace Sketch_Bot
 
             if (context.User.IsBot) return;
 
+            // If developer, execute command without checks
+            if (context.User.Id == 135446225565515776 || context.User.Id == 208624502878371840)
+            {
+                await _interactionService.ExecuteCommandAsync(context, _provider);
+                return;
+            }
+
             if (_provider.GetService<CachingService>()._blacklist.Contains(context.User.Id))
             {
                 if (context.Interaction is SocketSlashCommand slashCommand)
@@ -231,7 +238,7 @@ namespace Sketch_Bot
                     return;
                 }
             }
-                await _interactionService.ExecuteCommandAsync(context, _provider);
+            await _interactionService.ExecuteCommandAsync(context, _provider);
             
         }
         async Task SlashCommandExecuted(SlashCommandInfo arg1, Discord.IInteractionContext arg2, Discord.Interactions.IResult arg3)
