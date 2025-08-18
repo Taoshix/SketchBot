@@ -345,13 +345,14 @@ namespace Sketch_Bot.Modules
             var blacklist = _cachingService.GetBlackList();
             if (blacklist.Contains(user.Id))
             {
-                var blacklistCheck = Database.BlacklistCheck(user.Id);
+                var blacklistCheck = _cachingService.GetBlacklistCheck(user.Id);
                 var alreadyEmbed = new EmbedBuilder()
                     .WithTitle("Blacklist")
-                    .WithDescription($"{user.Mention} is already blacklisted by {blacklistCheck.FirstOrDefault().Blacklister}.")
+                    .WithDescription($"{user.Mention} is already blacklisted by {blacklistCheck.Blacklister}.")
                     .WithColor(new Color(0, 0, 0))
-                    .AddField("Reason", blacklistCheck.FirstOrDefault().Reason)
+                    .AddField("Reason", blacklistCheck.Reason)
                     .Build();
+                await Context.Channel.SendMessageAsync("", false, alreadyEmbed);
                 return;
             }
 
@@ -386,13 +387,14 @@ namespace Sketch_Bot.Modules
             var blacklist = _cachingService.GetBlackList();
             if (blacklist.Contains(user.Id))
             {
-                var blacklistCheck = Database.BlacklistCheck(user.Id);
+                var blacklistCheck = _cachingService.GetBlacklistCheck(user.Id);
                 var alreadyEmbed = new EmbedBuilder()
                     .WithTitle("Blacklist")
-                    .WithDescription($"{user.Mention} is already blacklisted by {blacklistCheck.FirstOrDefault().Blacklister}.")
+                    .WithDescription($"{user.Mention} is already blacklisted by {blacklistCheck.Blacklister}.")
                     .WithColor(new Color(0, 0, 0))
-                    .AddField("Reason", blacklistCheck.FirstOrDefault().Reason)
+                    .AddField("Reason", blacklistCheck.Reason)
                     .Build();
+                await Context.Channel.SendMessageAsync("", false, alreadyEmbed);
                 return;
             }
 
@@ -473,21 +475,20 @@ namespace Sketch_Bot.Modules
                 return;
             }
 
-            var result = Database.BlacklistCheck(user.Id);
+            var result = _cachingService.GetBlacklistCheck(user.Id);
             var embedBuilder = new EmbedBuilder()
                 .WithColor(new Color(0, 0, 0))
                 .WithTitle("Blacklist Check");
 
-            if (!result.Any())
+            if (result == null)
             {
                 embedBuilder.Description = $"{user.Mention} is not on the blacklist!";
             }
             else
             {
-                var entry = result.FirstOrDefault();
                 embedBuilder.Description = $"{user.Mention} is blacklisted!" +
-                    $"\n\n*Reason:* {entry.Reason}" +
-                    $"\n\nBlacklisted by {entry.Blacklister}";
+                    $"\n\n*Reason:* {result.Reason}" +
+                    $"\n\nBlacklisted by {result.Blacklister}";
             }
 
             await Context.Channel.SendMessageAsync("", false, embedBuilder.Build());
@@ -503,21 +504,20 @@ namespace Sketch_Bot.Modules
             }
 
             var user = await Context.Client.Rest.GetUserAsync(id);
-            var result = Database.BlacklistCheck(id);
+            var result = _cachingService.GetBlacklistCheck(id);
             var embedBuilder = new EmbedBuilder()
                 .WithColor(new Color(0, 0, 0))
                 .WithTitle("Blacklist Check");
 
-            if (!result.Any())
+            if (result == null)
             {
                 embedBuilder.Description = $"{user?.Username ?? id.ToString()} is not on the blacklist!";
             }
             else
             {
-                var entry = result.FirstOrDefault();
                 embedBuilder.Description = $"{user?.Username ?? id.ToString()} is blacklisted!" +
-                    $"\n\n*Reason:* {entry.Reason}" +
-                    $"\n\nBlacklisted by {entry.Blacklister}";
+                    $"\n\n*Reason:* {result.Reason}" +
+                    $"\n\nBlacklisted by {result.Blacklister}";
             }
 
             await Context.Channel.SendMessageAsync("", false, embedBuilder.Build());

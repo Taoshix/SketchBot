@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
+using Sketch_Bot.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,7 @@ namespace Sketch_Bot.Services
         public Dictionary<ulong, string> _prefixes = new Dictionary<ulong, string>();
         public Dictionary<ulong, List<string>> _badWords = new Dictionary<ulong, List<string>>();
         public Dictionary<ulong, List<ulong>> _usersInDatabase = new Dictionary<ulong, List<ulong>>();
+        public Dictionary<ulong, blacklist> _cachedBlacklistChecks = new Dictionary<ulong, blacklist>();
         public List<ulong> _blacklist = new List<ulong>();
         public bool _dbConnected = true;
 
@@ -226,6 +228,20 @@ namespace Sketch_Bot.Services
         public List<ulong> GetBlackList()
         {
             return _blacklist;
+        }
+        public blacklist GetBlacklistCheck(ulong Id)
+        {
+            if (_cachedBlacklistChecks.ContainsKey(Id))
+            {
+                return _cachedBlacklistChecks[Id];
+            }
+            var blacklistCheck = Database.BlacklistCheck(Id);
+            if (blacklistCheck.Any())
+            {
+                _cachedBlacklistChecks[Id] = blacklistCheck.FirstOrDefault();
+                return blacklistCheck.FirstOrDefault();
+            }
+            return null;
         }
         public List<string> GetBadWords(ulong Id)
         {

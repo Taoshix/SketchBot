@@ -177,8 +177,24 @@ namespace Sketch_Bot
 
             if (_provider.GetService<CachingService>()._blacklist.Contains(context.User.Id))
             {
-                Console.WriteLine($"Blacklisted user {context.User.Username} tried to use a command");
-                await context.Interaction.RespondAsync("You are currently blacklisted!", ephemeral: true);
+                if (context.Interaction is SocketSlashCommand slashCommand)
+                {
+                    Console.WriteLine($"Blacklisted user {context.User.Username} tried to use command /{slashCommand.Data.Name}");
+                }
+                else if (context.Interaction is SocketMessageComponent messageComponent)
+                {
+                    Console.WriteLine($"Blacklisted user {context.User.Username} tried to use button {messageComponent.Data.CustomId}");
+                }
+                var blacklistCheck = _provider.GetService<CachingService>().GetBlacklistCheck(context.User.Id);
+                var embed = new EmbedBuilder()
+                    .WithTitle("Blacklisted User")
+                    .WithDescription($"You are blacklisted from using this bot!")
+                    .WithColor(new Color(255, 0, 0))
+                    .AddField("Reason", blacklistCheck?.Reason ?? "No reason provided", true)
+                    .AddField("Blacklister", blacklistCheck?.Blacklister ?? "Unknown", true)
+                    .Build();
+                await context.Interaction.RespondAsync("", [embed], ephemeral: true);
+                return;
             }
             await _interactionService.ExecuteCommandAsync(context, _provider);
             
