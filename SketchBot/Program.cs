@@ -172,30 +172,33 @@ namespace Sketch_Bot
         async Task HandleInteraction(SocketInteraction arg)
         {
             var context = new SocketInteractionContext(_client, arg);
-
             if (context.User.IsBot) return;
 
-            // If developer, execute command without checks
-            if (context.User.Id == 135446225565515776 || context.User.Id == 208624502878371840)
+            // Developer bypass
+            if (context.User.Id is 135446225565515776 or 208624502878371840)
             {
                 await _interactionService.ExecuteCommandAsync(context, _provider);
                 return;
             }
 
-            if (_provider.GetService<CachingService>()._blacklist.Contains(context.User.Id))
+            var cachingService = _provider.GetRequiredService<CachingService>();
+            var blacklistedIds = cachingService.GetBlackList();
+
+            // Block blacklisted users from all interactions
+            if (blacklistedIds.Contains(context.User.Id))
             {
-                if (context.Interaction is SocketSlashCommand slashCommand)
+                string attempted = context.Interaction switch
                 {
-                    Console.WriteLine($"Blacklisted user {context.User.Username} tried to use command /{slashCommand.Data.Name}");
-                }
-                else if (context.Interaction is SocketMessageComponent messageComponent)
-                {
-                    Console.WriteLine($"Blacklisted user {context.User.Username} tried to use button {messageComponent.Data.CustomId}");
-                }
-                var blacklistCheck = _provider.GetService<CachingService>().GetBlacklistCheck(context.User.Id);
+                    SocketSlashCommand slash => $"/{slash.Data.Name}",
+                    SocketMessageComponent btn => $"button {btn.Data.CustomId}",
+                    _ => "an interaction"
+                };
+                Console.WriteLine($"Blacklisted user {context.User.Username} tried to use {attempted}");
+
+                var blacklistCheck = cachingService.GetBlacklistCheck(context.User.Id);
                 var embed = new EmbedBuilder()
                     .WithTitle("Blacklisted User")
-                    .WithDescription($"You are blacklisted from using this bot!")
+                    .WithDescription("You are blacklisted from using this bot!")
                     .WithColor(new Color(255, 0, 0))
                     .AddField("Reason", blacklistCheck?.Reason ?? "No reason provided", true)
                     .AddField("Blacklister", blacklistCheck?.Blacklister ?? "Unknown", true)
@@ -203,43 +206,40 @@ namespace Sketch_Bot
                 await context.Interaction.RespondAsync("", [embed], ephemeral: true);
                 return;
             }
-            if (context.Interaction is SocketSlashCommand slashCommandTarget)
+
+            // Prevent commands targeting blacklisted users
+            if (context.Interaction is SocketSlashCommand slashCmd)
             {
-                if (slashCommandTarget.Data.Options.Any(x => x.Type == ApplicationCommandOptionType.User))
+                var userOptions = slashCmd.Data.Options.Where(x => x.Type == ApplicationCommandOptionType.User);
+                foreach (var userOption in userOptions)
                 {
-                    var userOptions = slashCommandTarget.Data.Options.Where(x => x.Type == ApplicationCommandOptionType.User);
-                    var blacklistedUsers = _provider.GetRequiredService<CachingService>().GetBlackList();
-                    foreach (var userOption in userOptions)
+                    if (blacklistedIds.Contains((userOption.Value as SocketGuildUser).Id))
                     {
-                        if (blacklistedUsers.Contains((userOption.Value as SocketGuildUser).Id))
-                        {
-                            var embed = new EmbedBuilder()
-                                .WithTitle("Blacklisted User")
-                                .WithDescription($"You cannot use this command on blacklisted users!")
-                                .WithColor(new Color(255, 0, 0))
-                                .Build();
-                            await context.Interaction.RespondAsync("", [embed]);
-                            return;
-                        }
+                        var embed = new EmbedBuilder()
+                            .WithTitle("Blacklisted User")
+                            .WithDescription("You cannot use this command on blacklisted users!")
+                            .WithColor(new Color(255, 0, 0))
+                            .Build();
+                        await context.Interaction.RespondAsync("", [embed]);
+                        return;
                     }
                 }
             }
-            else if (context.Interaction is SocketUserCommand userCommandTarget)
+            else if (context.Interaction is SocketUserCommand userCmd)
             {
-                var target = userCommandTarget.Data.Member;
-                if (_provider.GetRequiredService<CachingService>().GetBlackList().Contains(target.Id))
+                if (blacklistedIds.Contains(userCmd.Data.Member.Id))
                 {
                     var embed = new EmbedBuilder()
                         .WithTitle("Blacklisted User")
-                        .WithDescription($"You cannot use this command on blacklisted users!")
+                        .WithDescription("You cannot use this command on blacklisted users!")
                         .WithColor(new Color(255, 0, 0))
                         .Build();
                     await context.Interaction.RespondAsync("", [embed]);
                     return;
                 }
             }
+
             await _interactionService.ExecuteCommandAsync(context, _provider);
-            
         }
         async Task SlashCommandExecuted(SlashCommandInfo arg1, Discord.IInteractionContext arg2, Discord.Interactions.IResult arg3)
         {
