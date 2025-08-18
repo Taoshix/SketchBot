@@ -269,7 +269,7 @@ namespace Sketch_Bot.Modules
         {
             var userTable = ServerSettingsDB.GetSettings(Context.Guild.Id);
             var channel = userTable.FirstOrDefault()?.WelcomeChannel;
-            if (channel == "(NULL)" || channel == null)
+            if (channel == 0 || channel == null)
             {
                 await ReplyAsync("Welcome channel is not enabled. use `?setwelcome` in a channel to enable it");
             }
@@ -285,7 +285,7 @@ namespace Sketch_Bot.Modules
         {
             var usertable = ServerSettingsDB.GetSettings(Context.Guild.Id);
             var channel = usertable.FirstOrDefault()?.ModlogChannel;
-            if (channel == "(NULL)" || string.IsNullOrEmpty(channel))
+            if (channel == 0 || string.IsNullOrEmpty(channel))
             {
                 await ReplyAsync("Mod-log is not enabled. use `?setmodlog` in a channel to enable it");
             }

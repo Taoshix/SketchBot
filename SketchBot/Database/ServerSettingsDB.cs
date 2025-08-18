@@ -92,7 +92,7 @@ namespace Sketch_Bot
         public static void MakeSettings(ulong guildid, int levelup)
         {
             var database = new Database();
-            var str = string.Format("INSERT INTO `server_settings` (id, prefix, welcomechannel, modlogchannel, xpmultiplier, LevelupMessages) VALUES ({0}, '?', NULL, NULL, 1, {1})", guildid, levelup);
+            var str = string.Format("INSERT INTO `server_settings` (id, prefix, welcomechannel, modlogchannel, xpmultiplier, LevelupMessages) VALUES ({0}, '?', 0, 0, 1, {1})", guildid, levelup);
             var table = database.FireCommand(str);
 
             database.CloseConnection();
@@ -175,10 +175,10 @@ namespace Sketch_Bot
             while (table.Read())
             {
                 var prefix = table["prefix"] == DBNull.Value ? string.Empty : (string)table["prefix"];
-                var welcomechannel = table["welcomechannel"] == DBNull.Value ? string.Empty : (string)table["welcomechannel"];
-                var modlogchannel = table["modlogchannel"] == DBNull.Value ? string.Empty : (string)table["modlogchannel"];
-                var xprate = table["xpmultiplier"] == DBNull.Value ? 1 : Convert.ToInt32(table["xpmultiplier"]);
-                var levelupmessages = table["LevelupMessages"] == DBNull.Value ? 1 : Convert.ToInt32(table["LevelupMessages"]);
+                var welcomechannel = table["welcomechannel"] == DBNull.Value ? 0 : (ulong)table["welcomechannel"];
+                var modlogchannel = table["modlogchannel"] == DBNull.Value ? 0 : (ulong)table["modlogchannel"];
+                var xprate = table["xpmultiplier"] == DBNull.Value ? 1 : (int)table["xpmultiplier"];
+                var levelupmessages = table["LevelupMessages"] == DBNull.Value ? 1 : (ulong)table["LevelupMessages"];
 
                 result.Add(new Serversettings
                 {
@@ -249,7 +249,7 @@ namespace Sketch_Bot
 
             while (table.Read())
             {
-                var roleId = (string)table["roleId"];
+                var roleId = (ulong)table["roleId"];
 
                 result.Add(new Serversettings
                 {
@@ -270,7 +270,7 @@ namespace Sketch_Bot
 
             while (table.Read())
             {
-                var roleId = (string)table["roleId"];
+                var roleId = (ulong)table["roleId"];
                 var roleLevel = (int)table["level"];
 
                 result.Add(new Serversettings

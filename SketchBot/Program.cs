@@ -502,7 +502,7 @@ namespace Sketch_Bot
                         if (rolesToAward.Count > 0)
                         {
                             var filteredRoles = rolesToAward.Where(x => x.roleLevel <= newLevel).OrderByDescending(o => o.roleLevel);
-                            var roles = filteredRoles.Select(x => socketGuild.GetRole(ulong.Parse(x.roleId))).ToList();
+                            var roles = filteredRoles.Select(x => socketGuild.GetRole(x.roleId)).ToList();
                             await guildUser.AddRolesAsync(roles);
                             newRoles.AddRange(roles.Where(r => r != null));
                         }
@@ -553,14 +553,11 @@ namespace Sketch_Bot
                 {
                     ServerSettingsDB.MakeSettings(user.Guild.Id, user.Guild.MemberCount >= 100 ? 0 : 1);
                 }
-                var settings = ServerSettingsDB.GetSettings(user.Guild.Id).FirstOrDefault();
-                if (settings == null || string.IsNullOrEmpty(settings.WelcomeChannel))
+                var welcomeChannel = settingsTable.FirstOrDefault().WelcomeChannel;
+                if (welcomeChannel == 0)
                     return;
 
-                if (!ulong.TryParse(settings.WelcomeChannel, out var channelId))
-                    return;
-
-                var channel = user.Guild.GetTextChannel(channelId);
+                var channel = user.Guild.GetTextChannel(welcomeChannel);
                 if (channel == null)
                     return;
 

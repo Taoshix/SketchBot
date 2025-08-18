@@ -295,9 +295,9 @@ namespace Sketch_Bot.Modules
                         + (user as IGuildUser).Username + " with the reason: " + (reason) + " (" + Context.Guild.Name + ")");
                     await (user as IGuildUser).KickAsync(reason);
                     await Context.Channel.SendMessageAsync("", false, builtEmbed);///sends embed///
-                    if (ServerSettingsDB.GetSettings(Context.Guild.Id).FirstOrDefault().ModlogChannel != "(NULL)")
+                    if (ServerSettingsDB.GetSettings(Context.Guild.Id).FirstOrDefault().ModlogChannel != 0)
                     {
-                        var moderationchannel = Context.Guild.GetTextChannel(UInt64.Parse(ServerSettingsDB.GetSettings(Context.Guild.Id).FirstOrDefault()?.ModlogChannel));
+                        var moderationchannel = Context.Guild.GetTextChannel(ServerSettingsDB.GetSettings(Context.Guild.Id).FirstOrDefault().ModlogChannel);
                         var embed2 = new EmbedBuilder();
                         embed2.Color = new Color(244, 66, 66);
                         //embed2.WithColor(new Color(0xb72707));
@@ -348,9 +348,9 @@ namespace Sketch_Bot.Modules
                     await Context.Guild.AddBanAsync(user, 7, reason);
                     await Context.Channel.SendMessageAsync("", false, builtEmbed);///sends embed///
 
-                    if (ServerSettingsDB.GetSettings(Context.Guild.Id).FirstOrDefault()?.ModlogChannel != "(NULL)")
+                    if (ServerSettingsDB.GetSettings(Context.Guild.Id).FirstOrDefault()?.ModlogChannel != 0)
                     {
-                        var moderationchannel = (Context.Guild.GetTextChannel(UInt64.Parse(ServerSettingsDB.GetSettings(Context.Guild.Id).FirstOrDefault().ModlogChannel)));
+                        var moderationchannel = (Context.Guild.GetTextChannel(ServerSettingsDB.GetSettings(Context.Guild.Id).FirstOrDefault().ModlogChannel));
                         var embed2 = new EmbedBuilder();
                         embed2.WithColor(new Color(0xb72707));
                         embed2.WithAuthor(auther =>
