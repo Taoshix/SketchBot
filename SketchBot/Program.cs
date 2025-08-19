@@ -293,6 +293,7 @@ namespace Sketch_Bot
                 {
                     // Create a Command Context.
                     var context = new SocketCommandContext(_client, msg);
+                    Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture)} {context.User.Username} ran text command {msg.Content}");
                     if (_provider.GetRequiredService<CachingService>()._dbConnected)
                     {
                         var cache = _provider.GetService<CachingService>();
