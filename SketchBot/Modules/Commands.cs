@@ -661,7 +661,7 @@ namespace Sketch_Bot.Modules
             await DeferAsync();
             try
             {
-                await FollowupAsync(expression.Result.ToString());
+                await FollowupAsync($"`{expression.Equation}` = {expression.Result}");
             }
             catch
             {
