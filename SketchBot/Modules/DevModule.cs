@@ -19,6 +19,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Victoria;
 
 namespace Sketch_Bot.Modules
@@ -543,6 +544,42 @@ namespace Sketch_Bot.Modules
                 .WithTitle("Top 20 Servers")
                 .WithDescription(output)
                 .WithColor(new Color(0, 0, 255))
+                .Build();
+            await ReplyAsync("", false, embed);
+        }
+        [RequireDevelopers]
+        [Command("guildinfo", RunMode = RunMode.Async)]
+        public async Task GuildInfoAsync(ulong guildId)
+        {
+            var guild = Context.Client.GetGuild(guildId);
+            if (guild == null)
+            {
+                await ReplyAsync("Guild not found.");
+                return;
+            }
+            await guild.DownloadUsersAsync();
+            var embed = new EmbedBuilder()
+                .WithTitle($"Guild Info: {guild.Name}")
+                .AddField("ID", guild.Id, true)
+                .AddField("Owner", guild.Owner.Mention, true)
+                .AddField("Member Count", $"{guild.MemberCount} ({guild.Users.Count(x => !x.IsBot)} users + {guild.Users.Count(x => x.IsBot)} bots)", true)
+                .AddField("Created At", guild.CreatedAt.ToString("f"), true)
+                .AddField("Categories", guild.CategoryChannels.Count.ToString(), true)
+                .AddField($"Total Channels", guild.Channels.Count, true) // We dont know if stage channels or other types are included, so we just use total channels
+                .AddField($"Text Channels ({guild.TextChannels.Count})", string.Join("\n", guild.TextChannels.Select(x => x.Name).Take(5)), true)
+                .AddField($"Voice Channels ({guild.VoiceChannels.Count})", string.Join("\n", guild.VoiceChannels.Select(x => x.Name).Take(5)), true)
+                .AddField("Emojis", $"{guild.Emotes.Count} emojis", true)
+                .AddField("Features", string.Join(", ", guild.Features), true)
+                .AddField($"Roles ({guild.Roles.Count})", string.Join("\n", guild.Roles.OrderByDescending(x => x.Position).Take(5).Select(x => x.Mention).ToArray()), true)
+                .AddField("Verification Level", guild.VerificationLevel.ToString(), true)
+                .AddField("Boost Level", guild.PremiumTier.ToString(), true)
+                .AddField("Boost Count", guild.PremiumSubscriptionCount.ToString(), true)
+                .AddField("Region", guild.VoiceRegionId, true)
+                .AddField("Vanity", guild.VanityURLCode ?? "No Vanity", true)
+                .AddField("Icon URL", guild.IconUrl ?? "No Icon", true)
+                .AddField("Banner URL", guild.BannerUrl ?? "No Banner", true)
+                .WithThumbnailUrl(guild.IconUrl ?? "")
+                .WithColor(new Color(0, 255, 0))
                 .Build();
             await ReplyAsync("", false, embed);
         }
