@@ -83,12 +83,13 @@ namespace Sketch_Bot.Services
             }
         }
 
-        private Task OnPlayerUpdateAsync(PlayerUpdateEventArg arg)
+        private async Task OnPlayerUpdateAsync(PlayerUpdateEventArg arg)
         {
             var voicechannel = _socketClient.Guilds.FirstOrDefault(g => g.Id == arg.GuildId)?.VoiceChannels.FirstOrDefault(x => x.ConnectedUsers.Select(x => x.Id).Contains(_socketClient.CurrentUser.Id));
             int connectedUsers = voicechannel?.ConnectedUsers.Count(x => x.Id != _socketClient.CurrentUser.Id) ?? 0;
-            _logger.LogInformation("Guild latency: {0} Connected Users excluding the bot {1}", arg.Ping, connectedUsers);
-            return Task.CompletedTask;
+            var player = await _lavaNode.TryGetPlayerAsync(arg.GuildId);
+            var queueSize = player.GetQueue().Count;
+            _logger.LogInformation("Guild latency: {0} Connected Users excluding the bot {1} Queue size {2}", arg.Ping, connectedUsers, queueSize);
         }
 
         private Task OnStatsAsync(StatsEventArg arg)

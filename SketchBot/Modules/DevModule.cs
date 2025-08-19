@@ -1,8 +1,10 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.Rest;
+using Discord.WebSocket;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
-using Microsoft.CodeAnalysis;
 using Sketch_Bot.Custom_Preconditions;
 using Sketch_Bot.Models;
 using Sketch_Bot.Services;
@@ -10,15 +12,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Discord.WebSocket;
-using System.IO;
-using System.Net;
-using Discord.Rest;
-using System.Net.Http;
+using Victoria;
 
 namespace Sketch_Bot.Modules
 {
@@ -32,12 +33,16 @@ namespace Sketch_Bot.Modules
         private TimerService _timerService;
         private StatService _statService;
         private CachingService _cachingService;
-        public DevModule(DiscordBotsListService service, TimerService service2, StatService service3, CachingService service4)
+        private LavaNode<LavaPlayer<LavaTrack>, LavaTrack> _lavaNode;
+        private IServiceProvider _serviceProvider;
+        public DevModule(DiscordBotsListService service, TimerService service2, StatService service3, CachingService service4, LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaNode, IServiceProvider serviceProvider)
         {
             _service = service;
             _timerService = service2;
             _statService = service3;
             _cachingService = service4;
+            _lavaNode = lavaNode;
+            _serviceProvider = serviceProvider;
         }
 
         [RequireDevelopers]
@@ -58,9 +63,9 @@ namespace Sketch_Bot.Modules
                         references.Add(MetadataReference.CreateFromFile(Assembly.Load(referencedAssembly).Location));
                     var scriptoptions = ScriptOptions.Default.WithReferences(references);
                     var emoji = new Emoji("✅");
-                    GlobalsOld globals = new GlobalsOld { Context = Context, Guild = Context.Guild, DblApi = _service.DblApi() };
+                    GlobalsOld globals = new GlobalsOld { Context = Context, Guild = Context.Guild, DblApi = _service.DblApi(), ServiceProvider = _serviceProvider, LavaNode = _lavaNode };
                     //object o = await CSharpScript.EvaluateAsync(@"using System;using System.Linq;using System.Threading.Tasks;using System.Collections.Generic;using Discord.WebSocket;using Discord;using System.Net;using System.Net.Http;using OsuSharp;using OsuSharp.UserEndpoint;using OsuSharp.Misc;using OsuSharp.Entities;try{" + @code + "} catch (exception) {}", scriptoptions, globals);
-                    object o = await CSharpScript.EvaluateAsync(@"using System;using System.Linq;using System.Threading.Tasks;using System.Collections.Generic;using System.IO;using Discord.WebSocket;using Discord;using System.Net;using System.Net.Http;using DiscordBotsList.Api;" + @code, scriptoptions, globals);
+                    object o = await CSharpScript.EvaluateAsync(@"using System;using System.Linq;using System.Threading.Tasks;using System.Collections.Generic;using System.IO;using Discord.WebSocket;using Discord;using System.Net;using System.Net.Http;using DiscordBotsList.Api;using Victoria; using Microsoft.Extensions.DependencyInjection;" + @code, scriptoptions, globals);
                     stopwatch.Stop();
                     if (o == null)
                     {

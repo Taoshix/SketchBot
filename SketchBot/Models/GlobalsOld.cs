@@ -5,6 +5,7 @@ using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
 using DiscordBotsList.Api;
+using Victoria;
 
 namespace Sketch_Bot.Models
 {
@@ -14,5 +15,6 @@ namespace Sketch_Bot.Models
         public SocketGuild Guild;
         public AuthDiscordBotListApi DblApi;
         public IServiceProvider ServiceProvider;
+        public LavaNode<LavaPlayer<LavaTrack>, LavaTrack> LavaNode;
     }
 }
