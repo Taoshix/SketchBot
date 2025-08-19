@@ -85,7 +85,9 @@ namespace Sketch_Bot.Services
 
         private Task OnPlayerUpdateAsync(PlayerUpdateEventArg arg)
         {
-            _logger.LogInformation("Guild latency: {}", arg.Ping);
+            var voicechannel = _socketClient.Guilds.FirstOrDefault(g => g.Id == arg.GuildId)?.VoiceChannels.FirstOrDefault(x => x.ConnectedUsers.Select(x => x.Id).Contains(_socketClient.CurrentUser.Id));
+            int connectedUsers = voicechannel?.ConnectedUsers.Count(x => x.Id != _socketClient.CurrentUser.Id) ?? 0;
+            _logger.LogInformation("Guild latency: {0} Connected Users excluding the bot {1}", arg.Ping, connectedUsers);
             return Task.CompletedTask;
         }
 
