@@ -29,6 +29,7 @@ namespace Sketch_Bot
             stringBuilder.Database = "Server settings";
             stringBuilder.SslMode = MySqlSslMode.Disabled;
             stringBuilder.Pooling = false;
+            stringBuilder.AllowPublicKeyRetrieval = true;
 
             var connectionString = stringBuilder.ToString();
 
