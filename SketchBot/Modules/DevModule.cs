@@ -64,7 +64,7 @@ namespace Sketch_Bot.Modules
                         references.Add(MetadataReference.CreateFromFile(Assembly.Load(referencedAssembly).Location));
                     var scriptoptions = ScriptOptions.Default.WithReferences(references);
                     var emoji = new Emoji("✅");
-                    GlobalsOld globals = new GlobalsOld { Context = Context, Guild = Context.Guild, DblApi = _service.DblApi(), ServiceProvider = _serviceProvider, LavaNode = _lavaNode };
+                    GlobalsOld globals = new GlobalsOld { Context = Context, Guild = Context.Guild, DblApi = _service.DblApi(), ServiceProvider = _serviceProvider, LavaNode = _lavaNode, CachingService = _cachingService};
                     //object o = await CSharpScript.EvaluateAsync(@"using System;using System.Linq;using System.Threading.Tasks;using System.Collections.Generic;using Discord.WebSocket;using Discord;using System.Net;using System.Net.Http;using OsuSharp;using OsuSharp.UserEndpoint;using OsuSharp.Misc;using OsuSharp.Entities;try{" + @code + "} catch (exception) {}", scriptoptions, globals);
                     object o = await CSharpScript.EvaluateAsync(@"using System;using System.Linq;using System.Threading.Tasks;using System.Collections.Generic;using System.IO;using Discord.WebSocket;using Discord;using System.Net;using System.Net.Http;using DiscordBotsList.Api;using Victoria; using Microsoft.Extensions.DependencyInjection;" + @code, scriptoptions, globals);
                     stopwatch.Stop();
