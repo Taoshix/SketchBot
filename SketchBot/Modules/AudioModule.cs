@@ -401,6 +401,22 @@ namespace Sketch_Bot.Modules
                 .Build();
             await ReplyAsync(embed: embed);
         }
+        [Command("lavastats")]
+        public async Task PlayerStatsAsync()
+        {
+            var stats = await lavaNode.GetLavalinkStatsAsync();
+
+            var embed = new EmbedBuilder()
+                .WithTitle("Lavalink Stats")
+                .AddField("Players", stats.Players, true)
+                .AddField("Playing Players", stats.PlayingPlayers, true)
+                .AddField("Uptime", HelperFunctions.FormatTimeSpan(TimeSpan.FromMilliseconds(stats.Uptime)))
+                .AddField("Memory Usage", $"{stats.Memory.Used / 1024 / 1024} MB", true)
+                .AddField("CPU Usage", $"{stats.Cpu.LavalinkLoad}%", true)
+                .WithColor(Color.Blue)
+                .Build();
+            await ReplyAsync(embed: embed);
+        }
         [Command("ClearQueue"), RequirePlayer]
         public async Task ClearQueueAsync()
         {

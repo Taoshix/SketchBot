@@ -298,5 +298,13 @@ namespace Sketch_Bot.Models
 
             return char.ToUpper(input[0]) + input.Substring(1);
         }
+        public static string FormatTimeSpan(TimeSpan ts)
+        {
+            // Format as d:hh:mm:ss, omitting days if zero
+            if (ts.Days > 0)
+                return $"{ts.Days}:{ts.Hours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}";
+            else
+                return $"{ts.Hours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}";
+        }
     }
 }
