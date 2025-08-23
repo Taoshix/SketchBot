@@ -58,6 +58,12 @@ namespace Sketch_Bot.Services
 
         private Task OnTrackStartAsync(TrackStartEventArg arg)
         {
+            // Cancel any pending disconnect for this guild
+            if (_disconnectTokens.TryGetValue(arg.GuildId, out var token))
+            {
+                token.Cancel();
+                _disconnectTokens.TryRemove(arg.GuildId, out _);
+            }
             return SendAndLogMessageAsync(arg.GuildId,
                 $"Now playing: {arg.Track.Title}");
         }
@@ -81,13 +87,48 @@ namespace Sketch_Bot.Services
                 queue.RemoveAt(0);
                 await player.PlayAsync(_lavaNode, nextTrack);
             }
+            else
+            {
+                if (_disconnectTokens.TryGetValue(arg.GuildId, out var existingToken))
+                {
+                    existingToken.Cancel();
+                    _disconnectTokens.TryRemove(arg.GuildId, out _);
+                }
+                var cancellationTokenSource = new CancellationTokenSource();
+                _disconnectTokens[arg.GuildId] = cancellationTokenSource;
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await SendAndLogMessageAsync(arg.GuildId, "No more tracks in queue. Disconnecting in 5 minutes unless a new track is added.");
+                        await Task.Delay(TimeSpan.FromMinutes(5), cancellationTokenSource.Token);
+                        if (player.VoiceState != null)
+                        {
+                            await _lavaNode.LeaveAsync(_socketClient.Guilds.FirstOrDefault(x => x.Id == arg.GuildId).VoiceChannels.FirstOrDefault(x => x.ConnectedUsers.Select(x => x.Id).Contains(_socketClient.CurrentUser.Id)));
+                            await SendAndLogMessageAsync(arg.GuildId, "Disconnected due to inactivity.");
+                        }
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        await SendAndLogMessageAsync(arg.GuildId, "Disconnect cancelled.");
+                    }
+                    finally
+                    {
+                        _disconnectTokens.TryRemove(arg.GuildId, out _);
+                    }
+                });
+            }
         }
 
         private async Task OnPlayerUpdateAsync(PlayerUpdateEventArg arg)
         {
+            var player = await _lavaNode.TryGetPlayerAsync(arg.GuildId);
+            if (player == null)
+            {
+                return;
+            }
             var voicechannel = _socketClient.Guilds.FirstOrDefault(g => g.Id == arg.GuildId)?.VoiceChannels.FirstOrDefault(x => x.ConnectedUsers.Select(x => x.Id).Contains(_socketClient.CurrentUser.Id));
             int connectedUsers = voicechannel?.ConnectedUsers.Count(x => x.Id != _socketClient.CurrentUser.Id) ?? 0;
-            var player = await _lavaNode.TryGetPlayerAsync(arg.GuildId);
             var queueSize = player.GetQueue().Count;
             _logger.LogInformation("Guild latency: {0} Connected Users excluding the bot {1} Queue size {2}", arg.Ping, connectedUsers, queueSize);
         }

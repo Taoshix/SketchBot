@@ -103,6 +103,11 @@ namespace Sketch_Bot.Modules
                     await ReplyAsync(exception.Message);
                 }
             }
+            // Auto disconnect does not properly destroy the player and making it null so we need to use the existing player to reconnect
+            if (!player.State.IsConnected && (Context.User as IVoiceState) != null)
+            {
+                player = await lavaNode.JoinAsync((Context.User as IVoiceState).VoiceChannel);
+            }
             var searchResponse = await lavaNode.LoadTrackAsync(searchQuery);
             if (searchResponse.Type is SearchType.Empty or SearchType.Error)
             {
