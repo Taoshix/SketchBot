@@ -94,8 +94,8 @@ namespace Sketch_Bot.Modules
         [Command("upvote")]
         public async Task upvote()
         {
-            await ReplyAsync("You can upvote the bot here https://discordbots.org/bot/369865463670374400");
-            var Api = _service.DblApi();
+            await ReplyAsync($"You can upvote the bot here https://discordbots.org/bot/{Context.Client.CurrentUser.Id}");
+            var Api = _service.DblApi(Context.Client.CurrentUser.Id);
             if (await Api.HasVoted(Context.User.Id))
             {
                 await Context.Channel.SendMessageAsync("Thanks for voting today!");
@@ -990,7 +990,7 @@ namespace Sketch_Bot.Modules
         public async Task invite()
         {
             await Context.Channel.SendMessageAsync("**" + Context.User.Username + "**, use this URL to invite me" +
-                "\nhttps://discordapp.com/oauth2/authorize?client_id=369865463670374400&scope=bot&permissions=8");
+                $"\nhttps://discord.com/api/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=1617578818631&scope=bot%20applications.commands");
             if (Context.Guild != null)
             {
                 Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?invite with success!" + " (" + Context.Guild.Name + ")");
@@ -1152,7 +1152,7 @@ namespace Sketch_Bot.Modules
             if ((tableName.FirstOrDefault()?.Daily.ToString() == "0001-01-01 00:00:00") || (daily.DayOfYear < now.DayOfYear && difference < 0 || difference >= 0 || daily.Year < now.Year))
             {
                 int amount = 50; // The amount of credits the user is gonna receive, in uint of you followed BossDarkReaper advises or in int
-                if (await _service.DblApi().HasVoted(Context.User.Id))
+                if (await _service.DblApi(Context.Client.CurrentUser.Id).HasVoted(Context.User.Id))
                 {
                     amount *= 4;
                     await ReplyAsync("Thanks for voting today, here is a bonus");
@@ -1287,7 +1287,7 @@ namespace Sketch_Bot.Modules
             {
                 author
                 .WithName("Info:")
-                .WithUrl("https://discordapp.com/oauth2/authorize?client_id=369865463670374400&scope=bot&permissions=8");
+                .WithUrl($"https://discord.com/api/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=1617578818631&scope=bot%20applications.commands");
             }).AddField("Developers:", $"Bot developer: {Context.Client.GetUser(135446225565515776)}" +
                                     $"\nWeb developer: {Context.Client.GetUser(208624502878371840)}", true)
             .AddField("Other info:", "I am in " + Context.Client.Guilds.Count + " servers!" +

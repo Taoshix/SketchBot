@@ -20,13 +20,17 @@ namespace Sketch_Bot.Services
         private AuthDiscordBotListApi _dblApi;
         public DiscordBotsListService()
         {
-            Config config = Config.Load();
-            AuthDiscordBotListApi dblApi = new AuthDiscordBotListApi(369865463670374400,
-                config.DblApiKey);
-            _dblApi = dblApi;
+
         }
-        public AuthDiscordBotListApi DblApi()
+        public AuthDiscordBotListApi DblApi(ulong botId)
         {
+            if(_dblApi == null)
+            {
+                Config config = Config.Load();
+                AuthDiscordBotListApi dblApi = new AuthDiscordBotListApi(botId,
+                    config.DblApiKey);
+                _dblApi = dblApi;
+            }
             return _dblApi;
         }
     }

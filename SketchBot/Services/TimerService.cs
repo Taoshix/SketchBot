@@ -1,14 +1,15 @@
-﻿using System;
+﻿using Discord;
+using Discord.Addons.Interactive;
+using Discord.Commands;
+using Discord.WebSocket;
+using MySqlX.XDevAPI;
+using Sketch_Bot.Models;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading; // 1) Add this namespace
 using System.Threading.Tasks;
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-using Discord.Addons.Interactive;
-using System.Linq;
-using Sketch_Bot.Models;
 
 namespace Sketch_Bot.Services
 {
@@ -37,8 +38,8 @@ namespace Sketch_Bot.Services
                     int TotalMembers() => client.Guilds.Sum(x => x.MemberCount);
                     var numberOfGuilds = client.Guilds.Count;
                     await client.SetGameAsync(numberOfGuilds + " servers! | " + TotalMembers() + " users! | www.sketchbot.xyz");
-                    await DiscordBots.UpdateStats(numberOfGuilds);
-                    await DiscordBots.UpdateStats2(numberOfGuilds);
+                    await DiscordBots.UpdateStats(numberOfGuilds, client.CurrentUser.Id);
+                    await DiscordBots.UpdateStats2(numberOfGuilds, client.CurrentUser.Id);
                     
                     // 3) Any code you want to periodically run goes here, for example:
                 }

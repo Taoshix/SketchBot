@@ -184,8 +184,8 @@ namespace Sketch_Bot.Modules
         public async Task upvote()
         {
             await DeferAsync();
-            await ReplyAsync("You can upvote the bot here https://discordbots.org/bot/369865463670374400");
-            var Api = _discordBotListService.DblApi();
+            await ReplyAsync($"You can upvote the bot here https://discordbots.org/bot/{Context.Client.CurrentUser.Id}");
+            var Api = _discordBotListService.DblApi(Context.Client.CurrentUser.Id);
             if (await Api.HasVoted(Context.User.Id))
             {
                 await FollowupAsync("Thanks for voting today!");
@@ -880,7 +880,7 @@ namespace Sketch_Bot.Modules
         {
             await DeferAsync();
             await FollowupAsync("**" + Context.User.Username + "**, use this URL to invite me" +
-                "\nhttps://discord.com/api/oauth2/authorize?client_id=369865463670374400&permissions=1617578818631&scope=bot%20applications.commands");
+                $"\nhttps://discord.com/api/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=1617578818631&scope=bot%20applications.commands");
         }
         [RequireBotPermission(GuildPermission.ManageMessages)]
         [RequireContext(ContextType.Guild)]
@@ -1026,7 +1026,7 @@ namespace Sketch_Bot.Modules
                 return;
             }
             int amount = 50;
-            var dblApi = _discordBotListService.DblApi();
+            var dblApi = _discordBotListService.DblApi(Context.Client.CurrentUser.Id);
             bool hasVoted = await dblApi.HasVoted(Context.User.Id);
 
             if (hasVoted)
@@ -1207,7 +1207,7 @@ namespace Sketch_Bot.Modules
             {
                 author
                 .WithName("Info:")
-                .WithUrl("https://discordapp.com/oauth2/authorize?client_id=369865463670374400&scope=bot&permissions=8");
+                .WithUrl($"https://discord.com/api/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=1617578818631&scope=bot%20applications.commands");
             }).AddField("Developers:", $"Bot developer: {await Context.Client.GetUserAsync(135446225565515776)}" +
                                     $"\nWeb developer: {await Context.Client.GetUserAsync(208624502878371840)}", true)
             .AddField("Other info:", "I am in " + Context.Client.Guilds.Count + " servers!" +

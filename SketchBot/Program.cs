@@ -397,8 +397,8 @@ namespace Sketch_Bot
                 await Task.Delay(5000);
                 var numberOfGuilds = _client.Guilds.Count;
                 await _client.SetGameAsync(numberOfGuilds + " servers! | " + TotalMembers() + " users! | www.sketchbot.xyz");
-                await DiscordBots.UpdateStats(numberOfGuilds);
-                await DiscordBots.UpdateStats2(numberOfGuilds);
+                await DiscordBots.UpdateStats(numberOfGuilds, _client.CurrentUser.Id);
+                await DiscordBots.UpdateStats2(numberOfGuilds, _client.CurrentUser.Id);
             });
             return Task.CompletedTask;
         }

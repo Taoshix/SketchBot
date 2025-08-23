@@ -12,12 +12,12 @@ namespace Sketch_Bot.Models
 {
     public static class DiscordBots
     {
-        public static async Task UpdateStats(int servercount)
+        public static async Task UpdateStats(int servercount, ulong botId)
         {
             try
             {
                 Config config = Config.Load();
-                AuthDiscordBotListApi DblApi = new AuthDiscordBotListApi(369865463670374400,
+                AuthDiscordBotListApi DblApi = new AuthDiscordBotListApi(botId,
                     config.DblApiKey);
                 var me = await DblApi.GetMeAsync();
                 await me.UpdateStatsAsync(servercount);
@@ -27,7 +27,7 @@ namespace Sketch_Bot.Models
                 Console.WriteLine();
             }
         }
-        public static async Task UpdateStats2(int servercount)
+        public static async Task UpdateStats2(int servercount, ulong botId)
         {
             try
             {
@@ -37,7 +37,7 @@ namespace Sketch_Bot.Models
                     httpClient.DefaultRequestHeaders.Add("Authorization", config.DbggApiKey);
                     var json = JsonConvert.SerializeObject(new { guildCount = servercount });
                     var content = new StringContent(json, Encoding.UTF8, "application/json");
-                    var response = await httpClient.PostAsync("https://discord.bots.gg/api/v1/bots/369865463670374400/stats", content);
+                    var response = await httpClient.PostAsync($"https://discord.bots.gg/api/v1/bots/{botId}/stats", content);
                     var responseText = await response.Content.ReadAsStringAsync();
                     Console.WriteLine(responseText);    
                 }
