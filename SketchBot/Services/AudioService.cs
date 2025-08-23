@@ -94,7 +94,10 @@ namespace Sketch_Bot.Services
 
         private Task OnStatsAsync(StatsEventArg arg)
         {
-            _logger.LogInformation("{}", JsonSerializer.Serialize(arg));
+            if (arg.Players > 0)
+            {
+                _logger.LogInformation("{}", JsonSerializer.Serialize(arg));
+            }
             return Task.CompletedTask;
         }
 
