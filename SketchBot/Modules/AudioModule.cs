@@ -82,6 +82,14 @@ namespace Sketch_Bot.Modules
                 return;
             }
 
+            // remove whitespace after first : if there is one
+            // "ytsearch: query" -> "ytsearch:query"
+            int colonIndex = searchQuery.IndexOf(':');
+            if (colonIndex != -1 && colonIndex + 1 < searchQuery.Length && searchQuery[colonIndex + 1] == ' ')
+            {
+                searchQuery = searchQuery.Remove(colonIndex + 1, 1);
+            }
+
             var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
             if (player == null)
             {
@@ -111,8 +119,8 @@ namespace Sketch_Bot.Modules
             var searchResponse = await lavaNode.LoadTrackAsync(searchQuery);
             if (searchResponse.Type is SearchType.Empty or SearchType.Error)
             {
-                await ReplyAsync($"I wasn't able to find anything for `{searchQuery}`.\n" +
-                    $"You can use a direct link or make a search query\n" +
+                await ReplyAsync($"I wasn't able to find anything for `{searchQuery}`. Please check if the query/link is correct.\n" +
+                    $"You can use a direct link or make a search query like demonstrated below:\n" +
                     $"Here is a list of prefixes for searching:\n" +
                     $"`ytsearch:` for YouTube\n" +
                     $"`ytmsearch:` for YouTubeMusic\n" +
