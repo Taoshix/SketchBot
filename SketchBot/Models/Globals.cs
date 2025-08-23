@@ -5,14 +5,18 @@ using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
 using DiscordBotsList.Api;
+using Sketch_Bot.Services;
+using Victoria;
 
 namespace Sketch_Bot.Models
 {
     public class Globals
     {
-        public SocketInteractionContext Context;
+        public SocketCommandContext Context;
         public SocketGuild Guild;
         public AuthDiscordBotListApi DblApi;
         public IServiceProvider ServiceProvider;
+        public LavaNode<LavaPlayer<LavaTrack>, LavaTrack> LavaNode;
+        public CachingService CachingService;
     }
 }
