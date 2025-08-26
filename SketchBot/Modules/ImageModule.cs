@@ -518,7 +518,7 @@ namespace Sketch_Bot.Modules
                     float degrees = i * (360f / frameCount);
 
                     using var canvas = new Image<Rgba32>(canvasSize, canvasSize, new Rgba32(0, 0, 0, 0));
-                    var clone = original.Clone(ctx => ctx.Rotate(degrees));
+                    using var clone = original.Clone(ctx => ctx.Rotate(degrees));
                     canvas.Mutate(ctx => ctx.DrawImage(clone, new Point(0, 0), 1f));
 
                     if (i == 0)
