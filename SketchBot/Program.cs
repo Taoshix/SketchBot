@@ -74,7 +74,7 @@ namespace Sketch_Bot
                 .AddLogging(x => {
                     x.ClearProviders();
                     x.AddConsole();
-                    x.SetMinimumLevel(LogLevel.Trace);
+                    x.SetMinimumLevel(LogLevel.Information);
                 })
                 .AddLavaNode(x =>
                 {
