@@ -821,7 +821,7 @@ namespace Sketch_Bot.Modules
 
             if (!result.Any())
             {
-                _cachingService.SetupUserInDatabase((SocketGuild)(user as IGuildUser).Guild, user as SocketGuildUser);
+                _cachingService.SetupUserInDatabase((user as IGuildUser).Guild.Id, user as SocketGuildUser);
             }
 
             var userTable = Database.GetUserStatus(user as IGuildUser);
@@ -990,7 +990,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("You do not have permission!");
             }
         }
-        [SlashCommand("daily", "Claim your daily")]
+        [SlashCommand("daily", "Claim your daily or give it to another person")]
         public async Task Daily(IGuildUser user = null)
         {
             await DeferAsync();
@@ -999,14 +999,16 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            if (user == null)
+            if (user.IsBot)
             {
-                user = Context.User as IGuildUser;
+                await FollowupAsync("Bots don't have stats");
+                return;
             }
-            var result = Database.CheckExistingUser(user);
-            if (!result.Any())
+            user ??= Context.User as IGuildUser;
+            var result = _cachingService.IsInDatabase(Context.Guild.Id, user.Id);
+            if (!result)
             {
-                Database.EnterUser(user);
+                _cachingService.SetupUserInDatabase(Context.Guild.Id, user as SocketGuildUser);
             }
             var tableName = Database.GetUserStatus(user);
             DateTime now = DateTime.Now;
@@ -1032,12 +1034,25 @@ namespace Sketch_Bot.Modules
             if (hasVoted)
             {
                 amount *= 4;
-                await FollowupAsync("Thanks for voting today, here is a bonus");
+                Database.ChangeDaily(user);
+                if (user.Id != Context.User.Id)
+                {
+                    _rand = new Random();
+                    int giveBonus = _rand.Next(amount * 2);
+                    amount += giveBonus;
+                    await FollowupAsync($"You have given {user.Nickname ?? user.Username} {amount} daily tokens! (4x vote bonus) (+{giveBonus} generosity bonus)");
+                    Database.ChangeTokens(user, amount);
+                }
+                else
+                {
+                    Database.ChangeTokens(user, amount);
+                    await FollowupAsync($"You received your {amount} tokens! (4x vote bonus)");
+                }
             }
             else
             {
                 var builder = new ComponentBuilder()
-                    .WithButton("Claim Daily Tokens", $"daily-confirm:{Context.User.Id}", ButtonStyle.Primary);
+                    .WithButton("Claim Daily Tokens", $"daily-confirm:{Context.User.Id}:{user.Id}", ButtonStyle.Primary);
                 var promptMessage = await FollowupAsync(
                     $"You would have gotten 4x more tokens if you have voted today. See /upvote\nDo you want to claim your daily anyway?",
                     components: builder.Build()
@@ -1045,7 +1060,7 @@ namespace Sketch_Bot.Modules
                 await Task.Delay(8000);
                 if (!(promptMessage.Components.FirstOrDefault() as ButtonComponent).IsDisabled)
                 {
-                    var disabledBuilder = new ComponentBuilder().WithButton("Claim Daily Tokens", $"daily-confirm:{Context.User.Id}", ButtonStyle.Primary, disabled: true);
+                    var disabledBuilder = new ComponentBuilder().WithButton("Claim Daily Tokens", $"daily-confirm:{Context.User.Id}:{user.Id}", ButtonStyle.Primary, disabled: true);
                     await promptMessage.ModifyAsync(msg =>
                     {
                         msg.Components = disabledBuilder.Build();
@@ -1053,20 +1068,6 @@ namespace Sketch_Bot.Modules
                 }
 
                 return;
-            }
-
-            Database.ChangeDaily(user);
-            if (user != Context.User as IGuildUser)
-            {
-                _rand = new Random();
-                amount += _rand.Next(amount * 2);
-                await FollowupAsync($"You have given {user.Nickname ?? user.Username} {amount} daily tokens!");
-                Database.ChangeTokens(user, amount);
-            }
-            else
-            {
-                Database.ChangeTokens(user, amount);
-                await FollowupAsync($"You received your {amount} tokens!");
             }
         }
         [RequireContext(ContextType.Guild)]

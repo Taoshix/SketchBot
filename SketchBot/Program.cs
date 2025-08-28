@@ -347,10 +347,10 @@ namespace Sketch_Bot
                     }
                     if (component.User.Id != ulong.Parse(args.FirstOrDefault()))
                     {
-                        await component.RespondAsync("If you want to claim your daily tokens do /daily", ephemeral: true);
+                        await component.RespondAsync("If you want to claim your own daily tokens do /daily", ephemeral: true);
                         return;
                     }
-                    var user = component.User as SocketGuildUser;
+                    var user = _client.GetUser(ulong.Parse(args.Last())) as SocketGuildUser;
                     var tableName = Database.GetUserStatus(user);
                     DateTime now = DateTime.Now;
                     DateTime daily = tableName.FirstOrDefault().Daily;
@@ -369,18 +369,25 @@ namespace Sketch_Bot
                         return;
                     }
                     int dailyReward = 50;
-                    Database.ChangeDaily(user);
+                    int giveBonus = rand.Next(dailyReward);
+                    // Give a bonus if given to someone else
+                    if (user.Id != component.User.Id)
+                    {
+                        dailyReward += giveBonus;
+                    }
+                    Database.ChangeDaily(component.User as IGuildUser);
                     Database.ChangeTokens(user, dailyReward);
-                    await component.RespondAsync($"{user.Mention} You have received {dailyReward} tokens for your daily reward!");
+                    await component.RespondAsync($"{user.Mention} You have received {dailyReward} tokens for your daily reward!{(user.Id != component.User.Id ? $" (+{giveBonus})" : "")}");
                     await component.Message.ModifyAsync(msg =>
                     {
                         msg.Components = new ComponentBuilder()
-                            .WithButton("Claim Daily Tokens", $"daily-confirm:{component.User.Id}", ButtonStyle.Success, disabled: true)
+                            .WithButton("Claim Daily Tokens", $"daily-confirm:{component.User.Id}:{user.Id}", ButtonStyle.Success, disabled: true)
                             .Build();
                     });
                     break;
                 default:
                     await component.RespondAsync("Unknown button interaction!", ephemeral: true);
+                    Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture)}Unknown button interaction: " + component.Data.CustomId);
                     break;
             }
         }
@@ -522,7 +529,7 @@ namespace Sketch_Bot
                     if (user.IsBot || user.IsWebhook || socketGuild == null || cachingService.GetBlackList().Contains(user.Id))
                         return;
 
-                    cachingService.SetupUserInDatabase(socketGuild, (SocketGuildUser)user);
+                    cachingService.SetupUserInDatabase(socketGuild.Id, (SocketGuildUser)user);
 
                     ServerSettingsDB.CreateTableRole(socketGuild.Id);
 
