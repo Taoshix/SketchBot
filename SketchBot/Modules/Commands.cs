@@ -537,7 +537,7 @@ namespace Sketch_Bot.Modules
                 {
                     string websiteUrl = "http://aws.random.cat/meow";
                     client.BaseAddress = new Uri(websiteUrl);
-                    HttpResponseMessage response = client.GetAsync("").Result;
+                    HttpResponseMessage response = await client.GetAsync("");
                     response.EnsureSuccessStatusCode();
                     string result = await response.Content.ReadAsStringAsync();
                     var json = JObject.Parse(result);
@@ -564,7 +564,7 @@ namespace Sketch_Bot.Modules
                 {
                     var websitee = "https://randomfox.ca/floof/";
                     client.BaseAddress = new Uri(websitee);
-                    HttpResponseMessage response = client.GetAsync("").Result;
+                    HttpResponseMessage response = await client.GetAsync("");
                     response.EnsureSuccessStatusCode();
                     string result = await response.Content.ReadAsStringAsync();
                     var json = JObject.Parse(result);
@@ -591,7 +591,7 @@ namespace Sketch_Bot.Modules
                     var websitee = "https://random.birb.pw/img/";
                     string websiteurl = "http://random.birb.pw/tweet.json/";
                     client.BaseAddress = new Uri(websiteurl);
-                    HttpResponseMessage response = client.GetAsync("").Result;
+                    HttpResponseMessage response = await client.GetAsync("");
                     response.EnsureSuccessStatusCode();
                     string result = await response.Content.ReadAsStringAsync();
                     var json = JObject.Parse(result);
@@ -611,12 +611,11 @@ namespace Sketch_Bot.Modules
             await DeferAsync();
             try
             {
-
                 using (var client = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate }))//This is like the 'webbrowser' (?)
                 {
                     string websiteUrl = "https://random-d.uk/api/v1/random";
                     client.BaseAddress = new Uri(websiteUrl);
-                    HttpResponseMessage response = client.GetAsync("").Result;
+                    HttpResponseMessage response = await client.GetAsync("")        ;
                     response.EnsureSuccessStatusCode();
                     string result = await response.Content.ReadAsStringAsync();
                     var json = JObject.Parse(result);
@@ -636,12 +635,11 @@ namespace Sketch_Bot.Modules
             await DeferAsync();
             try
             {
-
                 using (var client = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate }))//This is like the 'webbrowser' (?)
                 {
                     string websiteurl = "https://random.dog/woof.json";
                     client.BaseAddress = new Uri(websiteurl);
-                    HttpResponseMessage response = client.GetAsync("").Result;
+                    HttpResponseMessage response = await client.GetAsync("");
                     response.EnsureSuccessStatusCode();
                     string result = await response.Content.ReadAsStringAsync();
                     var json = JObject.Parse(result);
