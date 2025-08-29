@@ -196,7 +196,7 @@ namespace Sketch_Bot
         }
         public static void UpdateLevelupMessagesBool(ulong guildid, int boool)
         {
-            var database = new ServerSettingsDB();
+            var database = new Database();
             var str = string.Format("UPDATE `server_settings` SET LevelupMessages = ('{1}') WHERE id = {0}", guildid, boool);
             var table = database.FireCommand(str);
 
