@@ -541,8 +541,8 @@ namespace Sketch_Bot.Modules
                     response.EnsureSuccessStatusCode();
                     string result = await response.Content.ReadAsStringAsync();
                     var json = JObject.Parse(result);
-                    string CatImage = json["file"].ToString();
-                    await FollowupAsync(CatImage);
+                    string catImage = json["file"].ToString();
+                    await FollowupAsync(catImage);
                 }
                 
             }
@@ -568,8 +568,8 @@ namespace Sketch_Bot.Modules
                     response.EnsureSuccessStatusCode();
                     string result = await response.Content.ReadAsStringAsync();
                     var json = JObject.Parse(result);
-                    string catImage = json["image"].ToString();
-                    await FollowupAsync($"{catImage}");
+                    string foxImage = json["image"].ToString();
+                    await FollowupAsync($"{foxImage}");
                 }
             }
             catch (Exception ex)
@@ -595,8 +595,8 @@ namespace Sketch_Bot.Modules
                     response.EnsureSuccessStatusCode();
                     string result = await response.Content.ReadAsStringAsync();
                     var json = JObject.Parse(result);
-                    string CatImage = json["file"].ToString();
-                    await FollowupAsync($"{websitee}{CatImage}");
+                    string birbImage = json["file"].ToString();
+                    await FollowupAsync($"{websitee}{birbImage}");
                 }
             }
             catch (Exception ex)
@@ -643,8 +643,8 @@ namespace Sketch_Bot.Modules
                     response.EnsureSuccessStatusCode();
                     string result = await response.Content.ReadAsStringAsync();
                     var json = JObject.Parse(result);
-                    string catImage = json["url"].ToString();
-                    await FollowupAsync(catImage);
+                    string dogImage = json["url"].ToString();
+                    await FollowupAsync(dogImage);
                 }
             }
             catch (Exception ex)
@@ -900,7 +900,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("award", "Give someone tokens")]
-        public async Task Award(IUser user, int tokens, string comment = null)
+        public async Task Award(IUser user, int tokens, string comment = "")
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -920,20 +920,10 @@ namespace Sketch_Bot.Modules
                         Color = new Color(0, 0, 255)
                     };
                     Database.ChangeTokens(guildUser, tokens);
-                    if (comment != null)
-                    {
-                        embed.Title = (name + " was awarded " + tokens + " tokens!");
-                        embed.Description = (comment);
-                        var builtEmbed = embed.Build();
-                        await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
-                        
-                    }
-                    else
-                    {
-                        embed.Title = (name + " was awarded " + tokens + " tokens!");
-                        var builtEmbed = embed.Build();
-                        await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
-                    }
+                    embed.Title = name + " was awarded " + tokens + " tokens!";
+                    embed.Description = comment;
+                    var builtEmbed = embed.Build();
+                    await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
                 }
             }
             else
@@ -968,20 +958,11 @@ namespace Sketch_Bot.Modules
                 {
                     Color = new Color(0, 0, 255)
                 };
-                if (comment != "")
-                {
-                    embed.Title = ("All users were awarded " + tokens + " tokens!");
-                    embed.Description = (comment);
-                    var builtEmbed = embed.Build();
-                    await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
-                    
-                }
-                else
-                {
-                    embed.Title = ("All users were awarded " + tokens + " tokens!");
-                    var builtEmbed = embed.Build();
-                    await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
-                }
+
+                embed.Title = "All users were awarded " + tokens + " tokens!";
+                embed.Description = comment;
+                var builtEmbed = embed.Build();
+                await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
             }
             else
             {
