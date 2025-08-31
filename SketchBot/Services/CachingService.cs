@@ -27,7 +27,7 @@ namespace Sketch_Bot.Services
         public void UpdateDBStatus()
         {
             var db = new Database();
-            var status = db.isDatabaseConnected();
+            var status = db.IsDatabaseConnected();
             _dbConnected = status;
         }
         public bool GetDBStatus()

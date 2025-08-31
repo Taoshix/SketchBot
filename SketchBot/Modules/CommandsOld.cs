@@ -118,7 +118,7 @@ namespace Sketch_Bot.Modules
                 var RNG = _rand.Next(0, 100);
                 if (RNG >= 53)
                 {
-                    Database.ChangeTokens(Context.User as IGuildUser, amount);
+                    Database.AddTokens(Context.User as IGuildUser, amount);
                     currentTokens = Database.GetUserStatus(Context.User as IGuildUser).FirstOrDefault().Tokens;
                     EmbedBuilder builder = new EmbedBuilder()
                     {
@@ -169,7 +169,7 @@ namespace Sketch_Bot.Modules
                 var RNG = _rand.Next(0, 100);
                 if (RNG >= 53)
                 {
-                    Database.ChangeTokens(Context.User as IGuildUser, amount);
+                    Database.AddTokens(Context.User as IGuildUser, amount);
                     currentTokens = Database.GetUserStatus(Context.User as IGuildUser).FirstOrDefault().Tokens;
                     EmbedBuilder builder = new EmbedBuilder()
                     {
@@ -1035,7 +1035,7 @@ namespace Sketch_Bot.Modules
                     {
                         Color = new Color(0, 0, 255)
                     };
-                    Database.ChangeTokens(user, tokens);
+                    Database.AddTokens(user, tokens);
                     if (comment != null)
                     {
                         embed.Title = (name + " was awarded " + tokens + " tokens!");
@@ -1072,7 +1072,7 @@ namespace Sketch_Bot.Modules
                     {
                         Color = new Color(0, 0, 255)
                     };
-                    Database.addXP(user as IGuildUser, xptogive);
+                    Database.AddXP(user as IGuildUser, xptogive);
                     embed.Title = (name + " was awarded " + xptogive + " xp!");
                     embed.Description = (reason);
                     var builtEmbed = embed.Build();
@@ -1095,7 +1095,7 @@ namespace Sketch_Bot.Modules
                     var result = Database.CheckExistingUser(user);
                     if (result.Count() <= 1)
                     {
-                        Database.ChangeTokens(user, tokens);
+                        Database.AddTokens(user, tokens);
                     }
                 }
                 var embed = new EmbedBuilder()
@@ -1167,11 +1167,11 @@ namespace Sketch_Bot.Modules
                     _rand = new Random();
                     amount += _rand.Next(amount * 2);
                     await ReplyAsync($"You have given {user.Nickname ?? user.Username} {amount} daily tokens!");
-                    Database.ChangeTokens(user, amount);
+                    Database.AddTokens(user, amount);
                 }
                 else
                 {
-                    Database.ChangeTokens(user, amount); // We add the tokens to the user
+                    Database.AddTokens(user, amount); // We add the tokens to the user
                     await ReplyAsync($"You received your {amount} tokens!");
                 }
                 Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?daily with success!" + " (" + Context.Guild.Name + ")");
@@ -1208,7 +1208,7 @@ namespace Sketch_Bot.Modules
                             if (userTable.FirstOrDefault().Tokens >= amount)
                             {
                                 Database.RemoveTokens(user, amount);
-                                Database.ChangeTokens(usertopay, amount);
+                                Database.AddTokens(usertopay, amount);
                                 if (comment != null)
                                 {
                                     var embed = new EmbedBuilder()

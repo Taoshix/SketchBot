@@ -376,7 +376,7 @@ namespace Sketch_Bot
                         dailyReward += giveBonus;
                     }
                     Database.ChangeDaily(component.User as IGuildUser);
-                    Database.ChangeTokens(user, dailyReward);
+                    Database.AddTokens(user, dailyReward);
                     await component.RespondAsync($"{user.Mention} You have received {dailyReward} tokens for your daily reward!{(user.Id != component.User.Id ? $" (+{giveBonus})" : "")}");
                     await component.Message.ModifyAsync(msg =>
                     {
@@ -548,7 +548,7 @@ namespace Sketch_Bot
                         return;
                     }
 
-                    Database.ChangeTokens(guildUser, tokens);
+                    Database.AddTokens(guildUser, tokens);
                     xpService.addUser(guildUser);
 
                     var xpToLevelUp = XP.caclulateNextLevel(userData.Level);
@@ -558,7 +558,7 @@ namespace Sketch_Bot
                         while (userData.XP >= XP.caclulateNextLevel(userData.Level + addLevels))
                             addLevels++;
 
-                        Database.levelUp(guildUser, xp, addLevels);
+                        Database.LevelUp(guildUser, xp, addLevels);
 
                         var newLevel = userData.Level + addLevels;
                         var rolesToAward = ServerSettingsDB.GetRoles(socketGuild.Id);
@@ -591,7 +591,7 @@ namespace Sketch_Bot
                     }
                     else if (!user.IsBot)
                     {
-                        Database.addXP(guildUser, xp);
+                        Database.AddXP(guildUser, xp);
                     }
                 }
                 catch (Exception ex)

@@ -46,7 +46,7 @@ namespace Sketch_Bot
             }
         }
 
-        public bool isDatabaseConnected()
+        public bool IsDatabaseConnected()
         {
             var status = dbConnection != null;
             if (status)
@@ -273,7 +273,7 @@ namespace Sketch_Bot
 
             return result;
         }
-        public static void addXP(IGuildUser user, long xp)/*Creates a new method with IUser and int xp as its params*/
+        public static void AddXP(IGuildUser user, long xp)/*Creates a new method with IUser and int xp as its params*/
         {
             var realguildid = user.Guild.Id;
             var database = new Database(); /*Sets up a connection to the database*/
@@ -292,7 +292,7 @@ namespace Sketch_Bot
                 return;
             }
         }
-        public static void levelUp(IGuildUser user, long xp, long level)
+        public static void LevelUp(IGuildUser user, long xp, long level)
         {
             var realguildid = user.Guild.Id;
             var database = new Database();
@@ -311,7 +311,7 @@ namespace Sketch_Bot
                 return;
             }
         }
-        public static void ChangeTokens(IGuildUser user, long tokens)
+        public static void AddTokens(IGuildUser user, long tokens)
         {
             var database = new Database();
             var realguildid = user.Guild.Id;

@@ -197,7 +197,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("gamble", "Gamble tokens")]
-        public async Task gamble(long amount)
+        public async Task Gamble(long amount)
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -222,11 +222,12 @@ namespace Sketch_Bot.Modules
             }
 
             _rand = new Random();
-            bool won = _rand.Next(0, 100) >= 53;
+            int RNG = _rand.Next(0, 100);
+            bool won = RNG >= 53;
 
             if (won)
             {
-                Database.ChangeTokens(user, amount);
+                Database.AddTokens(user, amount);
             }
             else
             {
@@ -237,7 +238,7 @@ namespace Sketch_Bot.Modules
             var builder = new EmbedBuilder()
             {
                 Title = won ? "You won!" : "You lost!",
-                Description = $"You gambled {amount} tokens and {(won ? "won" : "lost")}!\nYou now have {currentTokens} tokens!",
+                Description = $"You gambled {amount} tokens and rolled {RNG} and {(won ? "won" : "lost")}!\nYou now have {currentTokens} tokens!",
                 Color = new Color(0, 0, 255)
             }.WithAuthor(author =>
             {
@@ -249,7 +250,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("gambleall", "Gambles all of your tokens")]
-        public async Task gambleall()
+        public async Task Gambleall()
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -269,11 +270,12 @@ namespace Sketch_Bot.Modules
             }
 
             _rand = new Random();
-            bool won = _rand.Next(0, 100) >= 53;
+            int RNG = _rand.Next(0, 100);
+            bool won = RNG >= 53;
 
             if (won)
             {
-                Database.ChangeTokens(user, amount);
+                Database.AddTokens(user, amount);
             }
             else
             {
@@ -284,7 +286,7 @@ namespace Sketch_Bot.Modules
             var builder = new EmbedBuilder()
             {
                 Title = won ? "You won!" : "You lost!",
-                Description = $"You gambled {amount} tokens and {(won ? "won" : "lost")}!\nYou now have {currentTokens} tokens!",
+                Description = $"You gambled {amount} tokens and rolled {RNG} and {(won ? "won" : "lost")}!\nYou now have {currentTokens} tokens!",
                 Color = new Color(0, 0, 255)
             }.WithAuthor(author =>
             {
@@ -919,7 +921,7 @@ namespace Sketch_Bot.Modules
                     {
                         Color = new Color(0, 0, 255)
                     };
-                    Database.ChangeTokens(guildUser, tokens);
+                    Database.AddTokens(guildUser, tokens);
                     embed.Title = name + " was awarded " + tokens + " tokens!";
                     embed.Description = comment;
                     var builtEmbed = embed.Build();
@@ -951,7 +953,7 @@ namespace Sketch_Bot.Modules
                     var result = Database.CheckExistingUser(user);
                     if (result.Count() <= 1)
                     {
-                        Database.ChangeTokens(user, tokens);
+                        Database.AddTokens(user, tokens);
                     }
                 }
                 var embed = new EmbedBuilder()
@@ -1020,11 +1022,11 @@ namespace Sketch_Bot.Modules
                     int giveBonus = _rand.Next(amount * 2);
                     amount += giveBonus;
                     await FollowupAsync($"You have given {user.Nickname ?? user.Username} {amount} daily tokens! (4x vote bonus) (+{giveBonus} generosity bonus)");
-                    Database.ChangeTokens(user, amount);
+                    Database.AddTokens(user, amount);
                 }
                 else
                 {
-                    Database.ChangeTokens(user, amount);
+                    Database.AddTokens(user, amount);
                     await FollowupAsync($"You received your {amount} tokens! (4x vote bonus)");
                 }
             }
@@ -1147,7 +1149,7 @@ namespace Sketch_Bot.Modules
             }
 
             Database.RemoveTokens(user, amount);
-            Database.ChangeTokens(userToPay, amount);
+            Database.AddTokens(userToPay, amount);
 
             var embed = new EmbedBuilder()
             {
