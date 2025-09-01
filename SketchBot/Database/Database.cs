@@ -164,7 +164,7 @@ namespace Sketch_Bot
 
             while (userTable.Read())
             {
-                var userId = (ulong)userTable["user_id"];
+                var userId = Convert.ToUInt64(userTable["user_id"]);
                 var currentTokens = (long)userTable["tokens"];
                 var daily = (DateTime)userTable["daily"];
                 var level = (long)userTable["level"];
@@ -194,7 +194,7 @@ namespace Sketch_Bot
 
             while (userTable.Read())
             {
-                var userId = (ulong)userTable["user_id"];
+                var userId = Convert.ToUInt64(userTable["user_id"]);
                 var currentTokens = (long)userTable["tokens"];
                 var daily = (DateTime)userTable["daily"];
                 var level = (long)userTable["level"];
@@ -223,7 +223,7 @@ namespace Sketch_Bot
 
             while (userTable.Read())
             {
-                var userId = (ulong)userTable["user_id"];
+                var userId = Convert.ToUInt64(userTable["user_id"]);
                 var currentTokens = (long)userTable["tokens"];
                 var daily = (DateTime)userTable["daily"];
                 var level = (long)userTable["level"];
@@ -251,7 +251,7 @@ namespace Sketch_Bot
 
             while (userTable.Read())
             {
-                var userId = (ulong)userTable["user_id"];
+                var userId = Convert.ToUInt64(userTable["user_id"]);
                 var reason = (string)userTable["reason"];
                 var blacklister = (string)userTable["blacklister"];
 
@@ -370,7 +370,7 @@ namespace Sketch_Bot
 
             while (blacklist.Read())
             {
-                var userId = (ulong)blacklist["user_id"];
+                var userId = Convert.ToUInt64(blacklist["user_id"]);
                 var userName = (string)blacklist["username"];
                 var reason = (string)blacklist["reason"];
                 var blacklister = (string)blacklist["blacklister"];
