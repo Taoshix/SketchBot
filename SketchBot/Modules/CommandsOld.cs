@@ -871,7 +871,7 @@ namespace Sketch_Bot.Modules
                             int position = list.IndexOf(item) + 1;
                             string padded = position.ToString() + ".";
                             string userName;
-                            var currentUser = Context.Guild.Users.FirstOrDefault(x => x.Id == ulong.Parse(item.UserId));
+                            var currentUser = Context.Guild.Users.FirstOrDefault(x => x.Id == item.UserId);
                             if (currentUser == null)
                             {
                                 userName = $"Unknown({item.UserId})";
@@ -923,7 +923,7 @@ namespace Sketch_Bot.Modules
                             int position = list.IndexOf(item) + 1;
                             string padded = position.ToString() + ".";
                             string userName;
-                            var currentUser = Context.Guild.Users.FirstOrDefault(x => x.Id == ulong.Parse(item.UserId));
+                            var currentUser = Context.Guild.Users.FirstOrDefault(x => x.Id == item.UserId);
                             if(currentUser == null)
                             {
                                 userName = $"Unknown({item.UserId})";

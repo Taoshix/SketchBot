@@ -8,7 +8,7 @@ namespace Sketch_Bot.Models
 {
     public class UserStats
     {
-        public string UserId { get; set; }
+        public ulong UserId { get; set; }
         public string Username { get; set; }
         public long Tokens { get; set; }
         public DateTime Daily { get; set; }

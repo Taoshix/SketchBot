@@ -230,12 +230,9 @@ namespace Sketch_Bot.Services
             var blacklistTable = Database.GetAllBlacklistedUsers();
             foreach (var element in blacklistTable)
             {
-                if (ulong.TryParse(element.UserId, out var userId))
+                if (!_blacklist.Contains(element.UserId))
                 {
-                    if (!_blacklist.Contains(userId))
-                    {
-                        _blacklist.Add(userId);
-                    }
+                    _blacklist.Add(element.UserId);
                 }
             }
         }

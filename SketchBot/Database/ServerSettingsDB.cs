@@ -64,7 +64,6 @@ namespace Sketch_Bot
             MySqlCommand command = new MySqlCommand(query, dbConnection);
 
             var mySqlReader = command.ExecuteReader();
-            //Console.WriteLine($"ServerSettings Database: {queryCount}\n{query}");
             return mySqlReader;
         }
         public void CloseConnection()
@@ -203,23 +202,6 @@ namespace Sketch_Bot
             database.CloseConnection();
 
             return;
-        }
-        public static List<string> CheckPrefix(SocketUser user)
-        {
-            var socketguild = (user as SocketGuildUser).Guild;
-            var result = new List<string>();
-            var database = new Database();
-            var str = string.Format("SELECT * FROM `server_settings` WHERE id = {0}", socketguild.Id.ToString());
-            var userTable = database.FireCommand(str);
-
-            while (userTable.Read())
-            {
-                var prefix = (string)userTable["prefix"];
-
-                result.Add(prefix);
-            }
-            database.CloseConnection();
-            return result;
         }
         public static void SetWelcomeChannel(ulong id, ulong guildid)
         {

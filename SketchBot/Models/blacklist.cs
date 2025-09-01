@@ -7,7 +7,7 @@ namespace Sketch_Bot.Models
 {
     public class Blacklist
     {
-        public string UserId { get; set; }
+        public ulong UserId { get; set; }
         public string Username { get; set; }
         public string Reason { get; set; }
         public string Blacklister { get; set; }

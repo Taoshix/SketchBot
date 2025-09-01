@@ -10,7 +10,7 @@ namespace Sketch_Bot.Custom_Preconditions
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
     public class RequireDevelopersAttribute : PreconditionAttribute
     {
-        private IApplication application;
+        private IApplication? application;
         public override async Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
             if (application == null)

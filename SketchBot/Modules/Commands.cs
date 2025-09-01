@@ -675,7 +675,7 @@ namespace Sketch_Bot.Modules
                     int position = userStatsList.IndexOf(item) + 1;
                     string padded = position.ToString() + ".";
                     string userName;
-                    var currentUser = Context.Guild.GetUser(ulong.Parse(item.UserId));
+                    var currentUser = Context.Guild.GetUser(item.UserId);
                     if (currentUser == null)
                     {
                         userName = $"Unknown({item.UserId})";

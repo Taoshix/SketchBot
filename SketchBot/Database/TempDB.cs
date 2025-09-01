@@ -158,7 +158,7 @@ namespace Sketch_Bot
 
             while (userTable.Read())
             {
-                var userId = (string)userTable["user_id"];
+                var userId = (ulong)userTable["user_id"];
                 var userName = (string)userTable["username"];
                 var currentTokens = (long)userTable["tokens"];
                 var daily = (DateTime)userTable["daily"];
@@ -192,7 +192,7 @@ namespace Sketch_Bot
 
             while (userTable.Read())
             {
-                var userId = (string)userTable["user_id"];
+                var userId = (ulong)userTable["user_id"];
                 var userName = (string)userTable["username"];
                 var currentTokens = (long)userTable["tokens"];
                 var daily = (DateTime)userTable["daily"];
@@ -225,7 +225,7 @@ namespace Sketch_Bot
 
             while (userTable.Read())
             {
-                var userId = (string)userTable["user_id"];
+                var userId = (ulong)userTable["user_id"];
                 var userName = (string)userTable["username"];
                 var currentTokens = (long)userTable["tokens"];
                 var daily = (DateTime)userTable["daily"];
@@ -256,7 +256,7 @@ namespace Sketch_Bot
 
             while (userTable.Read())
             {
-                var userId = (string)userTable["user_id"];
+                var userId = (ulong)userTable["user_id"];
                 var userName = (string)userTable["username"];
                 var reason = (string)userTable["reason"];
                 var blacklister = (string)userTable["blacklister"];
@@ -381,7 +381,7 @@ namespace Sketch_Bot
 
             while (blacklist.Read())
             {
-                var userId = (string)blacklist["user_id"];
+                var userId = (ulong)blacklist["user_id"];
                 var userName = (string)blacklist["username"];
                 var reason = (string)blacklist["reason"];
                 var blacklister = (string)blacklist["blacklister"];

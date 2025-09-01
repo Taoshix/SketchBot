@@ -66,7 +66,6 @@ namespace Sketch_Bot
             MySqlCommand command = new MySqlCommand(query, dbConnection);
             
             var mySqlReader = command.ExecuteReader();
-            //Console.WriteLine($"Riskage Database: {queryCount}\n{query}");
             return mySqlReader;
         }
         public void CloseConnection()
@@ -107,17 +106,17 @@ namespace Sketch_Bot
         }
         public static void UpdateStats(BotStats stats)
         {
-            var database = new Database(); /*Sets up a connection to the database*/
+            var database = new Database();
             try
             {
-                var strings = string.Format("UPDATE `stats` SET servers = {0}, users = '{1}', msg_since_startup = '{2}', msg_per_min = '{3}', startup_time = '{4}', cmd_since_startup = '{5}', cmd_per_min = '{6}'", stats.Servers, stats.Users, stats.MsgSinceStartup, stats.MsgPerMin, $"{stats.StartUpTime.Year}-{stats.StartUpTime.Month}-{stats.StartUpTime.Day} {stats.StartUpTime.Hour}:{stats.StartUpTime.Minute}:{stats.StartUpTime.Second}", stats.CmdsSinceStartup, stats.CmdsPerMin); /*This is your SQL string*/
-                var reader = database.FireCommand(strings);/*fires the command*/
-                reader.Close(); /*Closes the reader*/
-                database.CloseConnection(); /*Closes the connection*/
+                var strings = string.Format("UPDATE `stats` SET servers = {0}, users = '{1}', msg_since_startup = '{2}', msg_per_min = '{3}', startup_time = '{4}', cmd_since_startup = '{5}', cmd_per_min = '{6}'", stats.Servers, stats.Users, stats.MsgSinceStartup, stats.MsgPerMin, $"{stats.StartUpTime.Year}-{stats.StartUpTime.Month}-{stats.StartUpTime.Day} {stats.StartUpTime.Hour}:{stats.StartUpTime.Minute}:{stats.StartUpTime.Second}", stats.CmdsSinceStartup, stats.CmdsPerMin);
+                var reader = database.FireCommand(strings);
+                reader.Close();
+                database.CloseConnection();
             }
             catch(Exception ex)
             {
-                database.CloseConnection(); /*Closes the connection*/
+                database.CloseConnection();
                 Console.WriteLine(ex);
             }
             return;
@@ -127,10 +126,10 @@ namespace Sketch_Bot
             var database = new Database();
             try
             {
-                var strings = string.Format("UPDATE `stats` SET tao_avatar = '{0}', tjamp_avatar = '{1}'", url1, url2); /*This is your SQL string*/
-                var reader = database.FireCommand(strings);/*fires the command*/
-                reader.Close(); /*Closes the reader*/
-                database.CloseConnection(); /*Closes the connection*/
+                var strings = string.Format("UPDATE `stats` SET tao_avatar = '{0}', tjamp_avatar = '{1}'", url1, url2);
+                var reader = database.FireCommand(strings);
+                reader.Close();
+                database.CloseConnection();
             }
             catch(Exception ex)
             {
@@ -140,10 +139,9 @@ namespace Sketch_Bot
         }
         public static void EnterUser(IGuildUser user)
         {
-            //Console.WriteLine($"Entering User {user} {user.Guild.Name}");
             var database = new Database();
             var realguildid = user.Guild.Id;
-            var str = string.Format("INSERT INTO `{1}` (user_id, tokens, daily, level, xp ) VALUES ('{0}', '100', '0001-01-01 00:00:00', '1', '1')", user.Id, realguildid.ToString());
+            var str = string.Format("INSERT INTO `{1}` (user_id, tokens, daily, level, xp ) VALUES ('{0}', '100', '0001-01-01 00:00:00', '1', '1')", user.Id, realguildid);
             var table = database.FireCommand(str);
 
             database.CloseConnection();
@@ -161,12 +159,12 @@ namespace Sketch_Bot
             var result = new List<UserStats>();
             var database = new Database();
             var realguildid = user.Guild.Id;
-            var str = string.Format("SELECT * FROM `{1}` WHERE user_id = '{0}'", user.Id, realguildid.ToString());
+            var str = string.Format("SELECT * FROM `{1}` WHERE user_id = '{0}'", user.Id, realguildid);
             var userTable = database.FireCommand(str);
 
             while (userTable.Read())
             {
-                var userId = (string)userTable["user_id"];
+                var userId = (ulong)userTable["user_id"];
                 var currentTokens = (long)userTable["tokens"];
                 var daily = (DateTime)userTable["daily"];
                 var level = (long)userTable["level"];
@@ -188,17 +186,15 @@ namespace Sketch_Bot
         }
         public static List<UserStats> GetAllUserStats(IGuildUser user)
         {
-            //int pagelimit = numberOfPositions-numberOfPositions+10*numberOfPositions-10;
             var result = new List<UserStats>();
-            //Console.WriteLine("Getting all users");
             var database = new Database();
             var realguildid = user.Guild.Id;
-            var str = string.Format("SELECT * FROM `{1}` ORDER BY tokens DESC LIMIT 10000", user.Id, realguildid.ToString());
+            var str = string.Format("SELECT * FROM `{0}` ORDER BY tokens DESC LIMIT 10000", realguildid);
             var userTable = database.FireCommand(str);
 
             while (userTable.Read())
             {
-                var userId = (string)userTable["user_id"];
+                var userId = (ulong)userTable["user_id"];
                 var currentTokens = (long)userTable["tokens"];
                 var daily = (DateTime)userTable["daily"];
                 var level = (long)userTable["level"];
@@ -219,17 +215,15 @@ namespace Sketch_Bot
         }
         public static List<UserStats> GetAllUsersLeveling(IGuildUser user)
         {
-            //int pagelimit = numberOfPositions - numberOfPositions + 10 * numberOfPositions - 10;
             var result = new List<UserStats>();
-            //Console.WriteLine("Getting all users");
             var database = new Database();
             var realguildid = user.Guild.Id;
-            var str = string.Format("SELECT * FROM `{1}` ORDER BY level DESC, xp DESC LIMIT 10000;", user.Id, realguildid.ToString());
+            var str = string.Format("SELECT * FROM `{0}` ORDER BY level DESC, xp DESC LIMIT 10000;", realguildid);
             var userTable = database.FireCommand(str);
 
             while (userTable.Read())
             {
-                var userId = (string)userTable["user_id"];
+                var userId = (ulong)userTable["user_id"];
                 var currentTokens = (long)userTable["tokens"];
                 var daily = (DateTime)userTable["daily"];
                 var level = (long)userTable["level"];
@@ -251,14 +245,13 @@ namespace Sketch_Bot
         public static List<Blacklist> GetAllBlacklistedUsers()
         {
             var result = new List<Blacklist>();
-            //Console.WriteLine("Getting all users");
             var database = new Database();
             var str = string.Format("SELECT * FROM blacklist ORDER BY user_id DESC LIMIT 10000");
             var userTable = database.FireCommand(str);
 
             while (userTable.Read())
             {
-                var userId = (string)userTable["user_id"];
+                var userId = (ulong)userTable["user_id"];
                 var reason = (string)userTable["reason"];
                 var blacklister = (string)userTable["blacklister"];
 
@@ -273,22 +266,22 @@ namespace Sketch_Bot
 
             return result;
         }
-        public static void AddXP(IGuildUser user, long xp)/*Creates a new method with IUser and int xp as its params*/
+        public static void AddXP(IGuildUser user, long xp)
         {
             var realguildid = user.Guild.Id;
-            var database = new Database(); /*Sets up a connection to the database*/
-            try /*Tries this*/
+            var database = new Database();
+            try
             {
-                var strings = string.Format("UPDATE `{0}` SET xp = xp + {1} WHERE user_id = {2}",realguildid.ToString(),xp,user.Id.ToString()); /*This is your SQL string*/
-                var reader = database.FireCommand(strings);/*fires the command*/
-                reader.Close(); /*Closes the reader*/
-                database.CloseConnection(); /*Closes the connection*/
+                var strings = string.Format("UPDATE `{0}` SET xp = xp + {1} WHERE user_id = {2}", realguildid, xp, user.Id);
+                var reader = database.FireCommand(strings);
+                reader.Close();
+                database.CloseConnection();
                 return;
             }
-            catch (Exception ex)/*Catches any errors*/
+            catch (Exception ex)
             {
                 Console.WriteLine(ex);
-                database.CloseConnection(); /*Closes the connection if there is any errors*/
+                database.CloseConnection();
                 return;
             }
         }
@@ -296,18 +289,18 @@ namespace Sketch_Bot
         {
             var realguildid = user.Guild.Id;
             var database = new Database();
-            try/*Tries the following code*/
+            try
             {
-                var strings = string.Format("UPDATE `{0}` SET level = level + {3}, xp = xp + {1} WHERE user_id = {2}", realguildid.ToString(), xp, user.Id.ToString(), level);/*this is your sql string*/
-                var reader = database.FireCommand(strings); /*Fires the command*/
-                reader.Close(); /*Closes the reader*/
-                database.CloseConnection(); /*Closes the connections*/
+                var strings = string.Format("UPDATE `{0}` SET level = level + {3}, xp = xp + {1} WHERE user_id = '{2}'", realguildid, xp, user.Id, level);
+                var reader = database.FireCommand(strings);
+                reader.Close(); 
+                database.CloseConnection();
                 return;
             }
-            catch (Exception e)/*Catches any errors*/
+            catch (Exception e)
             {
                 Console.WriteLine(e);
-                database.CloseConnection(); /*Closes the connection*/
+                database.CloseConnection();
                 return;
             }
         }
@@ -317,7 +310,7 @@ namespace Sketch_Bot
             var realguildid = user.Guild.Id;
             try
             {
-                var strings = string.Format("UPDATE `{2}` SET tokens = tokens + '{1}' WHERE user_id = {0}", user.Id, tokens, realguildid.ToString());
+                var strings = string.Format("UPDATE `{2}` SET tokens = tokens + '{1}' WHERE user_id = '{0}'", user.Id, tokens, realguildid);
                 var reader = database.FireCommand(strings);
                 reader.Close();
                 database.CloseConnection();
@@ -336,7 +329,7 @@ namespace Sketch_Bot
             var realguildid = user.Guild.Id;
             try
             {
-                var strings = string.Format("UPDATE `{2}` SET tokens = tokens - '{1}' WHERE user_id = {0}", user.Id, tokens, realguildid.ToString());
+                var strings = string.Format("UPDATE `{2}` SET tokens = tokens - '{1}' WHERE user_id = '{0}'", user.Id, tokens, realguildid);
                 var reader = database.FireCommand(strings);
                 reader.Close();
                 database.CloseConnection();
@@ -362,7 +355,7 @@ namespace Sketch_Bot
         {
             var database = new Database();
 
-            var str = string.Format("DELETE FROM blacklist WHERE (user_id ) = " + Id, Id);
+            var str = string.Format("DELETE FROM blacklist WHERE (user_id ) = '{0}'", Id);
             var table = database.FireCommand(str);
 
             database.CloseConnection();
@@ -377,7 +370,7 @@ namespace Sketch_Bot
 
             while (blacklist.Read())
             {
-                var userId = (string)blacklist["user_id"];
+                var userId = (ulong)blacklist["user_id"];
                 var userName = (string)blacklist["username"];
                 var reason = (string)blacklist["reason"];
                 var blacklister = (string)blacklist["blacklister"];
@@ -399,7 +392,7 @@ namespace Sketch_Bot
             var realguildid = user.Guild.Id;
             try
             {
-                var strings = string.Format($"UPDATE `{realguildid}` SET daily = curtime() WHERE user_id = '{user.Id}'");
+                var strings = string.Format("UPDATE `{0}` SET daily = curtime() WHERE user_id = '{1}'", realguildid, user.Id);
                 var reader = database.FireCommand(strings);
                 reader.Close();
                 database.CloseConnection();
@@ -411,11 +404,10 @@ namespace Sketch_Bot
         }
         public static void DeleteUser(IGuildUser user)
         {
-            Console.WriteLine("Deleting user");
-            var guildid = user.Guild.Id.ToString();
+            var guildid = user.Guild.Id;
             var database = new Database();
 
-            var str = string.Format("DELETE FROM `{1}` WHERE (user_id ) = " + user.Id, user.Id, guildid);
+            var str = string.Format("DELETE FROM `{1}` WHERE (user_id ) = '{0}'", user.Id, guildid);
             var table = database.FireCommand(str);
 
             database.CloseConnection();
