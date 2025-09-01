@@ -35,7 +35,7 @@ namespace Sketch_Bot.Services
                         TempDB.UpdateStats(buildBotStats());
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     //Console.WriteLine(ex);
                 }

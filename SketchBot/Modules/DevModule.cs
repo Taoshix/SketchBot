@@ -234,8 +234,8 @@ namespace Sketch_Bot.Modules
                 try
                 {
                     Database.CreateTable(guild.Id);
-                    var gottenprefix = ServerSettingsDB.GetSettings(guild.Id);
-                    if (!gottenprefix.Any())
+                    var serverSettings = ServerSettingsDB.GetSettings(guild.Id);
+                    if (!serverSettings.Any())
                     {
                         ServerSettingsDB.MakeSettings(guild.Id, 1);
                         ServerSettingsDB.CreateTableWords(guild.Id);

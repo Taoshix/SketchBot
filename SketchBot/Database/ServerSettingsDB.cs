@@ -39,7 +39,7 @@ namespace Sketch_Bot
             {
                 dbConnection.Open();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 dbConnection = null;
             }

@@ -57,7 +57,7 @@ namespace Sketch_Bot.Modules
         }
 
         [SlashCommand("repeat", "Echo a message")]
-        public async Task testt(string input)
+        public async Task RepeatAsync(string input)
         {
             await DeferAsync();
             await FollowupAsync($"{Context.User.Mention} < {input}");
@@ -65,7 +65,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireUserPermission(GuildPermission.SendTTSMessages)]
         [SlashCommand("repeattts", "Echo a message")]
-        public async Task repeattts(string input)
+        public async Task RepeatTTSAsync(string input)
         {
             await DeferAsync();
             await FollowupAsync($"{Context.User.Mention} < {input}", null, true);
@@ -97,27 +97,23 @@ namespace Sketch_Bot.Modules
     };
 
             string username = Context.User.Username;
-            string guildName = Context.Guild?.Name ?? "DM";
             string timestamp = DateTime.Now.ToString("HH:mm:ss", ci);
 
             if (specialRatings.TryGetValue(input, out var special))
             {
                 await FollowupAsync($"I rate {input} **{special.rating}** out of 100");
-                Console.WriteLine($"{timestamp} Command     {username} just ran ?rate with success! and got {special.rating} ({special.comment}) ({guildName})");
             }
             else
             {
                 var rand = new Random();
                 int randomScore = rand.Next(1001); // 0–1000
                 double rating = randomScore / 10.0;
-
                 await FollowupAsync($"I rate {input} **{rating}** out of 100");
-                Console.WriteLine($"{timestamp} Command     {username} just ran ?rate with success! and got {randomScore} ({input}) ({guildName})");
             }
         }
 
         [SlashCommand("roll", "Rolls between x and y")]
-        public async Task roll(int min = 1, int max = 100)
+        public async Task RollAsync(int min = 1, int max = 100)
         {
             await DeferAsync();
             _rand = new Random();
@@ -141,7 +137,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("choose", "Makes the choice for you between a bunch of listed things seperated by , (comma)")]
-        public async Task choose([Summary("Choices")] string choices)
+        public async Task ChooseAsync([Summary("Choices")] string choices)
         {
             await DeferAsync();
             if (string.IsNullOrWhiteSpace(choices))
@@ -161,7 +157,7 @@ namespace Sketch_Bot.Modules
             await FollowupAsync($"I choose: **{chosen}**");
         }
         [SlashCommand("hello", "Hello")]
-        public async Task hello()
+        public async Task HelloAsync()
         {
             await DeferAsync();
             if (Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
@@ -175,13 +171,13 @@ namespace Sketch_Bot.Modules
             
         }
         [SlashCommand("donate", "Sends a link for donations")]
-        public async Task donate()
+        public async Task DonateAsync()
         {
             await DeferAsync();
             await FollowupAsync("https://www.patreon.com/Sketch_Bot");
         }
         [SlashCommand("upvote", "Sends a link for upvoting the bot")]
-        public async Task upvote()
+        public async Task UpvoteAsync()
         {
             await DeferAsync();
             await ReplyAsync($"You can upvote the bot here https://discordbots.org/bot/{Context.Client.CurrentUser.Id}");
@@ -197,7 +193,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("gamble", "Gamble tokens")]
-        public async Task Gamble(long amount)
+        public async Task GambleAsync(long amount)
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -207,8 +203,8 @@ namespace Sketch_Bot.Modules
             }
 
             var user = Context.User as IGuildUser;
-            var userStatus = Database.GetUserStatus(user).FirstOrDefault();
-            long currentTokens = userStatus?.Tokens ?? 0;
+            var userStats = Database.GetUserStats(user).FirstOrDefault();
+            long currentTokens = userStats?.Tokens ?? 0;
 
             if (amount > currentTokens)
             {
@@ -228,14 +224,15 @@ namespace Sketch_Bot.Modules
             if (won)
             {
                 Database.AddTokens(user, amount);
+                currentTokens += amount;
             }
             else
             {
                 Database.RemoveTokens(user, amount);
+                currentTokens -= amount;
             }
 
-            currentTokens = Database.GetUserStatus(user).FirstOrDefault()?.Tokens ?? 0;
-            var builder = new EmbedBuilder()
+            var embedBuilder = new EmbedBuilder()
             {
                 Title = won ? "You won!" : "You lost!",
                 Description = $"You gambled {amount} tokens and rolled {RNG} and {(won ? "won" : "lost")}!\nYou now have {currentTokens} tokens!",
@@ -246,11 +243,11 @@ namespace Sketch_Bot.Modules
                 author.IconUrl = Context.User.GetAvatarUrl();
             });
 
-            await FollowupAsync("", null, false, false, null, null, null, builder.Build());
+            await FollowupAsync("", null, false, false, null, null, null, embedBuilder.Build());
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("gambleall", "Gambles all of your tokens")]
-        public async Task Gambleall()
+        public async Task GambleAllAsync()
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -260,12 +257,13 @@ namespace Sketch_Bot.Modules
             }
 
             var user = Context.User as IGuildUser;
-            var userStatus = Database.GetUserStatus(user).FirstOrDefault();
-            long amount = userStatus?.Tokens ?? 0;
+            var userStats = Database.GetUserStats(user).FirstOrDefault();
+            long amount = userStats?.Tokens ?? 0;
+            var currentTokens = amount;
 
             if (amount < 1)
             {
-                await FollowupAsync("The minimum amount of tokens is 1");
+                await FollowupAsync("You dont have any tokens!");
                 return;
             }
 
@@ -276,14 +274,15 @@ namespace Sketch_Bot.Modules
             if (won)
             {
                 Database.AddTokens(user, amount);
+                currentTokens += amount;
             }
             else
             {
                 Database.RemoveTokens(user, amount);
+                currentTokens -= amount;
             }
 
-            var currentTokens = Database.GetUserStatus(user).FirstOrDefault()?.Tokens ?? 0;
-            var builder = new EmbedBuilder()
+            var embedBuilder = new EmbedBuilder()
             {
                 Title = won ? "You won!" : "You lost!",
                 Description = $"You gambled {amount} tokens and rolled {RNG} and {(won ? "won" : "lost")}!\nYou now have {currentTokens} tokens!",
@@ -294,40 +293,22 @@ namespace Sketch_Bot.Modules
                 author.IconUrl = Context.User.GetAvatarUrl();
             });
 
-            await FollowupAsync("", null, false, false, null, null, null, builder.Build());
+            await FollowupAsync("", null, false, false, null, null, null, embedBuilder.Build());
         }
         [SlashCommand("ping", "Pong")]
-        public async Task ping()
+        public async Task PingAsync()
         {
             await DeferAsync();
             await FollowupAsync("Pong!");
-            /*
-            _stopwatch = new Stopwatch();
-            _stopwatch.Start();
-            var message = await RespondAsync("hello!");
-            _stopwatch.Stop();
-            await message.DeleteAsync();
-            EmbedBuilder embedBuilder = new EmbedBuilder()
-            {
-                Color = new Color(0, 0, 255)
-            };
-            embedBuilder.Title = "Pong!";
-            embedBuilder.AddField("Gateway latency", Context.Client.Latency + "ms");
-            var time = _stopwatch.ElapsedMilliseconds;
-            embedBuilder.AddField("Execution time", time + "ms");
-            var embed = embedBuilder.Build();
-            await RespondAsync("", null,false,false,null,null,null,embed);
-            
-        */
         }
         [UserCommand("avatar")]
-        public async Task avatar(IUser user)
+        public async Task UserAvatarAsync(IUser user)
         {
             await DeferAsync();
             await FollowupAsync(user.GetAvatarUrl(ImageFormat.Auto, 256));
         }
         [SlashCommand("avatar", "Get the avatar of a user")]
-        public async Task avatarAsync(IUser user = null)
+        public async Task AvatarAsync(IUser user = null)
         {
             await DeferAsync();
             if (user == null)
@@ -341,7 +322,7 @@ namespace Sketch_Bot.Modules
             await FollowupAsync("", null, false, false, null, null, null, embed.Build());
         }
         [SlashCommand("eightball", "Ask the 8ball a question")]
-        public async Task eightball(string input)
+        public async Task EightballAsync(string input)
         {
             await DeferAsync();
             string[] predictionsTexts =
@@ -364,18 +345,13 @@ namespace Sketch_Bot.Modules
         [RequireBotPermission(GuildPermission.KickMembers)]
         [RequireContext(ContextType.Guild)]
         [SlashCommand("kick", "Kicks someone from the server")]
-        public async Task kick(IGuildUser user, string reason = "No reason")
+        public async Task KickAsync(IGuildUser user, string reason = "No reason")
         {
             await DeferAsync();
             var currentUser = Context.User as IGuildUser;
-            if (currentUser == null || !currentUser.GuildPermissions.KickMembers)
+            if (!currentUser.GuildPermissions.KickMembers)
             {
                 await FollowupAsync("You do not have Guild permission KickMembers");
-                return;
-            }
-            if (user == null)
-            {
-                await FollowupAsync("/kick <user> <reason>");
                 return;
             }
             if (!(Context.Client.CurrentUser as IGuildUser).GuildPermissions.KickMembers)
@@ -393,18 +369,13 @@ namespace Sketch_Bot.Modules
         [RequireBotPermission(GuildPermission.BanMembers)]
         [RequireContext(ContextType.Guild)]
         [SlashCommand("ban", "Bans someone from the server")]
-        public async Task banAsync(IGuildUser user, string reason = "No reason")
+        public async Task BanAsync(IGuildUser user, string reason = "No reason")
         {
             await DeferAsync();
             var currentUser = Context.User as IGuildUser;
-            if (currentUser == null || !currentUser.GuildPermissions.BanMembers)
+            if (!currentUser.GuildPermissions.BanMembers)
             {
                 await FollowupAsync("You do not have Guild permission BanMembers");
-                return;
-            }
-            if (user == null)
-            {
-                await FollowupAsync("/ban <user> <reason>");
                 return;
             }
             if (!(Context.Client.CurrentUser as IGuildUser).GuildPermissions.BanMembers)
@@ -422,10 +393,10 @@ namespace Sketch_Bot.Modules
         [RequireBotPermission(GuildPermission.BanMembers)]
         [RequireContext(ContextType.Guild)]
         [SlashCommand("unban", "Unbans someone from the server")]
-        public async Task unbanAsync(RestUser user, string reason = "No reason")
+        public async Task UnbanAsync(RestUser user, string reason = "No reason")
         {
             await DeferAsync();
-            if (Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840 || (Context.Client.CurrentUser as IGuildUser).GuildPermissions.BanMembers)
+            if ((Context.Client.CurrentUser as IGuildUser).GuildPermissions.BanMembers)
             {
                 await Context.Guild.RemoveBanAsync(user);
                 await FollowupAsync(user.Username + " has been unbanned" +
@@ -434,7 +405,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("status", "Checks to see if a website is up")]
-        public async Task status(string websiteUrl = "http://sketchbot.xyz")
+        public async Task StatusAsync(string websiteUrl = "http://sketchbot.xyz")
         {
             await DeferAsync();
 
@@ -478,12 +449,10 @@ namespace Sketch_Bot.Modules
                     .WithIconUrl(Context.User.GetAvatarUrl());
             });
             await FollowupAsync("", null, false, false, null, null, null, embed.Build());
-
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " Command     " + Context.User.Username + " just ran ?status with success!" + " (" + Context.Guild?.Name ?? "DM" + ")");
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("nickname", "Changes your nickname")]
-        public async Task nickname(IGuildUser targetUser, string newNickname)
+        public async Task NicknameAsync(IGuildUser targetUser, string newNickname)
         {
             await DeferAsync();
 
@@ -530,23 +499,21 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("cat", "Sends a random cat image")]
-        public async Task Cat()
+        public async Task CatAsync()
         {
             await DeferAsync();
             try
             {
-                using (var client = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate }))//This is like the 'webbrowser' (?)
-                {
-                    string websiteUrl = "http://aws.random.cat/meow";
-                    client.BaseAddress = new Uri(websiteUrl);
-                    HttpResponseMessage response = await client.GetAsync("");
-                    response.EnsureSuccessStatusCode();
-                    string result = await response.Content.ReadAsStringAsync();
-                    var json = JObject.Parse(result);
-                    string catImage = json["file"].ToString();
-                    await FollowupAsync(catImage);
-                }
-                
+                using var client = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });//This is like the 'webbrowser' (?)
+                string websiteUrl = "http://aws.random.cat/meow";
+                client.BaseAddress = new Uri(websiteUrl);
+                HttpResponseMessage response = await client.GetAsync("");
+                response.EnsureSuccessStatusCode();
+                string result = await response.Content.ReadAsStringAsync();
+                var json = JObject.Parse(result);
+                string catImage = json["file"].ToString();
+                await FollowupAsync(catImage);
+
             }
             catch (Exception ex)
             {
@@ -555,24 +522,21 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("fox", "Sends a random fox image")]
-        public async Task fox()
+        public async Task FoxAsync()
         {
             await DeferAsync();
             try
             {
-                using (var client = new HttpClient(new HttpClientHandler
-                { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate })
-                ) //This is like the 'webbrowser' (?)
-                {
-                    var websitee = "https://randomfox.ca/floof/";
-                    client.BaseAddress = new Uri(websitee);
-                    HttpResponseMessage response = await client.GetAsync("");
-                    response.EnsureSuccessStatusCode();
-                    string result = await response.Content.ReadAsStringAsync();
-                    var json = JObject.Parse(result);
-                    string foxImage = json["image"].ToString();
-                    await FollowupAsync($"{foxImage}");
-                }
+                using var client = new HttpClient(new HttpClientHandler
+                { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });
+                var websitee = "https://randomfox.ca/floof/";
+                client.BaseAddress = new Uri(websitee);
+                HttpResponseMessage response = await client.GetAsync("");
+                response.EnsureSuccessStatusCode();
+                string result = await response.Content.ReadAsStringAsync();
+                var json = JObject.Parse(result);
+                string foxImage = json["image"].ToString();
+                await FollowupAsync($"{foxImage}");
             }
             catch (Exception ex)
             {
@@ -581,25 +545,22 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("birb", "Sends a random birb bird image")]
-        public async Task birb()
+        public async Task BirbAsync()
         {
             await DeferAsync();
             try
             {
-                using (var client = new HttpClient(new HttpClientHandler
-                { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate })
-                ) //This is like the 'webbrowser' (?)
-                {
-                    var websitee = "https://random.birb.pw/img/";
-                    string websiteurl = "http://random.birb.pw/tweet.json/";
-                    client.BaseAddress = new Uri(websiteurl);
-                    HttpResponseMessage response = await client.GetAsync("");
-                    response.EnsureSuccessStatusCode();
-                    string result = await response.Content.ReadAsStringAsync();
-                    var json = JObject.Parse(result);
-                    string birbImage = json["file"].ToString();
-                    await FollowupAsync($"{websitee}{birbImage}");
-                }
+                using var client = new HttpClient(new HttpClientHandler
+                { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });
+                var websitee = "https://random.birb.pw/img/";
+                string websiteurl = "http://random.birb.pw/tweet.json/";
+                client.BaseAddress = new Uri(websiteurl);
+                HttpResponseMessage response = await client.GetAsync("");
+                response.EnsureSuccessStatusCode();
+                string result = await response.Content.ReadAsStringAsync();
+                var json = JObject.Parse(result);
+                string birbImage = json["file"].ToString();
+                await FollowupAsync($"{websitee}{birbImage}");
             }
             catch (Exception ex)
             {
@@ -608,22 +569,20 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("duck", "Posts a random picture of a dog")]
-        public async Task duck()
+        public async Task DuckAsync()
         {
             await DeferAsync();
             try
             {
-                using (var client = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate }))//This is like the 'webbrowser' (?)
-                {
-                    string websiteUrl = "https://random-d.uk/api/v1/random";
-                    client.BaseAddress = new Uri(websiteUrl);
-                    HttpResponseMessage response = await client.GetAsync("")        ;
-                    response.EnsureSuccessStatusCode();
-                    string result = await response.Content.ReadAsStringAsync();
-                    var json = JObject.Parse(result);
-                    string duckImage = json["url"].ToString();
-                    await FollowupAsync(duckImage);
-                }
+                using var client = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });//This is like the 'webbrowser' (?)
+                string websiteUrl = "https://random-d.uk/api/v1/random";
+                client.BaseAddress = new Uri(websiteUrl);
+                HttpResponseMessage response = await client.GetAsync("");
+                response.EnsureSuccessStatusCode();
+                string result = await response.Content.ReadAsStringAsync();
+                var json = JObject.Parse(result);
+                string duckImage = json["url"].ToString();
+                await FollowupAsync(duckImage);
             }
             catch (Exception ex)
             {
@@ -632,22 +591,20 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("dog", "Posts a random picture of a dog")]
-        public async Task dog()
+        public async Task DogAsync()
         {
             await DeferAsync();
             try
             {
-                using (var client = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate }))//This is like the 'webbrowser' (?)
-                {
-                    string websiteurl = "https://random.dog/woof.json";
-                    client.BaseAddress = new Uri(websiteurl);
-                    HttpResponseMessage response = await client.GetAsync("");
-                    response.EnsureSuccessStatusCode();
-                    string result = await response.Content.ReadAsStringAsync();
-                    var json = JObject.Parse(result);
-                    string dogImage = json["url"].ToString();
-                    await FollowupAsync(dogImage);
-                }
+                using var client = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });//This is like the 'webbrowser' (?)
+                string websiteurl = "https://random.dog/woof.json";
+                client.BaseAddress = new Uri(websiteurl);
+                HttpResponseMessage response = await client.GetAsync("");
+                response.EnsureSuccessStatusCode();
+                string result = await response.Content.ReadAsStringAsync();
+                var json = JObject.Parse(result);
+                string dogImage = json["url"].ToString();
+                await FollowupAsync(dogImage);
             }
             catch (Exception ex)
             {
@@ -656,7 +613,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("calculate", "Calculates a math problem")]
-        public async Task calculateAsync(HelperFunctions.Calculation expression)
+        public async Task CalculateAsync(HelperFunctions.Calculation expression)
         {
             await DeferAsync();
             try
@@ -671,7 +628,7 @@ namespace Sketch_Bot.Modules
 
         [RequireContext(ContextType.Guild)]
         [SlashCommand("membercount", "Tells you how many users are in the guild")]
-        public async Task memcount()
+        public async Task MemberCountAsync()
         {
             await DeferAsync();
 
@@ -679,7 +636,7 @@ namespace Sketch_Bot.Modules
             var members = Context.Guild.MemberCount;
             double ratio = (double)bots / (double)members;
             double percentage = Math.Round((double)bots / (double)members, 3) * 100;
-            EmbedBuilder builder = new EmbedBuilder()
+            EmbedBuilder embedBuilder = new EmbedBuilder()
             {
                 Title = $"Member count for {Context.Guild.Name}",
                 Description = $"{Context.Guild.MemberCount} Total members ({percentage}% bots)\n" +
@@ -688,46 +645,12 @@ namespace Sketch_Bot.Modules
                 $"{ratio} Bot to user ratio",
                 Color = new Color(0, 0, 255)
             };
-            var embed = builder.Build();
-            await FollowupAsync("", null, false, false, null, null, null, embed);
-            
-        }
-        [RequireContext(ContextType.Guild)]
-        [SlashCommand("tokens", "Shows you how many tokens you have")]
-        public async Task userstatus(IGuildUser user = null)
-        {
-            await DeferAsync();
-            if (!_cachingService._dbConnected)
-            {
-                await FollowupAsync("Database is down, please try again later");
-                return;
-            }
-            
-            if (user == null)
-            {
-                user = Context.User as IGuildUser;
-            }
-            Database.CreateTable(Context.Guild.Id);
-            var result = Database.CheckExistingUser(user);
-
-            if (!result.Any())
-            {
-                Database.EnterUser(user);
-            }
-
-            var userTable = Database.GetUserStatus(user);
-            var embed = new EmbedBuilder()
-            {
-                Color = new Color(0, 0, 255),
-                Description = (user.Mention + " has " + userTable.FirstOrDefault().Tokens + " tokens to spend!:small_blue_diamond:")
-            };
-            var builtEmbed = embed.Build();
-            await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
+            await FollowupAsync("", null, false, false, null, null, null, embedBuilder.Build());
             
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("leaderboard", "Server leaderboard of Tokens or Leveling")]
-        public async Task leaderboard([Summary("Type"), Autocomplete(typeof(LeaderboardAutocompleteHandler))] string type, int index = 1)
+        public async Task LeaderboardAsync([Summary("Type"), Autocomplete(typeof(LeaderboardAutocompleteHandler))] string type, int index = 1)
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -738,48 +661,46 @@ namespace Sketch_Bot.Modules
             type = type.ToLower();
             string[] types = { "tokens", "leveling" };
             index = index > 0 ? index : 1;
-            int pagelimit = index - index + 10 * index - 10;
+            int pageLimit = index - index + 10 * index - 10;
             var embed = new EmbedBuilder()
             {
                 Color = new Color(0, 0, 255)
             };
-            var list = Database.GetAllUsersTokens(Context.User as IGuildUser);
-            var foreachedlist = new List<string>();
+            var userStatsList = Database.GetAllUserStats(Context.User as IGuildUser);
+            var leaderboardEntries = new List<string>();
             if (types.Contains(type))
             {
-                foreach (var item in list.Skip(pagelimit).Take(10))
+                foreach (var item in userStatsList.Skip(pageLimit).Take(10))
                 {
-                    int position = list.IndexOf(item) + 1;
+                    int position = userStatsList.IndexOf(item) + 1;
                     string padded = position.ToString() + ".";
                     string userName;
-                    var currentUser = Context.Guild.Users.FirstOrDefault(x => x.Id == ulong.Parse(item.UserId));
+                    var currentUser = Context.Guild.GetUser(ulong.Parse(item.UserId));
                     if (currentUser == null)
                     {
                         userName = $"Unknown({item.UserId})";
                     }
                     else
                     {
-                        userName = currentUser.Nickname ?? currentUser.Username;
+                        userName = currentUser.Nickname ?? currentUser.DisplayName;
                     }
                     string leftside = padded.PadRight(4) + userName;
-                    string levelandxp = item.Level.ToString() + " " + item.XP.ToString() + "/" + XP.caclulateNextLevel(item.Level);
-                    foreachedlist.Add(type == "tokens" ? (leftside.PadRight(25 + 19 - item.Tokens.ToString().Length) + item.Tokens.ToString()) : leftside.PadRight(25 + 10 - item.Level.ToString().Length) + " " + levelandxp);
+                    string levelProgress = item.Level.ToString() + " " + item.XP.ToString() + "/" + XP.caclulateNextLevel(item.Level);
+                    leaderboardEntries.Add(type == "tokens" ? (leftside.PadRight(25 + 19 - item.Tokens.ToString().Length) + item.Tokens.ToString()) : leftside.PadRight(25 + 10 - item.Level.ToString().Length) + " " + levelProgress);
                 }
-                double decimalnumber = list.Count / 10.0D;
-                var celing = Math.Ceiling(decimalnumber);
+                double pageCount = userStatsList.Count / 10.0D;
+                var celing = Math.Ceiling(pageCount);
                 if (index > celing)
                 {
                     await FollowupAsync("This page is empty");
                 }
                 else
                 {
-                    var arrayedlist = foreachedlist.ToArray();
-                    string longstring = string.Join("\n", arrayedlist);
+                    string longstring = string.Join("\n", leaderboardEntries);
                     embed.Title = $"{type} leaderboard for {Context.Guild.Name}";
                     embed.Description = ($"```css\n{longstring}\n```");
                     embed.WithFooter($"Page {index}/{celing}");
-                    var builtEmbed = embed.Build();
-                    await FollowupAsync(embed: builtEmbed);
+                    await FollowupAsync(embed: embed.Build());
                 }
             }
             else
@@ -792,7 +713,7 @@ namespace Sketch_Bot.Modules
         [RequireContext(ContextType.Guild)]
         [UserCommand("stats")]
         //[Alias("level","profile")]
-        public async Task userstatus(IUser user)
+        public async Task UserStatsAsync(IGuildUser user)
         {
             await DeferAsync();
             if (user.IsBot)
@@ -815,27 +736,26 @@ namespace Sketch_Bot.Modules
             {
                 Color = new Color(0, 0, 255)
             };
-            var name = (user as IGuildUser).Nickname ?? user.Username;
+            var displayName = user.Nickname ?? user.DisplayName;
             Database.CreateTable(Context.Guild.Id);
-            var result = Database.CheckExistingUser(user as IGuildUser);
+            var userCheckResult = Database.CheckExistingUser(user);
 
-            if (!result.Any())
+            if (!userCheckResult.Any())
             {
-                _cachingService.SetupUserInDatabase((user as IGuildUser).Guild.Id, user as SocketGuildUser);
+                _cachingService.SetupUserInDatabase(user.Guild.Id, user as SocketGuildUser);
             }
 
-            var userTable = Database.GetUserStatus(user as IGuildUser);
-            embed.Title = "Stats for " + name;
-            embed.Description = userTable.FirstOrDefault().Tokens + " tokens:small_blue_diamond:" +
-                "\nLevel " + userTable.FirstOrDefault().Level +
-                "\nXP " + userTable.FirstOrDefault().XP + " out of " + XP.caclulateNextLevel(userTable.FirstOrDefault().Level);
-            var builtEmbed = embed.Build();
-            await FollowupAsync("", [builtEmbed]);
+            var userStats = Database.GetUserStats(user).FirstOrDefault();
+            embed.Title = "Stats for " + displayName;
+            embed.Description = userStats.Tokens + " tokens:small_blue_diamond:" +
+                "\nLevel " + userStats.Level +
+                "\nXP " + userStats.XP + " out of " + XP.caclulateNextLevel(userStats.Level);
+            await FollowupAsync("", embed: embed.Build());
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("stats", "Display a user's level and token")]
         //[Alias("level","profile")]
-        public async Task slashuserstatus(IUser user)
+        public async Task SlashUserStatsAsync(IGuildUser user)
         {
             await DeferAsync();
             if (user.IsBot)
@@ -858,25 +778,25 @@ namespace Sketch_Bot.Modules
             {
                 Color = new Color(0, 0, 255)
             };
-            var name = (user as IGuildUser).Nickname ?? user.Username;
+            var displayName = user.Nickname ?? user.DisplayName;
             Database.CreateTable(Context.Guild.Id);
-            var result = Database.CheckExistingUser(user as IGuildUser);
+            var userCheckResult = Database.CheckExistingUser(user);
 
-            if (!result.Any())
+            if (!userCheckResult.Any())
             {
-                Database.EnterUser(user as IGuildUser);
+                Database.EnterUser(user);
             }
 
-            var userTable = Database.GetUserStatus(user as IGuildUser) ?? throw new ArgumentNullException("Database.GetUserStatus(user)");
-            embed.Title = "Stats for " + name;
-            embed.Description = userTable.FirstOrDefault().Tokens + " tokens:small_blue_diamond:" +
-                "\nLevel " + userTable.FirstOrDefault().Level +
-                "\nXP " + userTable.FirstOrDefault().XP + " out of " + XP.caclulateNextLevel(userTable.FirstOrDefault().Level);
+            var userStats = Database.GetUserStats(user).FirstOrDefault();
+            embed.Title = "Stats for " + displayName;
+            embed.Description = userStats.Tokens + " tokens:small_blue_diamond:" +
+                "\nLevel " + userStats.Level +
+                "\nXP " + userStats.XP + " out of " + XP.caclulateNextLevel(userStats.Level);
             var builtEmbed = embed.Build();
             await FollowupAsync("", [builtEmbed]);
         }
         [SlashCommand("invite", "Invite me to your server")]
-        public async Task invite()
+        public async Task InviteAsync()
         {
             await DeferAsync();
             await FollowupAsync("**" + Context.User.Username + "**, use this URL to invite me" +
@@ -885,14 +805,14 @@ namespace Sketch_Bot.Modules
         [RequireBotPermission(GuildPermission.ManageMessages)]
         [RequireContext(ContextType.Guild)]
         [SlashCommand("purge", "Purges messages from the channel")]
-        public async Task purge(uint amount)
+        public async Task PurgeAsync(uint amount)
         {
             await DeferAsync();
             if ((Context.User as IGuildUser).GuildPermissions.ManageMessages == true)
             {
                 var messages = await Context.Channel.GetMessagesAsync((int)amount + 1).FlattenAsync();
-                await (Context.Channel as ITextChannel)?.DeleteMessagesAsync(messages);
                 await FollowupAsync($"Purge completed.", ephemeral:true);
+                await (Context.Channel as ITextChannel)?.DeleteMessagesAsync(messages);
             }
             else
             {
@@ -902,7 +822,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("award", "Give someone tokens")]
-        public async Task Award(IUser user, int tokens, string comment = "")
+        public async Task AwardTokensAsync(IGuildUser user, int tokens, string comment = "")
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -910,9 +830,9 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            var guildUser = user as IGuildUser;
-            var name = guildUser.Nickname ?? guildUser.Username;
-            if (((IGuildUser)Context.User).GuildPermissions.ManageGuild == true || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
+            var guildUser = user;
+            var name = guildUser.Nickname ?? guildUser.DisplayName;
+            if (((IGuildUser)Context.User).GuildPermissions.ManageGuild || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
                 var result = Database.CheckExistingUser(guildUser);
                 if (result.Count() <= 1)
@@ -933,10 +853,10 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("You do not have permission!");
             }
         }
-        [Custom_Preconditions.Ratelimit(1,5,Custom_Preconditions.Measure.Minutes,Custom_Preconditions.RatelimitFlags.ApplyPerGuild)]
+        [Custom_Preconditions.Ratelimit(1, 5, Custom_Preconditions.Measure.Minutes, Custom_Preconditions.RatelimitFlags.ApplyPerGuild)]
         [RequireContext(ContextType.Guild)]
         [SlashCommand("awardall", "Give everyone on the server some tokens")]
-        public async Task awardall(int tokens, string comment = "")
+        public async Task AwardTokensToEveryoneAsync(int tokens, string comment = "")
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -944,17 +864,18 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            if (((IGuildUser)Context.User).GuildPermissions.ManageGuild == true || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
+            if (((IGuildUser)Context.User).GuildPermissions.ManageGuild || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
-                await ReplyAsync("Handing out tokens.....");
+                await Context.Guild.DownloadUsersAsync();
                 var users = Context.Guild.Users;
                 foreach (var user in users)
                 {
-                    var result = Database.CheckExistingUser(user);
-                    if (result.Count() <= 1)
+                    var isUserInDatabase = _cachingService.IsInDatabase(Context.Guild.Id, user.Id);
+                    if (!isUserInDatabase)
                     {
-                        Database.AddTokens(user, tokens);
+                        _cachingService.SetupUserInDatabase(Context.Guild.Id, user);
                     }
+                    Database.AddTokens(user, tokens);
                 }
                 var embed = new EmbedBuilder()
                 {
@@ -972,7 +893,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("daily", "Claim your daily or give it to another person")]
-        public async Task Daily(IGuildUser user = null)
+        public async Task ClaimDailyAsync(IGuildUser user = null)
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -991,7 +912,7 @@ namespace Sketch_Bot.Modules
             {
                 _cachingService.SetupUserInDatabase(Context.Guild.Id, user as SocketGuildUser);
             }
-            var tableName = Database.GetUserStatus(user);
+            var tableName = Database.GetUserStats(user);
             DateTime now = DateTime.Now;
             DateTime daily = tableName.FirstOrDefault().Daily;
             int difference = DateTime.Compare(daily, now);
@@ -1015,7 +936,7 @@ namespace Sketch_Bot.Modules
             if (hasVoted)
             {
                 amount *= 4;
-                Database.ChangeDaily(user);
+                Database.UpdateDailyTimestamp(user);
                 if (user.Id != Context.User.Id)
                 {
                     _rand = new Random();
@@ -1054,7 +975,7 @@ namespace Sketch_Bot.Modules
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageGuild)]
         [SlashCommand("resetuser", "Resets a user's stats")]
-        public async Task resetuser(IGuildUser user)
+        public async Task ResetUserStatsAsync(IGuildUser user)
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -1087,7 +1008,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("pay", "Pay someone else some of your tokens")]
-        public async Task pay(IUser usertopay, int amount, string comment = "No comment")
+        public async Task PayTokensAsync(IGuildUser usertopay, int amount, string comment = "No comment")
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -1095,13 +1016,14 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-
+            
             var user = Context.User as SocketGuildUser;
             var userToPay = usertopay as SocketGuildUser;
             if (user == null || userToPay == null)
             {
-                await FollowupAsync("Both users must be members of this server.");
-                return;
+                await Context.Guild.DownloadUsersAsync();
+                user = Context.User as SocketGuildUser;
+                userToPay = usertopay as SocketGuildUser;
             }
 
             if (_cachingService.GetBlackList().Contains(usertopay.Id))
@@ -1115,34 +1037,22 @@ namespace Sketch_Bot.Modules
 
             if (!userInDb)
             {
-                var followup = await FollowupAsync("User not in the database! Adding user...");
-                Database.EnterUser(user);
-                await followup.ModifyAsync(msg => 
-                {
-                    msg.Content = "User added! Try running the command again.";
-                });
-                return;
+                _cachingService.SetupUserInDatabase(Context.Guild.Id, user);
             }
 
             if (!userToPayInDb)
             {
-                var followup = await FollowupAsync("Target user not in the database! Adding user...");
-                Database.EnterUser(userToPay);
-                await followup.ModifyAsync(msg => 
-                {
-                    msg.Content = "Target user added! Try running the command again.";
-                });
-                return;
+                _cachingService.SetupUserInDatabase(Context.Guild.Id, userToPay);
             }
 
-            var userTable = Database.GetUserStatus(user);
+            var userStats = Database.GetUserStats(user).FirstOrDefault();
             if (amount <= 0)
             {
                 await FollowupAsync("Don't attempt to steal tokens from people!");
                 return;
             }
 
-            if (userTable.FirstOrDefault().Tokens < amount)
+            if (userStats.Tokens < amount)
             {
                 await FollowupAsync("You don't have enough tokens to pay.");
                 return;
@@ -1160,15 +1070,11 @@ namespace Sketch_Bot.Modules
             await FollowupAsync("", null, false, false, null, null, null, embed);
         }
         [SlashCommand("info", "Displays info about the bot")]
-        public async Task info()
+        public async Task BotInfoAsync()
         {
             await DeferAsync();
             var uptime = DateTime.Now.Subtract(Process.GetCurrentProcess().StartTime);
-            int? totalmembers = 0;
-            foreach (var guild in Context.Client.Guilds)
-            {
-                totalmembers += guild.MemberCount;
-            }
+            int totalMembers = Context.Client.Guilds.Sum(g => g.MemberCount);
             _rand = new Random();
             var builder = new EmbedBuilder()
                     .WithTitle("Info about " + Context.Client.CurrentUser.Username + ":")
@@ -1193,19 +1099,19 @@ namespace Sketch_Bot.Modules
             }).AddField("Developers:", $"Bot developer: {await Context.Client.GetUserAsync(135446225565515776)}" +
                                     $"\nWeb developer: {await Context.Client.GetUserAsync(208624502878371840)}", true)
             .AddField("Other info:", "I am in " + Context.Client.Guilds.Count + " servers!" +
-            "\n" + totalmembers + " members across all servers!" +
+            "\n" + totalMembers + " members across all servers!" +
             "\nUptime: " + uptime.Days + " Days " + uptime.Hours + " Hours " + uptime.Minutes + " Minutes " + uptime.Seconds + " Seconds" +
             "\nAverage messages per min since startup: " + _statService.msgCounter/_statService.uptime.TotalMinutes, true)
             .AddField("My server:", "https://discord.gg/UPG8Vqb", true).AddField("Website:", "https://www.sketchbot.xyz", true);
-            var embed = builder.Build();
-            await FollowupAsync("", null,false,false,null,null,null,embed);
+            await FollowupAsync("", null, false, false, null, null, null, builder.Build());
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("serverinfo", "Displays info about the server")]
-        public async Task serverinfo()
+        public async Task ServerInfoAsync()
         {
             await DeferAsync();
             var guild = Context.Guild;
+            await guild.DownloadUsersAsync();
             EmbedBuilder builder = new EmbedBuilder()
             {
                 Color = new Color(0, 0, 255),
@@ -1220,7 +1126,7 @@ namespace Sketch_Bot.Modules
             {
                 footer.Text = $"ID: {guild.Id} | Server Created";
             });
-            builder.AddField("Owner", guild.Owner.Username + guild.Owner.Discriminator,true)
+            builder.AddField("Owner", guild.Owner.Username,true)
                 .AddField("Region", guild.VoiceRegionId, true)
                 .AddField("Channel Categories", guild.CategoryChannels.Count, true)
                 .AddField("Text Channels", guild.TextChannels.Count,true)
@@ -1229,12 +1135,11 @@ namespace Sketch_Bot.Modules
                 .AddField("Humans", guild.Users.Count(x => !x.IsBot),true)
                 .AddField("Bots", guild.Users.Count(x => x.IsBot), true)
                 .AddField("Roles", guild.Roles.Count,true);
-            var embed = builder.Build();
-            await FollowupAsync("", null,false,false,null,null,null,embed);
+            await FollowupAsync("", null, false, false, null, null, null, builder.Build());
         }
         [RequireContext(ContextType.Guild)]
         [UserCommand("userinfo")]
-        public async Task userinfo(IUser user)
+        public async Task UserInfoAsync(IUser user)
         {
             await DeferAsync();
             EmbedBuilder builder = new EmbedBuilder()
@@ -1264,12 +1169,11 @@ namespace Sketch_Bot.Modules
             builder.AddField("Joined", ((IGuildUser)user).JoinedAt, true).AddField("Join Position", joinedpos, true)
                 .AddField("Registered", user.CreatedAt)
                 .AddField($"Roles [{((IGuildUser)user).RoleIds.Count}]", roles);
-            var embed = builder.Build();
-            await FollowupAsync("", null,false,false,null,null,null,embed);
+            await FollowupAsync("", null, false, false, null, null, null, builder.Build());
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("userinfo", "Displays information about the user")]
-        public async Task slashuserinfo(IUser user)
+        public async Task SlashUserInfoAsync(IGuildUser user)
         {
             await DeferAsync();
             EmbedBuilder builder = new EmbedBuilder()
@@ -1299,21 +1203,7 @@ namespace Sketch_Bot.Modules
             builder.AddField("Joined", ((IGuildUser)user).JoinedAt, true).AddField("Join Position", joinedpos, true)
                 .AddField("Registered", user.CreatedAt)
                 .AddField($"Roles [{((IGuildUser)user).RoleIds.Count}]", roles);
-            var embed = builder.Build();
-            await FollowupAsync("", null, false, false, null, null, null, embed);
-        }
-        [SlashCommand("jojo", "Sends a random JoJo image")]
-        public async Task Jojosbizzareadventure()
-        {
-            await DeferAsync();
-            _rand = new Random();
-            var dir = new DirectoryInfo("Jojo");
-            var dirFiles = dir.GetFiles();
-            int fileIndex = _rand.Next(dirFiles.Length);
-            int pictureNumber = fileIndex + 1;
-            string fileToPost = dirFiles[fileIndex].FullName;
-            await Context.Channel.SendFileAsync(fileToPost, "Jojo's bizzare adventure " + pictureNumber);
-            await FollowupAsync();
+            await FollowupAsync("", null, false, false, null, null, null, builder.Build());
         }
         [SlashCommand("random", "Sends a random message")]
         public async Task Random()
@@ -1509,10 +1399,10 @@ namespace Sketch_Bot.Modules
             "Tyskland",
             "Morten",
 };
-            int randomFileIndex = _rand.Next(RandomMessages.Length);
-            int messageNumber = randomFileIndex + 1;
-            string fileToPost = RandomMessages[randomFileIndex];
-            await FollowupAsync(fileToPost);
+            int randomMessageIndex = _rand.Next(RandomMessages.Length);
+            int selectedMessageNumber = randomMessageIndex + 1;
+            string messageToSend = RandomMessages[randomMessageIndex];
+            await FollowupAsync(messageToSend);
             
         }
     }

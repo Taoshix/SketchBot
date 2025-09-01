@@ -166,7 +166,7 @@ namespace Sketch_Bot.Modules
                 Database.EnterUser(user);
             }
 
-            var userTable = Database.GetUserStatus(user) ?? throw new ArgumentNullException("Database.GetUserStatus(user)");
+            var userTable = Database.GetUserStats(user) ?? throw new ArgumentNullException("Database.GetUserStatus(user)");
             embed.Title = ("Stats for " + name);
             embed.Description = (userTable.FirstOrDefault().Tokens + " tokens:small_blue_diamond:" +
                 "\nLevel " + userTable.FirstOrDefault().Level +

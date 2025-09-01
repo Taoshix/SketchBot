@@ -12,7 +12,7 @@ namespace Sketch_Bot.Models
 {
     public static class DiscordBots
     {
-        public static async Task UpdateStats(int servercount, ulong botId)
+        public static async Task UpdateDblStatsAsync(int servercount, ulong botId)
         {
             try
             {
@@ -24,10 +24,10 @@ namespace Sketch_Bot.Models
             }
             catch (Exception ex)
             {
-                Console.WriteLine();
+                Console.WriteLine(ex.ToString());
             }
         }
-        public static async Task UpdateStats2(int servercount, ulong botId)
+        public static async Task UpdateDiscordBotsGgStatsAsync(int servercount, ulong botId)
         {
             try
             {

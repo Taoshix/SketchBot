@@ -351,7 +351,7 @@ namespace Sketch_Bot
                         return;
                     }
                     var user = _client.GetUser(ulong.Parse(args.Last())) as SocketGuildUser;
-                    var tableName = Database.GetUserStatus(user);
+                    var tableName = Database.GetUserStats(user);
                     DateTime now = DateTime.Now;
                     DateTime daily = tableName.FirstOrDefault().Daily;
                     int difference = DateTime.Compare(daily, now);
@@ -375,7 +375,7 @@ namespace Sketch_Bot
                     {
                         dailyReward += giveBonus;
                     }
-                    Database.ChangeDaily(component.User as IGuildUser);
+                    Database.UpdateDailyTimestamp(component.User as IGuildUser);
                     Database.AddTokens(user, dailyReward);
                     await component.RespondAsync($"{user.Mention} You have received {dailyReward} tokens for your daily reward!{(user.Id != component.User.Id ? $" (+{giveBonus})" : "")}");
                     await component.Message.ModifyAsync(msg =>
@@ -404,8 +404,8 @@ namespace Sketch_Bot
                 await Task.Delay(5000);
                 var numberOfGuilds = _client.Guilds.Count;
                 await _client.SetGameAsync(numberOfGuilds + " servers! | " + TotalMembers() + " users! | www.sketchbot.xyz");
-                await DiscordBots.UpdateStats(numberOfGuilds, _client.CurrentUser.Id);
-                await DiscordBots.UpdateStats2(numberOfGuilds, _client.CurrentUser.Id);
+                await DiscordBots.UpdateDblStatsAsync(numberOfGuilds, _client.CurrentUser.Id);
+                await DiscordBots.UpdateDiscordBotsGgStatsAsync(numberOfGuilds, _client.CurrentUser.Id);
             });
             return Task.CompletedTask;
         }
@@ -541,7 +541,7 @@ namespace Sketch_Bot
                     rand = new Random();
                     int xp = rand.Next(5, 15);
                     int tokens = rand.Next(1, 4);
-                    var userData = Database.GetUserStatus(guildUser).FirstOrDefault();
+                    var userData = Database.GetUserStats(guildUser).FirstOrDefault();
                     if (userData == null)
                     {
                         Console.WriteLine("UserData is null!");
@@ -549,7 +549,7 @@ namespace Sketch_Bot
                     }
 
                     Database.AddTokens(guildUser, tokens);
-                    xpService.addUser(guildUser);
+                    xpService.AddUser(guildUser);
 
                     var xpToLevelUp = XP.caclulateNextLevel(userData.Level);
                     if (userData.XP >= xpToLevelUp)
@@ -594,7 +594,7 @@ namespace Sketch_Bot
                         Database.AddXP(guildUser, xp);
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     Database.CreateTable((msg.Author as SocketGuildUser).Guild.Id);
                 }

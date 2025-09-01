@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Sketch_Bot.Models
 {
-    public class blacklist
+    public class Blacklist
     {
         public string UserId { get; set; }
         public string Username { get; set; }

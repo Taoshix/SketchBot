@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading; // 1) Add this namespace
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sketch_Bot.Services
@@ -17,17 +17,11 @@ namespace Sketch_Bot.Services
 
     public class TimerService
     {
-        private Dictionary<string, Timer> timers = new Dictionary<string, Timer>(); // 2) Add a field like this
-                                                           // This example only concerns a single timer.
-                                                           // If you would like to have multiple independant timers,
-                                                           // you could use a collection such as List<Timer>,
-                                                           // or even a Dictionary<string, Timer> to quickly get
-                                                           // a specific Timer instance by name.
+        private Dictionary<string, Timer> timers = new Dictionary<string, Timer>();
 
 
         private CachingService _cachingService;
 
-        //string Message = "not NULL (Get rekt Declan xD)";
         public TimerService(DiscordSocketClient client, CachingService cachingService)
         {
             _cachingService = cachingService;
@@ -38,10 +32,9 @@ namespace Sketch_Bot.Services
                     int TotalMembers() => client.Guilds.Sum(x => x.MemberCount);
                     var numberOfGuilds = client.Guilds.Count;
                     await client.SetGameAsync(numberOfGuilds + " servers! | " + TotalMembers() + " users! | www.sketchbot.xyz");
-                    await DiscordBots.UpdateStats(numberOfGuilds, client.CurrentUser.Id);
-                    await DiscordBots.UpdateStats2(numberOfGuilds, client.CurrentUser.Id);
+                    await DiscordBots.UpdateDblStatsAsync(numberOfGuilds, client.CurrentUser.Id);
+                    await DiscordBots.UpdateDiscordBotsGgStatsAsync(numberOfGuilds, client.CurrentUser.Id);
                     
-                    // 3) Any code you want to periodically run goes here, for example:
                 }
                 catch (Exception ex)
                 {
@@ -49,8 +42,8 @@ namespace Sketch_Bot.Services
                 }
             },
             null,
-            TimeSpan.FromMinutes(10),  // 4) Time that message should fire after the timer is created
-            TimeSpan.FromMinutes(30))); // 5) Time after which message should repeat (use `Timeout.Infinite` for no repeat));
+            TimeSpan.FromMinutes(10),  //Time that message should fire after the timer is created
+            TimeSpan.FromMinutes(30))); // Time after which message should repeat (use `Timeout.Infinite` for no repeat));
             timers.Add("Database", new Timer(async _ =>
             {
                 bool dbStatusBefore = _cachingService.GetDBStatus();
@@ -67,16 +60,16 @@ namespace Sketch_Bot.Services
                 }
             },
             null,
-            TimeSpan.FromMinutes(0),  // 4) Time that message should fire after the timer is created
-            TimeSpan.FromSeconds(10))); // 5) Time after which message should repeat (use `Timeout.Infinite` for no repeat));
+            TimeSpan.FromMinutes(0),  // Time that message should fire after the timer is created
+            TimeSpan.FromSeconds(10))); // Time after which message should repeat (use `Timeout.Infinite` for no repeat));
         }
 
-        public void Stop() // 6) Example to make the timer stop running
+        public void Stop()
         {
             timers["Timer"].Change(Timeout.Infinite, Timeout.Infinite);
         }
 
-        public void Restart() // 7) Example to restart the timer
+        public void Restart()
         {
             timers["Timer"].Change(TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(30));
         }

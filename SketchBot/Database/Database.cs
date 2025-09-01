@@ -40,7 +40,7 @@ namespace Sketch_Bot
             {
                 dbConnection.Open();
             }
-            catch(Exception ex)
+            catch (Exception)
             {
                 dbConnection = null;
             }
@@ -156,9 +156,9 @@ namespace Sketch_Bot
 
             database.CloseConnection();
         }
-        public static List<userTable> GetUserStatus(IGuildUser user)
+        public static List<UserStats> GetUserStats(IGuildUser user)
         {
-            var result = new List<userTable>();
+            var result = new List<UserStats>();
             var database = new Database();
             var realguildid = user.Guild.Id;
             var str = string.Format("SELECT * FROM `{1}` WHERE user_id = '{0}'", user.Id, realguildid.ToString());
@@ -172,7 +172,7 @@ namespace Sketch_Bot
                 var level = (long)userTable["level"];
                 var xp = (long)userTable["xp"];
 
-                result.Add(new userTable
+                result.Add(new UserStats
                 {
                     UserId = userId,
                     Tokens = currentTokens,
@@ -186,10 +186,10 @@ namespace Sketch_Bot
             return result;
 
         }
-        public static List<userTable> GetAllUsersTokens(IGuildUser user)
+        public static List<UserStats> GetAllUserStats(IGuildUser user)
         {
             //int pagelimit = numberOfPositions-numberOfPositions+10*numberOfPositions-10;
-            var result = new List<userTable>();
+            var result = new List<UserStats>();
             //Console.WriteLine("Getting all users");
             var database = new Database();
             var realguildid = user.Guild.Id;
@@ -204,7 +204,7 @@ namespace Sketch_Bot
                 var level = (long)userTable["level"];
                 var xp = (long)userTable["xp"];
 
-                result.Add(new userTable
+                result.Add(new UserStats
                 {
                     UserId = userId,
                     Tokens = currentTokens,
@@ -217,10 +217,10 @@ namespace Sketch_Bot
 
             return result;
         }
-        public static List<userTable> GetAllUsersLeveling(IGuildUser user)
+        public static List<UserStats> GetAllUsersLeveling(IGuildUser user)
         {
             //int pagelimit = numberOfPositions - numberOfPositions + 10 * numberOfPositions - 10;
-            var result = new List<userTable>();
+            var result = new List<UserStats>();
             //Console.WriteLine("Getting all users");
             var database = new Database();
             var realguildid = user.Guild.Id;
@@ -235,7 +235,7 @@ namespace Sketch_Bot
                 var level = (long)userTable["level"];
                 var xp = (long)userTable["xp"];
 
-                result.Add(new userTable
+                result.Add(new UserStats
                 {
                     UserId = userId,
                     Tokens = currentTokens,
@@ -248,9 +248,9 @@ namespace Sketch_Bot
 
             return result;
         }
-        public static List<blacklist> GetAllBlacklistedUsers()
+        public static List<Blacklist> GetAllBlacklistedUsers()
         {
-            var result = new List<blacklist>();
+            var result = new List<Blacklist>();
             //Console.WriteLine("Getting all users");
             var database = new Database();
             var str = string.Format("SELECT * FROM blacklist ORDER BY user_id DESC LIMIT 10000");
@@ -262,7 +262,7 @@ namespace Sketch_Bot
                 var reason = (string)userTable["reason"];
                 var blacklister = (string)userTable["blacklister"];
 
-                result.Add(new blacklist
+                result.Add(new Blacklist
                 {
                     UserId = userId,
                     Reason = reason,
@@ -367,9 +367,9 @@ namespace Sketch_Bot
 
             database.CloseConnection();
         }
-        public static List<blacklist> BlacklistCheck(ulong Id)
+        public static List<Blacklist> BlacklistCheck(ulong Id)
         {
-            var result = new List<blacklist>();
+            var result = new List<Blacklist>();
             var database = new Database();
 
             var str = string.Format("SELECT * FROM blacklist WHERE user_id = '{0}'", Id);
@@ -382,7 +382,7 @@ namespace Sketch_Bot
                 var reason = (string)blacklist["reason"];
                 var blacklister = (string)blacklist["blacklister"];
 
-                result.Add(new blacklist
+                result.Add(new Blacklist
                 {
                     UserId = userId,
                     Username = userName,
@@ -393,7 +393,7 @@ namespace Sketch_Bot
             database.CloseConnection();
             return result;
         }
-        public static void ChangeDaily(IGuildUser user)
+        public static void UpdateDailyTimestamp(IGuildUser user)
         {
             var database = new Database();
             var realguildid = user.Guild.Id;

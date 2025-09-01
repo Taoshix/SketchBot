@@ -15,7 +15,7 @@ namespace Sketch_Bot.Services
         public Dictionary<ulong, string> _prefixes = new Dictionary<ulong, string>();
         public Dictionary<ulong, List<string>> _badWords = new Dictionary<ulong, List<string>>();
         public Dictionary<ulong, List<ulong>> _usersInDatabase = new Dictionary<ulong, List<ulong>>();
-        public Dictionary<ulong, blacklist> _cachedBlacklistChecks = new Dictionary<ulong, blacklist>();
+        public Dictionary<ulong, Blacklist> _cachedBlacklistChecks = new Dictionary<ulong, Blacklist>();
         public List<ulong> _blacklist = new List<ulong>();
         public bool _dbConnected = true;
 
@@ -179,6 +179,28 @@ namespace Sketch_Bot.Services
 
             return true;
         }
+        public bool CheckAndAddUser(ulong guildId, ulong userId)
+        {
+            if (IsInDatabase(guildId, userId))
+            {
+                return true;
+            }
+            else
+            {
+                var user = _client.Guilds.FirstOrDefault(x => x.Id == guildId).GetUser(userId);
+                if (user != null && !user.IsBot)
+                {
+                    Database.EnterUser(user);
+                    if (!_usersInDatabase.ContainsKey(guildId))
+                    {
+                        _usersInDatabase[guildId] = new List<ulong>();
+                    }
+                    _usersInDatabase[guildId].Add(userId);
+                    return true;
+                }
+                return false;
+            }
+        }
         public void SetupBadWords(SocketGuild guild)
         {
             if (!_dbConnected)
@@ -229,7 +251,7 @@ namespace Sketch_Bot.Services
         {
             return _blacklist;
         }
-        public blacklist GetBlacklistCheck(ulong Id)
+        public Blacklist GetBlacklistCheck(ulong Id)
         {
             if (_cachedBlacklistChecks.ContainsKey(Id))
             {

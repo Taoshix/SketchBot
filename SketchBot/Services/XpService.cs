@@ -39,7 +39,7 @@ namespace Sketch_Bot.Services
             TimeSpan.FromMinutes(1),
             TimeSpan.FromMinutes(15)));
         }
-        public void addUser(SocketGuildUser user)
+        public void AddUser(SocketGuildUser user)
         {
             userlist.Add(user);
             if (!userIds.Contains(user.Id))

@@ -27,26 +27,24 @@ namespace Sketch_Bot.Modules
         private readonly HttpClient client = new HttpClient();
         private readonly IImageEncoder encoder = new PngEncoder();
         [SlashCommand("invert", "Inverts an image")]
-        public async Task Invert(IAttachment inputImage)
+        public async Task InvertAsync(IAttachment inputImage)
         {
             await DeferAsync();
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.Invert());
-                        image.Save(stream, encoder);
-                        image.Dispose();
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Invert.png", $"Filesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
+                    image.Mutate(x => x.Invert());
+                    image.Save(stream, encoder);
+                    image.Dispose();
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Invert.png", $"Filesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -55,25 +53,23 @@ namespace Sketch_Bot.Modules
         }
         [SlashCommand("grayscale", "Grayscales an image")]
         [Alias("greyscale", "gray", "grey")]
-        public async Task Grayscale(IAttachment inputImage)
+        public async Task GrayscaleAsync(IAttachment inputImage)
         {
             await DeferAsync();
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.Grayscale());
-                        image.Save(stream, encoder);
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Grayscale.png", $"Filesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
+                    image.Mutate(x => x.Grayscale());
+                    image.Save(stream, encoder);
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Grayscale.png", $"Filesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -84,25 +80,23 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("flip", "Flips an image upside down")]
-        public async Task Flip(IAttachment inputImage)
+        public async Task FlipAsync(IAttachment inputImage)
         {
             await DeferAsync();
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.RotateFlip(RotateMode.Rotate180, FlipMode.Horizontal));
-                        image.Save(stream, encoder);
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Flip.png", $"Filesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
+                    image.Mutate(x => x.RotateFlip(RotateMode.Rotate180, FlipMode.Horizontal));
+                    image.Save(stream, encoder);
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Flip.png", $"Filesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -110,7 +104,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("sepia", "Sepia color filter")]
-        public async Task Sepia(double amount, IAttachment inputImage)
+        public async Task SepiaAsync(double amount, IAttachment inputImage)
         {
             await DeferAsync();
             if (amount > 1 && Context.Interaction.User.Id != 135446225565515776)
@@ -120,20 +114,18 @@ namespace Sketch_Bot.Modules
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.Sepia((float)amount));
-                        image.Save(stream, encoder);
-                        image.Dispose();
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Sepia.png", $"Filesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
+                    image.Mutate(x => x.Sepia((float)amount));
+                    image.Save(stream, encoder);
+                    image.Dispose();
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Sepia.png", $"Filesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -143,7 +135,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("pixelate", "Pixelates an image")]
-        public async Task Pixelate(int factor, IAttachment inputImage)
+        public async Task PixelateAsync(int factor, IAttachment inputImage)
         {
             await DeferAsync();
             if (factor > 50 && Context.Interaction.User.Id != 135446225565515776)
@@ -153,20 +145,18 @@ namespace Sketch_Bot.Modules
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.Pixelate(factor));
-                        image.Save(stream, encoder);
+                    image.Mutate(x => x.Pixelate(factor));
+                    image.Save(stream, encoder);
 
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Pixelate.png", $"Factor: `{factor}`\nFilesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Pixelate.png", $"Factor: `{factor}`\nFilesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -174,7 +164,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("contrast", "Adjusts the contrast of an image")]
-        public async Task Contrast(float factor, IAttachment inputImage)
+        public async Task ContrastAsync(float factor, IAttachment inputImage)
         {
             await DeferAsync();
             if (factor > 100 && Context.Interaction.User.Id != 135446225565515776)
@@ -184,20 +174,18 @@ namespace Sketch_Bot.Modules
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.Contrast(factor));
-                        image.Save(stream, encoder);
+                    image.Mutate(x => x.Contrast(factor));
+                    image.Save(stream, encoder);
 
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Contrast.png", $"Factor: `{factor}`\n Filesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Contrast.png", $"Factor: `{factor}`\n Filesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -205,7 +193,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("glow", "Glows the image")]
-        public async Task Glow(int size, IAttachment inputImage)
+        public async Task GlowAsync(int size, IAttachment inputImage)
         {
             await DeferAsync();
             if (size > 2500 && Context.Interaction.User.Id != 135446225565515776)
@@ -215,20 +203,18 @@ namespace Sketch_Bot.Modules
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.Glow(size));
-                        image.Save(stream, encoder);
+                    image.Mutate(x => x.Glow(size));
+                    image.Save(stream, encoder);
 
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Glow.png", $"Factor: `{size}`\nFilesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Glow.png", $"Factor: `{size}`\nFilesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -236,26 +222,24 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("skew", "Skews the image")]
-        public async Task Skew(float x, float y, IAttachment inputImage)
+        public async Task SkewAsync(float x, float y, IAttachment inputImage)
         {
             await DeferAsync();
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(m => m.Skew(x, y));
-                        image.Save(stream, encoder);
+                    image.Mutate(m => m.Skew(x, y));
+                    image.Save(stream, encoder);
 
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Skew.png", $"X: `{x}` Y: `{y}`\nFilesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Skew.png", $"X: `{x}` Y: `{y}`\nFilesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -263,26 +247,24 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("oil", "Oil painting filter")]
-        public async Task Oil(IAttachment inputImage)
+        public async Task OilAsync(IAttachment inputImage)
         {
             await DeferAsync();
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.OilPaint());
-                        image.Save(stream, encoder);
+                    image.Mutate(x => x.OilPaint());
+                    image.Save(stream, encoder);
 
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Oil.png", $"Filesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Oil.png", $"Filesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -290,26 +272,24 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("polaroid", "Polaroid photo filter")]
-        public async Task Polaroid(IAttachment inputImage)
+        public async Task PolaroidAsync(IAttachment inputImage)
         {
             await DeferAsync();
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.Polaroid());
-                        image.Save(stream, encoder);
+                    image.Mutate(x => x.Polaroid());
+                    image.Save(stream, encoder);
 
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Polaroid.png", $"Filesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Polaroid.png", $"Filesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -317,26 +297,24 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("hue", "Alters the Hue component of a image")]
-        public async Task Hue(float degrees, IAttachment inputImage)
+        public async Task HueAsync(float degrees, IAttachment inputImage)
         {
             await DeferAsync();
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.Hue(degrees));
-                        image.Save(stream, encoder);
+                    image.Mutate(x => x.Hue(degrees));
+                    image.Save(stream, encoder);
 
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Hue.png", $"Degrees: `{degrees}`\nFilesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Hue.png", $"Degrees: `{degrees}`\nFilesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -344,7 +322,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("huewheel", "Creates a GIF cycling the hue of the image through 360 degrees over the given seconds")]
-        public async Task Huewheel(int seconds, IAttachment inputImage)
+        public async Task HuewheelAsync(int seconds, IAttachment inputImage)
         {
             await DeferAsync();
             if (seconds < 1 || seconds > 10)
@@ -393,7 +371,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("opacity", "Multiplies the opacity of the input image with a given factor between 0 and 1")]
-        public async Task Opacity(float factor, IAttachment inputImage)
+        public async Task OpacityAsync(float factor, IAttachment inputImage)
         {
             await DeferAsync();
             if (factor < 0 || factor > 1)
@@ -404,20 +382,18 @@ namespace Sketch_Bot.Modules
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.Opacity(factor));
-                        image.Save(stream, encoder);
+                    image.Mutate(x => x.Opacity(factor));
+                    image.Save(stream, encoder);
 
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Opacity.png", $"Filesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Opacity.png", $"Filesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -425,7 +401,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("fadeout", "Creates a GIF fading out the image to transparency")]
-        public async Task Fadeout(int seconds, IAttachment inputImage)
+        public async Task FadeoutAsync(int seconds, IAttachment inputImage)
         {
             await DeferAsync();
             if (seconds < 1 || seconds > 100)
@@ -487,7 +463,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("spin", "Creates a GIF of the image spinning 360 degrees over the given seconds")]
-        public async Task Spin(int seconds, IAttachment inputImage)
+        public async Task SpinAsync(int seconds, IAttachment inputImage)
         {
             await DeferAsync();
             if (seconds < 1 || seconds > 20)
@@ -547,26 +523,24 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("detectedges", "Detect edges on an image")]
-        public async Task DetectEdges(IAttachment inputImage)
+        public async Task DetectEdgesAsync(IAttachment inputImage)
         {
             await DeferAsync();
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.DetectEdges());
-                        image.Save(stream, encoder);
+                    image.Mutate(x => x.DetectEdges());
+                    image.Save(stream, encoder);
 
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"DetectEdges.png", $"Filesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"DetectEdges.png", $"Filesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -574,32 +548,30 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("crop", "Crops the image")]
-        public async Task Crop(int width, int height, IAttachment inputImage)
+        public async Task CropAsync(int width, int height, IAttachment inputImage)
         {
             await DeferAsync();
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.Crop(width, height));
-                        image.Save(stream, encoder);
+                    image.Mutate(x => x.Crop(width, height));
+                    image.Save(stream, encoder);
 
-                    }
-                    stream.Position = 0;
-                    if (width > 3840 || height > 2160)
-                    {
-                        await FollowupAsync("Image is larger than `3840x2160`");
-                        stream.Dispose();
-                        return;
-                    }
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Crop.png", $"`{width}`x`{height}`\nFilesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
                 }
+                stream.Position = 0;
+                if (width > 3840 || height > 2160)
+                {
+                    await FollowupAsync("Image is larger than `3840x2160`");
+                    stream.Dispose();
+                    return;
+                }
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Crop.png", $"`{width}`x`{height}`\nFilesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -607,7 +579,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("brightness", "Adjusts brightness of an image")]
-        public async Task Brightness(float factor, IAttachment inputImage)
+        public async Task BrightnessAsync(float factor, IAttachment inputImage)
         {
             await DeferAsync();
             if (factor > 100 && Context.Interaction.User.Id != 135446225565515776)
@@ -617,20 +589,18 @@ namespace Sketch_Bot.Modules
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.Brightness(factor));
-                        image.Save(stream, encoder);
+                    image.Mutate(x => x.Brightness(factor));
+                    image.Save(stream, encoder);
 
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Brightness.png", $"Factor: `{factor}`\nFilesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Brightness.png", $"Factor: `{factor}`\nFilesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -638,26 +608,24 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("rotate", "Rotates an image")]
-        public async Task Rotate(float angle, IAttachment inputImage)
+        public async Task RotateAsync(float angle, IAttachment inputImage)
         {
             await DeferAsync();
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.Rotate(angle));
-                        image.Save(stream, encoder);
+                    image.Mutate(x => x.Rotate(angle));
+                    image.Save(stream, encoder);
 
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Rotate.png", $"Degrees `{angle}`\nFilesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Rotate.png", $"Degrees `{angle}`\nFilesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -665,7 +633,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("saturate", "Saturates an image")]
-        public async Task Saturate(float size, IAttachment inputImage)
+        public async Task SaturateAsync(float size, IAttachment inputImage)
         {
             await DeferAsync();
             if (size > 100 && Context.Interaction.User.Id != 135446225565515776)
@@ -675,19 +643,17 @@ namespace Sketch_Bot.Modules
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.Saturate(size));
-                        image.Save(stream, encoder);
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Saturate.png", $"Factor: `{size}`\nFilesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
+                    image.Mutate(x => x.Saturate(size));
+                    image.Save(stream, encoder);
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Saturate.png", $"Factor: `{size}`\nFilesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -695,7 +661,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("blur", "Blurs an image")]
-        public async Task Blur(int factor, IAttachment inputImage)
+        public async Task BlurAsync(int factor, IAttachment inputImage)
         {
             await DeferAsync();
             if (factor > 100 && Context.Interaction.User.Id != 135446225565515776)
@@ -705,19 +671,17 @@ namespace Sketch_Bot.Modules
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.BoxBlur(factor));
-                        image.Save(stream, encoder);
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Blur.png", $"Factor: `{factor}`\nFilesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
+                    image.Mutate(x => x.BoxBlur(factor));
+                    image.Save(stream, encoder);
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Blur.png", $"Factor: `{factor}`\nFilesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -725,7 +689,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("sharpen", "Sharpens an image")]
-        public async Task Sharpen(int size, IAttachment inputImage)
+        public async Task SharpenAsync(int size, IAttachment inputImage)
         {
             await DeferAsync();
             if (size > 100 && Context.Interaction.User.Id != 135446225565515776)
@@ -735,21 +699,19 @@ namespace Sketch_Bot.Modules
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.GaussianSharpen(size));
-                        image.Save(stream, encoder);
+                    image.Mutate(x => x.GaussianSharpen(size));
+                    image.Save(stream, encoder);
 
-                        image.Dispose();
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Sharpen.png", $"Factor: `{size}`\nFilesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
+                    image.Dispose();
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Sharpen.png", $"Factor: `{size}`\nFilesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {
@@ -757,7 +719,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("upscale", "Upscales an image")]
-        public async Task Upscale(IAttachment inputImage)
+        public async Task UpscaleAsync(IAttachment inputImage)
         {
             await DeferAsync();
             try
@@ -766,31 +728,26 @@ namespace Sketch_Bot.Modules
                 int height;
 
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes);
+                if (image.Width > 3840 || image.Height > 2160)
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        if (image.Width > 3840 || image.Height > 2160)
-                        {
-                            await FollowupAsync("Image is larger than `3840x2160`");
-                            image.Dispose();
-                        }
-                        else
-                        {
-                            image.Mutate(x => x.Resize(image.Width * 2, image.Height * 2));
-                            image.Save(stream, encoder);
+                    await FollowupAsync("Image is larger than `3840x2160`");
+                    image.Dispose();
+                }
+                else
+                {
+                    image.Mutate(x => x.Resize(image.Width * 2, image.Height * 2));
+                    image.Save(stream, encoder);
 
-                            width = Math.Min(image.Width, 3840);
-                            height = Math.Min(image.Height, 2160);
-                            image.Dispose();
-                            stream.Position = 0;
-                            string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                            await Context.Interaction.FollowupWithFileAsync(stream, $"Upscale.png", $"Image upscaled by `2` (`{width}x{height}`)\nFilesize: `{fileSize}`");
-                            await stream.FlushAsync();
-                            stream.Dispose();
-                        }
-                    }
-
+                    width = Math.Min(image.Width, 3840);
+                    height = Math.Min(image.Height, 2160);
+                    image.Dispose();
+                    stream.Position = 0;
+                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                    await Context.Interaction.FollowupWithFileAsync(stream, $"Upscale.png", $"Image upscaled by `2` (`{width}x{height}`)\nFilesize: `{fileSize}`");
+                    await stream.FlushAsync();
+                    stream.Dispose();
                 }
             }
             catch (Exception ex)
@@ -799,7 +756,7 @@ namespace Sketch_Bot.Modules
             }
         }
         [SlashCommand("resize", "Resizes the image")]
-        public async Task Resize(int width, int height, IAttachment inputImage)
+        public async Task ResizeAsync(int width, int height, IAttachment inputImage)
         {
             await DeferAsync();
             if (width > 3840 && Context.Interaction.User.Id != 135446225565515776)
@@ -813,21 +770,19 @@ namespace Sketch_Bot.Modules
             try
             {
                 var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                    {
-                        image.Mutate(x => x.Resize(width, height));
-                        image.Save(stream, encoder);
+                    image.Mutate(x => x.Resize(width, height));
+                    image.Save(stream, encoder);
 
-                        image.Dispose();
-                    }
-                    stream.Position = 0;
-                    string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                    await Context.Interaction.FollowupWithFileAsync(stream, $"Resize.png", $"Image resized to `{width}x{height}`\nFilesize: `{fileSize}`");
-                    await stream.FlushAsync();
-                    stream.Dispose();
+                    image.Dispose();
                 }
+                stream.Position = 0;
+                string fileSize = HelperFunctions.FormatFileSize(stream.Length);
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Resize.png", $"Image resized to `{width}x{height}`\nFilesize: `{fileSize}`");
+                await stream.FlushAsync();
+                stream.Dispose();
             }
             catch (Exception ex)
             {

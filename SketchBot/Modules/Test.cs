@@ -45,7 +45,7 @@ namespace Sketch_Bot.Modules
         [RequireUserPermission(GuildPermission.ManageRoles)]
         [RequireContext(ContextType.Guild)]
         [SlashCommand("addrole", "Add a role for leveling")]
-        public async Task Addrole(IRole role, int level)
+        public async Task AddRoleAsync(IRole role, int level)
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -60,7 +60,7 @@ namespace Sketch_Bot.Modules
         [RequireUserPermission(GuildPermission.ManageRoles)]
         [RequireContext(ContextType.Guild)]
         [SlashCommand("removerole", "Remove a role for leveing")]
-        public async Task Removerole(IRole role)
+        public async Task RemoveRoleAsync(IRole role)
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -73,7 +73,7 @@ namespace Sketch_Bot.Modules
             await FollowupAsync(role.Name + " has been removed");
         }
         [SlashCommand("youtube", "Searches YouTube and returns the first result")]
-        public async Task youtube(string searchquery)
+        public async Task YouTubeSearchAsync(string searchquery)
         {
             await DeferAsync();
             var items = new VideoSearch();
@@ -83,37 +83,30 @@ namespace Sketch_Bot.Modules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("roleinfo", "Displays info about a role")]
-        public async Task roleinfo(IRole role)
+        public async Task RoleInfoAsync(IRole role)
         {
             await DeferAsync();
-            var rolelist = role.Permissions.ToList();
-            string roleliststring = string.Join("\n", rolelist);
+            var rolePermissionsList = role.Permissions.ToList();
+            string permissionsListString = string.Join("\n", rolePermissionsList);
             var embed = new EmbedBuilder()
             {
+                Title = $"Role info for {role.Name}",
                 Color = role.Color
             };
-            embed.Title = ("Role info for " + role.Name);
             embed.AddField("Id", role.Id);
             embed.AddField("Position", role.Position, true);
             embed.AddField("Members", ((SocketRole)role).Members.Count(), true);
             embed.AddField("Mentionable?", role.IsMentionable);
             embed.AddField("Hoisted?",role.IsHoisted, true);
-            embed.AddField("Permissions", roleliststring);
+            embed.AddField("Permissions", permissionsListString);
             embed.AddField("Color", role.Color, true);
             embed.AddField("Role creation date", role.CreatedAt.DateTime.ToString("dd/MM/yy HH:mm:ss"), true);
-            var builtEmbed = embed.Build();
-            await FollowupAsync("", embed: builtEmbed);
-        }
-        [SlashCommand("rune", "Rune............")]
-        public async Task rune()
-        {
-            await DeferAsync();
-            await FollowupAsync("The man of 2017. The hero we don't need, but deserve.");
+            await FollowupAsync("", embed: embed.Build());
         }
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [SlashCommand("setwelcome", "Sets the welcome channel for welcome messages")]
-        public async Task setwelcome()
+        public async Task SetWelcomeChannelAsync()
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -128,7 +121,7 @@ namespace Sketch_Bot.Modules
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [SlashCommand("unsetwelcome", "Disables welcome messages")]
-        public async Task unsetwelcome()
+        public async Task UnsetWelcomeChannelAsync()
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -141,7 +134,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("disablelevelmsg", "Disables level up messages")]
-        public async Task disableleveling()
+        public async Task DisableLevelMessagesAsync()
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -154,7 +147,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("enablelevelmsg", "Enables level up messages")]
-        public async Task enableleveling()
+        public async Task EnableLevelMessagesAsync()
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -167,7 +160,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("setmodlog", "Sets the modlog channel")]
-        public async Task setmodlog()
+        public async Task SetModlogChannelAsync()
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -188,7 +181,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("unsetmodlog", "Disables the mod logging")]
-        public async Task unsetmodlog()
+        public async Task UnsetModlogChannelAsync()
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -206,168 +199,15 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("You don't have `ManageChannels` permission");
             }
         }
-        /*
-        [Ratelimit(1,3, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers)]
-        [SlashCommand("osu", "Lookup osu! stats of a user")]
-        public async Task osu(string gamemode, string user)
-        {
-            await DeferAsync();
-            try
-            {
-                string gamemodename;
-                IOsuApi instance = new OsuApi(new OsuSharpConfiguration
-                {
-                    ApiKey = File.ReadAllText("osu api key.json"),
-                    ModsSeparator = "|",
-                    MaxRequests = 4,
-                    TimeInterval = TimeSpan.FromSeconds(8),
-                    LogLevel = LoggingLevel.Debug
-                });
-                var osuuser = await instance.GetUserByNameAsync(user, GameMode.Standard);
-                if (gamemode.ToLower() == "0" || gamemode.ToLower() == "std" || gamemode.ToLower() == "standard")
-                {
-                    osuuser = await instance.GetUserByNameAsync(user, GameMode.Standard);
-                    gamemodename = "Standard";
-                }
-                else if(gamemode.ToLower() == "1" || gamemode.ToLower() == "taiko")
-                {
-                    osuuser = await instance.GetUserByNameAsync(user, GameMode.Taiko);
-                    gamemodename = "Taiko";
-                }
-                else if(gamemode.ToLower() == "2" || gamemode.ToLower() == "ctb" || gamemode.ToLower() == "catchthebeat")
-                {
-                    osuuser = await instance.GetUserByNameAsync(user, GameMode.Catch);
-                    gamemodename = "CTB";
-                }
-                else if(gamemode.ToLower() == "3" || gamemode.ToLower() == "mania")
-                {
-                    osuuser = await instance.GetUserByNameAsync(user, GameMode.Mania);
-                    gamemodename = "Mania";
-                }
-                else
-                {
-                    await FollowupAsync("Invalid gamemode\nTry std taiko ctb mania");
-                    return;
-                }
-                if (osuuser != null)
-                {
-                    var roundlevel = Math.Floor(osuuser.Level);
-                    var rawlevel = osuuser.Level;
-                    EmbedBuilder builder = new EmbedBuilder()
-                    {
-                        Color = new Discord.Color(0, 0, 255),
-                        ThumbnailUrl = $"https://a.ppy.sh/{osuuser.Userid}",
-                        Description =
-                        $"▸ **Global Rank:** #{(osuuser.GlobalRank).ToString("N0", new NumberFormatInfo() { NumberGroupSizes = new[] { 3 }, NumberGroupSeparator = "." })} ({osuuser.Country}#{(osuuser.RegionalRank).ToString("N0", new NumberFormatInfo() { NumberGroupSizes = new[] { 3 }, NumberGroupSeparator = "." })})" +
-                        $"\n▸ **Level:** {Math.Floor(osuuser.Level)} ({Math.Round((rawlevel - roundlevel) * 100, 2)}%)" +
-                        $"\n▸ **Total PP:** {osuuser.Pp}" +
-                        $"\n▸ **Accuracy:** {Math.Round(osuuser.Accuracy, 2)}%" +
-                        $"\n▸ **Playcount:** {osuuser.PlayCount}" +
-                        $"\n▸ **Total Score:** {(osuuser.TotalScore).ToString("N0", new NumberFormatInfo() { NumberGroupSizes = new[] { 3 }, NumberGroupSeparator = "." })}" +
-                        $"\n▸ **Ranked Score:** {(osuuser.RankedScore).ToString("N0", new NumberFormatInfo() { NumberGroupSizes = new[] { 3 }, NumberGroupSeparator = "." })}" +
-                        $"\n\n**Play history:**",
-                        ImageUrl = $"https://osu.ppy.sh/pages/include/profile-graphactivity.php?_jpg_csimd=1&u={osuuser.Userid}"
-                    };
-                    builder.WithAuthor(auther =>
-                    {
-                        auther.Name = $"osu! {gamemodename} Profile for {osuuser.Username}";
-                        auther.IconUrl = $"https://osu.ppy.sh/images/flags/{osuuser.Country}.png";
-                        auther.Url = $"https://osu.ppy.sh/u/{osuuser.Userid}";
-                    });
-                    var embed = builder.Build();
-                    await FollowupAsync("", embed:embed);
-                }
-                else
-                {
-                    await FollowupAsync("User not found");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.StackTrace);
-                await FollowupAsync($"Something went wrong! ({ex.GetType().ToString()})" +
-                    $"\n{ex.Message}");
-            }
-        }
-        [SlashCommand("osutop", "Top 10 osu plays of a user")]
-        public async Task osutop(string gamemode, string user)
-        {
-            await DeferAsync();
-            try
-            {
-                string gamemodename;
-                IOsuApi instance = new OsuApi(new OsuSharpConfiguration
-                {
-                    ApiKey = File.ReadAllText("osu api key.json"),
-                    ModsSeparator = "|",
-                    MaxRequests = 4,
-                    TimeInterval = TimeSpan.FromSeconds(8),
-                    LogLevel = LoggingLevel.Debug
-                });
-                List<UserBest> bests = await instance.GetUserBestByUsernameAsync(user, GameMode.Standard, 5);
-                if (gamemode.ToLower() == "0" || gamemode.ToLower() == "std" || gamemode.ToLower() == "standard")
-                {
-                    bests = await instance.GetUserBestByUsernameAsync(user, GameMode.Standard, 10);
-                    gamemodename = "Standard";
-                }
-                else if (gamemode.ToLower() == "1" || gamemode.ToLower() == "taiko")
-                {
-                    bests = await instance.GetUserBestByUsernameAsync(user, GameMode.Taiko, 10);
-                    gamemodename = "Taiko";
-                }
-                else if (gamemode.ToLower() == "2" || gamemode.ToLower() == "ctb" || gamemode.ToLower() == "catchthebeat" || gamemode.ToLower() == "catch")
-                {
-                    bests = await instance.GetUserBestByUsernameAsync(user, GameMode.Catch, 10);
-                    gamemodename = "CTB";
-                }
-                else if (gamemode.ToLower() == "3" || gamemode.ToLower() == "mania")
-                {
-                    bests = await instance.GetUserBestByUsernameAsync(user, GameMode.Mania, 10);
-                    gamemodename = "Mania";
-                }
-                else
-                {
-                    await FollowupAsync("Invalid gamemode\nTry std taiko ctb mania");
-                    return;
-                }
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.WithAuthor(auther =>
-                {
-                    auther.Name = $"Top 10 {gamemodename} scores for {bests.FirstOrDefault().Username}";
-                });
-                
-                int cnt = 1;
-                foreach (UserBest best in bests)
-                {
-
-                    builder.AddField($"{cnt}. https://osu.ppy.sh/b/{best.BeatmapId}",$"**Score:** {best.ScorePoints}" +
-                        $"\n**Accuracy:** {Math.Round(best.Accuracy, 2)}" +
-                        $"\n**Max Combo:** {best.MaxCombo}x" +
-                        $"\n**PP:** {best.Pp}" +
-                        $"\n**FC?** {best.Perfect}" +
-                        $"\n**Misses:** {best.Miss}x");
-                    cnt++;
-                }
-                var embed = builder.Build();
-                await FollowupAsync("", embed:embed);
-            }
-            catch (Exception ex)
-            {
-                await FollowupAsync($"Something went wrong! ({ex.GetType().ToString()})");
-                Console.WriteLine(ex.StackTrace);
-            }
-        }
-        */
         [SlashCommand("activity", "Launch a discord activity in a voice channel!")]
-        public async Task Activity(IVoiceChannel chan, DefaultApplications app)
+        public async Task CreateDiscordActivityAsync(IVoiceChannel chan, DefaultApplications app)
         {
             await DeferAsync();
             var invite = await chan.CreateInviteToApplicationAsync(app);
             await Context.Interaction.FollowupAsync(invite.Url);
         }
         [SlashCommand("emote", "Enlargens an emote")]
-        public async Task emote(string emote)
+        public async Task ShowEmoteAsync(string emote)
         {
             await DeferAsync();
             var emo = Emote.Parse(emote);
@@ -385,7 +225,7 @@ namespace Sketch_Bot.Modules
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [RequireContext(ContextType.Guild)]
         [SlashCommand("slowmode", "Sets the slowmode of a channel to the input seconds")]
-        public async Task slowmode(int seconds)
+        public async Task SetSlowmodeAsync(int seconds)
         {
             if (seconds < 21600)
             {
@@ -399,7 +239,7 @@ namespace Sketch_Bot.Modules
         }
         [Ratelimit(1, 2, Measure.Seconds, RatelimitFlags.None)]
         [SlashCommand("memegen", "Generates a meme")]
-        public async Task MemeAsync(string templateName, string topText, string bottomText)
+        public async Task GenerateMemeAsync(string templateName, string topText, string bottomText)
         {
             await DeferAsync();
             var service = _service2.GetMemeService();

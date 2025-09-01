@@ -10,24 +10,25 @@ using Sketch_Bot.Services;
 
 namespace Sketch_Bot.Modules
 {
+    [RequireDevelopers]
     public class TimerModule : ModuleBase<SocketCommandContext>
     {
         private readonly TimerService _service;
 
-        public TimerModule(TimerService service) // Make sure to configure your DI with your TimerService instance
+        public TimerModule(TimerService service)
         {
             _service = service;
         }
-        [RequireDevelopers]
+
         [Command("stoptimer")]
-        public async Task StopCmd()
+        public async Task StopTimerAsync()
         {
             _service.Stop();
             await ReplyAsync("Timer stopped.");
         }
-        [RequireDevelopers]
+        
         [Command("starttimer")]
-        public async Task RestartCmd()
+        public async Task StartTimerAsync()
         {
             _service.Restart();
             await ReplyAsync("Timer (re)started.");

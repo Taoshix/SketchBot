@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Sketch_Bot.Models
 {
-    public class userTable
+    public class UserStats
     {
         public string UserId { get; set; }
         public string Username { get; set; }
