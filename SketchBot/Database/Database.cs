@@ -359,7 +359,7 @@ namespace Sketch_Bot
 
             database.CloseConnection();
         }
-        public static List<Blacklist> BlacklistCheck(ulong Id)
+        public static Blacklist? BlacklistCheck(ulong Id)
         {
             var result = new List<Blacklist>();
             var database = new Database();
@@ -383,7 +383,7 @@ namespace Sketch_Bot
                 });
             }
             database.CloseConnection();
-            return result;
+            return result.FirstOrDefault();
         }
         public static void UpdateDailyTimestamp(IGuildUser user)
         {

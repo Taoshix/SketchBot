@@ -255,10 +255,10 @@ namespace Sketch_Bot.Services
                 return _cachedBlacklistChecks[Id];
             }
             var blacklistCheck = Database.BlacklistCheck(Id);
-            if (blacklistCheck.Any())
+            if (blacklistCheck != null)
             {
-                _cachedBlacklistChecks[Id] = blacklistCheck.FirstOrDefault();
-                return blacklistCheck.FirstOrDefault();
+                _cachedBlacklistChecks[Id] = blacklistCheck;
+                return blacklistCheck;
             }
             return null;
         }
