@@ -80,6 +80,10 @@ namespace Sketch_Bot.Services
             await SendAndLogMessageAsync(arg.GuildId,$"Track {track.Title} ended!");
 
             LavaPlayer<LavaTrack> player = await _lavaNode.TryGetPlayerAsync(arg.GuildId);
+            if (player == null)
+            {
+                return;
+            }
             var queue = player.GetQueue();
             if(queue.Count > 0)
             {
