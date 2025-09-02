@@ -154,7 +154,7 @@ namespace Sketch_Bot
 
             database.CloseConnection();
         }
-        public static List<UserStats> GetUserStats(IGuildUser user)
+        public static UserStats? GetUserStats(IGuildUser user)
         {
             var result = new List<UserStats>();
             var database = new Database();
@@ -180,8 +180,7 @@ namespace Sketch_Bot
                 });
             }
             database.CloseConnection();
-
-            return result;
+            return result.FirstOrDefault();
 
         }
         public static List<UserStats> GetAllUserStats(IGuildUser user)

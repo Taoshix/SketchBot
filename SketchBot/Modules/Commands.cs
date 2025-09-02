@@ -203,7 +203,7 @@ namespace Sketch_Bot.Modules
             }
 
             var user = Context.User as IGuildUser;
-            var userStats = Database.GetUserStats(user).FirstOrDefault();
+            var userStats = Database.GetUserStats(user);
             long currentTokens = userStats?.Tokens ?? 0;
 
             if (amount > currentTokens)
@@ -257,7 +257,7 @@ namespace Sketch_Bot.Modules
             }
 
             var user = Context.User as IGuildUser;
-            var userStats = Database.GetUserStats(user).FirstOrDefault();
+            var userStats = Database.GetUserStats(user);
             long amount = userStats?.Tokens ?? 0;
             var currentTokens = amount;
 
@@ -745,7 +745,7 @@ namespace Sketch_Bot.Modules
                 _cachingService.SetupUserInDatabase(user.Guild.Id, user as SocketGuildUser);
             }
 
-            var userStats = Database.GetUserStats(user).FirstOrDefault();
+            var userStats = Database.GetUserStats(user);
             embed.Title = "Stats for " + displayName;
             embed.Description = userStats.Tokens + " tokens:small_blue_diamond:" +
                 "\nLevel " + userStats.Level +
@@ -787,7 +787,7 @@ namespace Sketch_Bot.Modules
                 _cachingService.SetupUserInDatabase(Context.Guild.Id, user as SocketGuildUser);
             }
 
-            var userStats = Database.GetUserStats(user).FirstOrDefault();
+            var userStats = Database.GetUserStats(user);
             embed.Title = "Stats for " + displayName;
             embed.Description = userStats.Tokens + " tokens:small_blue_diamond:" +
                 "\nLevel " + userStats.Level +
@@ -915,12 +915,12 @@ namespace Sketch_Bot.Modules
             {
                 _cachingService.SetupUserInDatabase(Context.Guild.Id, user as SocketGuildUser);
             }
-            var tableName = Database.GetUserStats(user);
+            var userStats = Database.GetUserStats(user);
             DateTime now = DateTime.Now;
-            DateTime daily = tableName.FirstOrDefault().Daily;
+            DateTime daily = userStats.Daily;
             int difference = DateTime.Compare(daily, now);
 
-            bool canClaim = (tableName.FirstOrDefault()?.Daily.ToString() == "0001-01-01 00:00:00") ||
+            bool canClaim = (userStats?.Daily.ToString() == "0001-01-01 00:00:00") ||
                             (daily.DayOfYear < now.DayOfYear && difference < 0) ||
                             (difference >= 0) ||
                             (daily.Year < now.Year);
@@ -1048,7 +1048,7 @@ namespace Sketch_Bot.Modules
                 _cachingService.SetupUserInDatabase(Context.Guild.Id, userToPay);
             }
 
-            var userStats = Database.GetUserStats(user).FirstOrDefault();
+            var userStats = Database.GetUserStats(user);
             if (amount <= 0)
             {
                 await FollowupAsync("Don't attempt to steal tokens from people!");

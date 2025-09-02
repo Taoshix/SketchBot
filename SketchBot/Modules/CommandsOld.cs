@@ -110,7 +110,7 @@ namespace Sketch_Bot.Modules
         public async Task gamble(long amount)
         {
             _rand = new Random();
-            var currentTokens = Database.GetUserStats(Context.User as IGuildUser).FirstOrDefault().Tokens;
+            var currentTokens = Database.GetUserStats(Context.User as IGuildUser).Tokens;
             if (amount > currentTokens) await ReplyAsync("You don't have enough tokens");
             else if (amount < 1) await ReplyAsync("The minimum amount of tokens is 1");
             else
@@ -119,7 +119,7 @@ namespace Sketch_Bot.Modules
                 if (RNG >= 53)
                 {
                     Database.AddTokens(Context.User as IGuildUser, amount);
-                    currentTokens = Database.GetUserStats(Context.User as IGuildUser).FirstOrDefault().Tokens;
+                    currentTokens = Database.GetUserStats(Context.User as IGuildUser).Tokens;
                     EmbedBuilder builder = new EmbedBuilder()
                     {
                         Title = "You won!",
@@ -138,7 +138,7 @@ namespace Sketch_Bot.Modules
                 else
                 {
                     Database.RemoveTokens(Context.User as IGuildUser, amount);
-                    currentTokens = Database.GetUserStats(Context.User as IGuildUser).FirstOrDefault().Tokens;
+                    currentTokens = Database.GetUserStats(Context.User as IGuildUser).Tokens;
                     EmbedBuilder builder = new EmbedBuilder()
                     {
                         Title = "You lost!",
@@ -160,9 +160,9 @@ namespace Sketch_Bot.Modules
         [Command("gamble all", RunMode = RunMode.Async)]
         public async Task gambleall()
         {
-            long amount = Database.GetUserStats(Context.User as IGuildUser).FirstOrDefault().Tokens;
+            long amount = Database.GetUserStats(Context.User as IGuildUser).Tokens;
             _rand = new Random();
-            var currentTokens = Database.GetUserStats(Context.User as IGuildUser).FirstOrDefault().Tokens;
+            var currentTokens = Database.GetUserStats(Context.User as IGuildUser).Tokens;
             if (amount < 1) await ReplyAsync("The minimum amount of tokens is 1");
             else
             {
@@ -170,7 +170,7 @@ namespace Sketch_Bot.Modules
                 if (RNG >= 53)
                 {
                     Database.AddTokens(Context.User as IGuildUser, amount);
-                    currentTokens = Database.GetUserStats(Context.User as IGuildUser).FirstOrDefault().Tokens;
+                    currentTokens = Database.GetUserStats(Context.User as IGuildUser).Tokens;
                     EmbedBuilder builder = new EmbedBuilder()
                     {
                         Title = "You won!",
@@ -189,7 +189,7 @@ namespace Sketch_Bot.Modules
                 else
                 {
                     Database.RemoveTokens(Context.User as IGuildUser, amount);
-                    currentTokens = Database.GetUserStats(Context.User as IGuildUser).FirstOrDefault().Tokens;
+                    currentTokens = Database.GetUserStats(Context.User as IGuildUser).Tokens;
                     EmbedBuilder builder = new EmbedBuilder()
                     {
                         Title = "You lost!",
@@ -841,10 +841,10 @@ namespace Sketch_Bot.Modules
 
             var userTable = Database.GetUserStats(user);
 
-            embed.Description = (user.Mention + " has " + userTable.FirstOrDefault().Tokens + " tokens to spend!:small_blue_diamond:");
+            embed.Description = (user.Mention + " has " + userTable.Tokens + " tokens to spend!:small_blue_diamond:");
             var builtEmbed = embed.Build();
             await Context.Channel.SendMessageAsync("", false, builtEmbed);
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?tokens with success! (" + userTable.FirstOrDefault().Tokens + ") (" + Context.Guild.Name + ")");
+            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?tokens with success! (" + userTable.Tokens + ") (" + Context.Guild.Name + ")");
         }
         [RequireContext(ContextType.Guild)]
         [Alias("leaderboards")]
@@ -1147,9 +1147,9 @@ namespace Sketch_Bot.Modules
             var tableName = Database.GetUserStats(Context.User as IGuildUser); // We get the user status
 
             DateTime now = DateTime.Now; // We get the actual time
-            DateTime daily = tableName.FirstOrDefault().Daily;
+            DateTime daily = tableName.Daily;
             int difference = DateTime.Compare(daily, now);
-            if ((tableName.FirstOrDefault()?.Daily.ToString() == "0001-01-01 00:00:00") || (daily.DayOfYear < now.DayOfYear && difference < 0 || difference >= 0 || daily.Year < now.Year))
+            if ((tableName?.Daily.ToString() == "0001-01-01 00:00:00") || (daily.DayOfYear < now.DayOfYear && difference < 0 || difference >= 0 || daily.Year < now.Year))
             {
                 int amount = 50; // The amount of credits the user is gonna receive, in uint of you followed BossDarkReaper advises or in int
                 if (await _service.DblApi(Context.Client.CurrentUser.Id).HasVoted(Context.User.Id))
@@ -1205,7 +1205,7 @@ namespace Sketch_Bot.Modules
                         var userToPay = Database.GetUserStats(usertopay);
                         if (amount > 0)
                         {
-                            if (userTable.FirstOrDefault().Tokens >= amount)
+                            if (userTable.Tokens >= amount)
                             {
                                 Database.RemoveTokens(user, amount);
                                 Database.AddTokens(usertopay, amount);

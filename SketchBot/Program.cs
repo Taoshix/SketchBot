@@ -351,12 +351,12 @@ namespace Sketch_Bot
                         return;
                     }
                     var user = _client.GetUser(ulong.Parse(args.Last())) as SocketGuildUser;
-                    var tableName = Database.GetUserStats(user);
+                    var userStats = Database.GetUserStats(user);
                     DateTime now = DateTime.Now;
-                    DateTime daily = tableName.FirstOrDefault().Daily;
+                    DateTime daily = userStats.Daily;
                     int difference = DateTime.Compare(daily, now);
 
-                    bool canClaim = (tableName.FirstOrDefault()?.Daily.ToString() == "0001-01-01 00:00:00") ||
+                    bool canClaim = (userStats?.Daily.ToString() == "0001-01-01 00:00:00") ||
                                     (daily.DayOfYear < now.DayOfYear && difference < 0) ||
                                     (difference >= 0) ||
                                     (daily.Year < now.Year);
@@ -541,7 +541,7 @@ namespace Sketch_Bot
                     rand = new Random();
                     int xp = rand.Next(5, 15);
                     int tokens = rand.Next(1, 4);
-                    var userData = Database.GetUserStats(guildUser).FirstOrDefault();
+                    var userData = Database.GetUserStats(guildUser);
                     if (userData == null)
                     {
                         Console.WriteLine("UserData is null!");

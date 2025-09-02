@@ -127,7 +127,7 @@ namespace Sketch_Bot.Modules
             {
                 Color = role.Color
             };
-            embed.Title = ("Role info for " + role.Name);
+            embed.Title = "Role info for " + role.Name;
             embed.AddField("Id", role.Id);
             embed.AddField("Position", role.Position, true);
             embed.AddField("Members", role.Members.Count(), true);
@@ -166,11 +166,11 @@ namespace Sketch_Bot.Modules
                 Database.EnterUser(user);
             }
 
-            var userTable = Database.GetUserStats(user) ?? throw new ArgumentNullException("Database.GetUserStatus(user)");
-            embed.Title = ("Stats for " + name);
-            embed.Description = (userTable.FirstOrDefault().Tokens + " tokens:small_blue_diamond:" +
-                "\nLevel " + userTable.FirstOrDefault().Level +
-                "\nXP " + userTable.FirstOrDefault().XP + " out of " + XP.caclulateNextLevel(userTable.FirstOrDefault().Level));
+            var userStats = Database.GetUserStats(user);
+            embed.Title = "Stats for " + name;
+            embed.Description = userStats.Tokens + " tokens:small_blue_diamond:" +
+                "\nLevel " + userStats.Level +
+                "\nXP " + userStats.XP + " out of " + XP.caclulateNextLevel(userStats.Level);
             var builtEmbed = embed.Build();
             await Context.Channel.SendMessageAsync("", false, builtEmbed);
         }
