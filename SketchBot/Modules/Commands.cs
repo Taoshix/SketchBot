@@ -740,7 +740,7 @@ namespace Sketch_Bot.Modules
             Database.CreateTable(Context.Guild.Id);
             var userCheckResult = Database.CheckExistingUser(user);
 
-            if (!userCheckResult.Any())
+            if (!userCheckResult)
             {
                 _cachingService.SetupUserInDatabase(user.Guild.Id, user as SocketGuildUser);
             }
@@ -780,11 +780,11 @@ namespace Sketch_Bot.Modules
             };
             var displayName = user.Nickname ?? user.DisplayName;
             Database.CreateTable(Context.Guild.Id);
-            var userCheckResult = Database.CheckExistingUser(user);
+            var userCheckResult = _cachingService.IsInDatabase(Context.Guild.Id, user.Id);
 
-            if (!userCheckResult.Any())
+            if (!userCheckResult)
             {
-                Database.EnterUser(user);
+                _cachingService.SetupUserInDatabase(Context.Guild.Id, user as SocketGuildUser);
             }
 
             var userStats = Database.GetUserStats(user).FirstOrDefault();
@@ -822,7 +822,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("award", "Give someone tokens")]
-        public async Task AwardTokensAsync(IGuildUser user, int tokens, string comment = "")
+        public async Task AwardTokensAsync(IGuildUser guildUser, int tokens, string comment = "")
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -830,12 +830,11 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            var guildUser = user;
             var name = guildUser.Nickname ?? guildUser.DisplayName;
             if (((IGuildUser)Context.User).GuildPermissions.ManageGuild || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
-                var result = Database.CheckExistingUser(guildUser);
-                if (result.Count() <= 1)
+                var userExists = _cachingService.IsInDatabase(Context.Guild.Id, guildUser.Id);
+                if (userExists)
                 {
                     var embed = new EmbedBuilder()
                     {
@@ -846,6 +845,10 @@ namespace Sketch_Bot.Modules
                     embed.Description = comment;
                     var builtEmbed = embed.Build();
                     await FollowupAsync("", null, false, false, null, null, null, builtEmbed);
+                }
+                else
+                {
+                    await FollowupAsync("This user is not in the database");
                 }
             }
             else
@@ -907,8 +910,8 @@ namespace Sketch_Bot.Modules
                 return;
             }
             user ??= Context.User as IGuildUser;
-            var result = _cachingService.IsInDatabase(Context.Guild.Id, user.Id);
-            if (!result)
+            var isUserInDatabase = _cachingService.IsInDatabase(Context.Guild.Id, user.Id);
+            if (!isUserInDatabase)
             {
                 _cachingService.SetupUserInDatabase(Context.Guild.Id, user as SocketGuildUser);
             }

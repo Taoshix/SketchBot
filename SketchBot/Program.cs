@@ -610,7 +610,7 @@ namespace Sketch_Bot
                     return;
 
                 // Ensure user is in database
-                if (!Database.CheckExistingUser(user).Any())
+                if (!Database.CheckExistingUser(user))
                     Database.EnterUser(user);
 
                 // Get welcome channel

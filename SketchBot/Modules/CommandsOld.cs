@@ -834,7 +834,7 @@ namespace Sketch_Bot.Modules
             Database.CreateTable(Context.Guild.Id);
             var result = Database.CheckExistingUser(user);
 
-            if (!result.Any())
+            if (!result)
             {
                 Database.EnterUser(user);
             }
@@ -1029,7 +1029,7 @@ namespace Sketch_Bot.Modules
             if (((IGuildUser)Context.User).GuildPermissions.ManageGuild == true || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
                 var result = Database.CheckExistingUser(user);
-                if (result.Count() <= 1)
+                if (result)
                 {
                     var embed = new EmbedBuilder()
                     {
@@ -1066,7 +1066,7 @@ namespace Sketch_Bot.Modules
             if (((IGuildUser)Context.User).GuildPermissions.ManageGuild == true || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
                 var result = Database.CheckExistingUser(user as IGuildUser);
-                if (result.Count() <= 1)
+                if (result)
                 {
                     var embed = new EmbedBuilder()
                     {
@@ -1093,7 +1093,7 @@ namespace Sketch_Bot.Modules
                 foreach (var user in users)
                 {
                     var result = Database.CheckExistingUser(user);
-                    if (result.Count() <= 1)
+                    if (result)
                     {
                         Database.AddTokens(user, tokens);
                     }
@@ -1140,7 +1140,7 @@ namespace Sketch_Bot.Modules
             }
             // These lines checks if the user exits, if not we add him into the database
             var result = Database.CheckExistingUser(user);
-            if (!result.Any())
+            if (!result)
             {
                 Database.EnterUser(user);
             }
@@ -1197,9 +1197,9 @@ namespace Sketch_Bot.Modules
             var result3 = _cachingService.GetBlackList();
             if (!result3.Contains(user.Id))
             {
-                if (result.Any())
+                if (result)
                 {
-                    if (result2.Count >= 1)
+                    if (result2)
                     {
                         var userTable = Database.GetUserStats(user);
                         var userToPay = Database.GetUserStats(usertopay);

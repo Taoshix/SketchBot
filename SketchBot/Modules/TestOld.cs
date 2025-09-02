@@ -161,7 +161,7 @@ namespace Sketch_Bot.Modules
             Database.CreateTable(Context.Guild.Id);
             var result = Database.CheckExistingUser(user);
 
-            if (!result.Any())
+            if (!result)
             {
                 Database.EnterUser(user);
             }

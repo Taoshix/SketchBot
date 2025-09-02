@@ -88,7 +88,7 @@ namespace Sketch_Bot.Services
             Console.WriteLine("Creating Words Table...");
             ServerSettingsDB.CreateTableWords(guildId);
         }
-        public void SetupUserInDatabase(ulong guild, SocketGuildUser user)
+        public void SetupUserInDatabase(ulong guildId, SocketGuildUser user)
         {
             if (!_dbConnected)
             {
@@ -96,16 +96,16 @@ namespace Sketch_Bot.Services
                 return;
             }
 
-            if (!_usersInDatabase.ContainsKey(guild))
+            if (!_usersInDatabase.ContainsKey(guildId))
             {
                 // Initialize the user list for this guild if not present
-                _usersInDatabase[guild] = new List<ulong>();
+                _usersInDatabase[guildId] = new List<ulong>();
             }
 
-            if (!IsInDatabase(guild, user.Id) && !user.IsBot)
+            if (!IsInDatabase(guildId, user.Id) && !user.IsBot)
             {
                 Database.EnterUser(user);
-                _usersInDatabase[guild].Add(user.Id);
+                _usersInDatabase[guildId].Add(user.Id);
             }
         }
         public Dictionary<ulong, List<ulong>> GetDatabaseUsers()
@@ -168,8 +168,8 @@ namespace Sketch_Bot.Services
             }
 
             // Check if the user exists in the database
-            var result = Database.CheckExistingUser(user);
-            if (!result.Any())
+            var userExistsInDatabase = Database.CheckExistingUser(user);
+            if (!userExistsInDatabase)
             {
                 return false;
             }

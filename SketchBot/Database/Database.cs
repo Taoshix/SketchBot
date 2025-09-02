@@ -79,7 +79,7 @@ namespace Sketch_Bot
         {
             MySqlConnection.ClearAllPools();
         }
-        public static List<string> CheckExistingUser(IGuildUser user) // TODO refactor to boolean return
+        public static bool CheckExistingUser(IGuildUser user) // TODO refactor to boolean return
         {
             var result = new List<string>();
             var database = new Database();
@@ -94,7 +94,7 @@ namespace Sketch_Bot
                 result.Add(userId);
             }
             database.CloseConnection();
-            return result;
+            return result.Count > 0;
         }
         public static void CreateSettingsTable()
         {
