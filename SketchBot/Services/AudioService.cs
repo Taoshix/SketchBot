@@ -142,10 +142,13 @@ namespace Sketch_Bot.Services
             return Task.CompletedTask;
         }
 
-        private Task OnWebSocketClosedAsync(WebSocketClosedEventArg arg)
+        private async Task OnWebSocketClosedAsync(WebSocketClosedEventArg arg)
         {
             _logger.LogCritical("{}", JsonSerializer.Serialize(arg));
-            return Task.CompletedTask;
+            if (arg.ByRemote)
+            {
+                await _lavaNode.DestroyPlayerAsync(arg.GuildId);
+            }
         }
 
         private Task SendAndLogMessageAsync(ulong guildId,
