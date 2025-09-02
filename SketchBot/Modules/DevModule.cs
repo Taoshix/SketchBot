@@ -557,31 +557,36 @@ namespace Sketch_Bot.Modules
                 await ReplyAsync("Guild not found.");
                 return;
             }
-            await guild.DownloadUsersAsync();
-            var embed = new EmbedBuilder()
-                .WithTitle($"Guild Info: {guild.Name}")
-                .AddField("ID", guild.Id, true)
-                .AddField("Owner", guild.Owner.Mention, true)
-                .AddField("Member Count", $"{guild.MemberCount} ({guild.Users.Count(x => !x.IsBot)} users + {guild.Users.Count(x => x.IsBot)} bots)", true)
-                .AddField("Created At", guild.CreatedAt.ToString("f"), true)
-                .AddField("Categories", guild.CategoryChannels.Count.ToString(), true)
-                .AddField($"Total Channels", guild.Channels.Count, true) // We dont know if stage channels or other types are included, so we just use total channels
-                .AddField($"Text Channels ({guild.TextChannels.Count})", string.Join("\n", guild.TextChannels.Select(x => x.Name).Take(5)), true)
-                .AddField($"Voice Channels ({guild.VoiceChannels.Count})", string.Join("\n", guild.VoiceChannels.Select(x => x.Name).Take(5)), true)
-                .AddField("Emojis", $"{guild.Emotes.Count} emojis", true)
-                .AddField("Features", string.Join(", ", guild.Features), true)
-                .AddField($"Roles ({guild.Roles.Count})", string.Join("\n", guild.Roles.OrderByDescending(x => x.Position).Take(5).Select(x => x.Mention).ToArray()), true)
-                .AddField("Verification Level", guild.VerificationLevel.ToString(), true)
-                .AddField("Boost Level", guild.PremiumTier.ToString(), true)
-                .AddField("Boost Count", guild.PremiumSubscriptionCount.ToString(), true)
-                .AddField("Region", guild.VoiceRegionId, true)
-                .AddField("Vanity", guild.VanityURLCode ?? "No Vanity", true)
-                .AddField("Icon URL", guild.IconUrl ?? "No Icon", true)
-                .AddField("Banner URL", guild.BannerUrl ?? "No Banner", true)
-                .WithThumbnailUrl(guild.IconUrl ?? "")
-                .WithColor(new Color(0, 255, 0))
-                .Build();
-            await ReplyAsync("", false, embed);
+            try
+            {
+                await guild.DownloadUsersAsync();
+                var embed = new EmbedBuilder()
+                    .WithTitle($"Guild Info: {guild.Name}")
+                    .AddField("ID", guild.Id, true)
+                    .AddField("Owner", guild.Owner?.Mention ?? "Unknown", true)
+                    .AddField("Member Count", $"{guild.MemberCount} ({guild.Users.Count(x => !x.IsBot)} users + {guild.Users.Count(x => x.IsBot)} bots)", true)
+                    .AddField("Created At", guild.CreatedAt.ToString("f"), true)
+                    .AddField("Categories", guild.CategoryChannels.Count == 0 ? "None" : guild.CategoryChannels.Count.ToString(), true)
+                    .AddField("Total Channels", guild.Channels.Count == 0 ? "None" : guild.Channels.Count.ToString(), true)
+                    .AddField($"Text Channels ({guild.TextChannels.Count})", guild.TextChannels.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.TextChannels.Select(x => x.Name), 1024, "\n"), true)
+                    .AddField($"Voice Channels ({guild.VoiceChannels.Count})", guild.VoiceChannels.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.VoiceChannels.Select(x => x.Name), 1024, "\n"), true)
+                    .AddField($"Emojis ({guild.Emotes.Count})", guild.Emotes.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.Emotes.Select(x => x.ToString()), 1024, ""), true)
+                    .AddField($"Roles ({guild.Roles.Count})", guild.Roles.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.Roles.OrderByDescending(x => x.Position).Select(x => x.Mention), 1024, "\n"), true)
+                    .AddField("Verification Level", guild.VerificationLevel.ToString(), true)
+                    .AddField("Boost Level", $"{guild.PremiumTier} ({guild.PremiumSubscriptionCount} boosts)", true)
+                    .AddField("Region", string.IsNullOrWhiteSpace(guild.VoiceRegionId) ? "None" : guild.VoiceRegionId, true)
+                    .AddField("Vanity", guild.Features.HasVanityUrl ? guild.VanityURLCode : "No Vanity", true)
+                    .AddField("Icon URL", string.IsNullOrWhiteSpace(guild.IconUrl) ? "No Icon" : guild.IconUrl, true)
+                    .AddField("Banner URL", string.IsNullOrWhiteSpace(guild.BannerUrl) ? "No Banner" : guild.BannerUrl, true)
+                    .WithThumbnailUrl(guild.IconUrl ?? "")
+                    .WithColor(new Color(0, 255, 0))
+                    .Build();
+                await ReplyAsync("", false, embed);
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"{ex.GetType()}: {ex.Message}");
+            }
         }
     }
 }

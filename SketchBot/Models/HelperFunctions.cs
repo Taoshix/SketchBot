@@ -306,5 +306,36 @@ namespace Sketch_Bot.Models
             else
                 return $"{ts.Hours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}";
         }
+        public static string JoinWithLimit(IEnumerable<string> items, int maxLength = 1024, string separator = "")
+        {
+            var result = new StringBuilder();
+            int count = 0;
+            int total = items.Count();
+            string moreMsg = ""; // Will be set if needed
+
+            foreach (var item in items)
+            {
+                // Calculate the "and X more" message in advance
+                int remaining = total - (count + 1);
+                moreMsg = remaining > 0 ? $" and **{remaining}** more" : "";
+
+                // Predict length if we add this item and the message
+                int predictedLength = result.Length + (count > 0 ? separator.Length : 0) + item.Length + moreMsg.Length;
+
+                if (predictedLength > maxLength)
+                    break;
+
+                if (count > 0)
+                    result.Append(separator);
+                result.Append(item);
+                count++;
+            }
+
+            if (count < total)
+            {
+                result.Append($" and **{total - count}** more");
+            }
+            return result.ToString();
+        }
     }
 }
