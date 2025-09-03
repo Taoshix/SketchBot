@@ -407,6 +407,10 @@ namespace Sketch_Bot.Modules
                 return;
             }
             var queue = player.GetQueue();
+            string durationFormat = player.Track.Duration.Hours > 0 ? @"hh\:mm\:ss" : @"mm\:ss";
+            string positionFormat = player.Track.Position.Hours > 0 ? @"hh\:mm\:ss" : @"mm\:ss";
+            string positionStr = player.Track.Position.ToString(positionFormat);
+            string durationStr = player.Track.Duration.ToString(durationFormat);
             var embed = new EmbedBuilder()
                 .WithAuthor(author =>
                 {
@@ -420,7 +424,7 @@ namespace Sketch_Bot.Modules
                 .AddField($"Queue ({queue.Count})", queue.Count > 0 ? HelperFunctions.JoinWithLimit(queue.Select(x => $"[{x.Title}]({x.Url})"), 1024, "\n") : "Empty")
                 .AddField("Player Volume", player.Volume, true)
                 .AddField("Current Track", $"[{player.Track?.Title}]({player.Track?.Url})" ?? "No track playing", true)
-                .AddField("Track Duration", player.Track != null ? $"{player.Track.Position} / {player.Track.Duration} ({(player.Track.Position / player.Track.Duration * 100).ToString("0.00")}%)" : "N/A")
+                .AddField("Track Duration", player.Track != null ? $"{positionStr} / {durationStr} ({(player.Track.Position / player.Track.Duration * 100).ToString("0.00")}%)" : "N/A")
                 .AddField($"VC - {(voiceChannel != null ? $"{voiceChannel.Name} ({voiceChannel.ConnectedUsers.Count})" : "Not connected")}", voiceChannel != null ? HelperFunctions.JoinWithLimit(voiceChannel.ConnectedUsers.Select(x => $"{x.DisplayName} ({x.Username} - {x.Id})"), 1024, "\n") : "N/A")
                 .WithFooter(footer => footer.Text = $"Guild ID: {guildId}")
                 .WithCurrentTimestamp()
