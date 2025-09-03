@@ -20,6 +20,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using TagLib.Asf;
 using Victoria;
 
 namespace Sketch_Bot.Modules
@@ -52,6 +53,7 @@ namespace Sketch_Bot.Modules
         {
             code = code.Replace("```cs", "");
             code = code.Replace("```", "");
+            code = code.Replace("`", "");
             var stopwatch = new Stopwatch();
             using (Context.Channel.EnterTypingState())
             {
@@ -117,8 +119,8 @@ namespace Sketch_Bot.Modules
         [Command("mutualserver")]
         public async Task mutualservers(ulong id)
         {
-            var guilds = Context.Client.Guilds;
-            var mutualGuilds = guilds.Where(guild => guild.Users.Any(user => user.Id == id)).ToList();
+            var user = await Context.Client.GetUserAsync(id) as SocketUser;
+            var mutualGuilds = user?.MutualGuilds ?? Context.Client.Guilds.Where(guild => guild.Users.Any(user => user.Id == id)).ToList();
 
             if (!mutualGuilds.Any())
             {
@@ -141,7 +143,6 @@ namespace Sketch_Bot.Modules
                 count++;
             }
 
-            var user = await Context.Client.GetUserAsync(id);
             var embed = new EmbedBuilder()
                 .WithTitle($"{count} mutual servers found")
                 .WithDescription(descriptionBuilder.ToString())
