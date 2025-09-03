@@ -49,7 +49,7 @@ namespace Sketch_Bot.Modules
 
         [RequireDevelopers]
         [Command("eval", RunMode = RunMode.Async)]
-        public async Task Eval([Remainder] string code)
+        public async Task EvalAsync([Remainder] string code)
         {
             code = code.Replace("```cs", "");
             code = code.Replace("```", "");
@@ -90,14 +90,14 @@ namespace Sketch_Bot.Modules
         }
         [RequireDevelopers]
         [Command("bash", RunMode = RunMode.Async)]
-        public async Task bashAsync([Remainder] string cmd)
+        public async Task BashAsync([Remainder] string cmd)
         {
             var result = HelperFunctions.Bash(cmd);
             await ReplyAsync(result);
         }
         [RequireDevelopers]
         [Command("checkowner")]
-        public async Task checkowner(ulong id)
+        public async Task CheckOwnerAsync(ulong id)
         {
             var guilds = Context.Client.Guilds.Where(g => g.OwnerId == id).ToList();
             if (guilds.Any())
@@ -117,7 +117,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireDevelopers]
         [Command("mutualserver")]
-        public async Task mutualservers(ulong id)
+        public async Task ListMutualGuildsAsync(ulong id)
         {
             var user = await Context.Client.GetUserAsync(id) as SocketUser;
             var mutualGuilds = user?.MutualGuilds ?? Context.Client.Guilds.Where(guild => guild.Users.Any(user => user.Id == id)).ToList();
@@ -160,7 +160,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireDevelopers]
         [Command("updatepfp", RunMode = RunMode.Async)]
-        public async Task blurple([Remainder] string url = "")
+        public async Task SetAvatarAsync([Remainder] string url = "")
         {
             try
             {
@@ -191,69 +191,9 @@ namespace Sketch_Bot.Modules
                 await ReplyAsync("Unable to download/verify the URL");
             }
         }
-        [RequireDevelopers]
-        [Command("im lazy", RunMode = RunMode.Async)]
-        public async Task ImLazy()
-        {
-            if (!_cachingService._dbConnected)
-            {
-                await ReplyAsync("Database is down, please try again later");
-                return;
-            }
-            await ReplyAsync("Updating all of the tables so you don't have to!");
-            var guilds = Context.Client.Guilds;
-            foreach (var guild in guilds)
-            {
-                try
-                {
-                    ServerSettingsDB.UpdateAllTables(guild.Id);
-                    await Task.Delay(50);
-                }
-                catch (Exception e)
-                {
-                    await ReplyAsync(e.Message +
-                        "\nCreating table if not exists...");
-                    ServerSettingsDB.CreateTableWords(guild.Id);
-                    await Task.Delay(50);
-                    ServerSettingsDB.MakeSettings(guild.Id, 1);
-                    await Task.Delay(50);
-                    continue;
-                }
-            }
-            await ReplyAsync("Done!");
-        }
-        [RequireDevelopers]
-        [Command("fix db", RunMode = RunMode.Async)]
-        public async Task fixDb()
-        {
-            Stopwatch s = new Stopwatch();
-            await ReplyAsync("Updating Database...");
-            s.Start();
-            var guilds = Context.Client.Guilds;
-            foreach (var guild in guilds)
-            {
-                try
-                {
-                    Database.CreateTable(guild.Id);
-                    var serverSettings = ServerSettingsDB.GetSettings(guild.Id);
-                    if (!serverSettings.Any())
-                    {
-                        ServerSettingsDB.MakeSettings(guild.Id, 1);
-                        ServerSettingsDB.CreateTableWords(guild.Id);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    await EmbedHandler.CreateBasicEmbed(ex.GetType().ToString(), ex.Message, Discord.Color.Red);
-                    continue;
-                }
-            }
-            s.Stop();
-            await ReplyAsync($"Done {s.ElapsedMilliseconds}ms");
-        }
         [RequireDevelopersSilent]
         [Command("serverlist", RunMode = RunMode.Async)]
-        public async Task test2(int index = 1)
+        public async Task ServerListPageAsync(int index = 1)
         {
             int pagelimit = index - index + 20 * index - 20;
             List<string> guildNames = new List<string>();
@@ -278,7 +218,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireDevelopersSilent]
         [Command("serverlist", RunMode = RunMode.Async)]
-        public async Task serverlist([Remainder] string search)
+        public async Task ServerListSearchAsync([Remainder] string search)
         {
 
             List<string> guildNames = new List<string>();
@@ -333,7 +273,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireDevelopers]
         [Command("blacklist", RunMode = RunMode.Async)]
-        public async Task blacklist(RestUser user, [Remainder] string reason = "No reason")
+        public async Task BlacklistUserAsync(RestUser user, [Remainder] string reason = "No reason")
         {
             if (!_cachingService._dbConnected)
             {
@@ -374,7 +314,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireDevelopers]
         [Command("blacklistid", RunMode = RunMode.Async)]
-        public async Task blacklistid(ulong id, [Remainder] string reason = "No reason")
+        public async Task BlacklistUserByIdAsync(ulong id, [Remainder] string reason = "No reason")
         {
             if (!_cachingService._dbConnected)
             {
@@ -418,7 +358,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireDevelopers]
         [Command("unblacklist", RunMode = RunMode.Async)]
-        public async Task unblacklist(RestUser user)
+        public async Task UnblacklistUserAsync(RestUser user)
         {
             if (!_cachingService._dbConnected)
             {
@@ -445,7 +385,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireDevelopers]
         [Command("unblacklistid", RunMode = RunMode.Async)]
-        public async Task unblacklistid(ulong id)
+        public async Task UnblacklistUserByIdAsync(ulong id)
         {
             if (!_cachingService._dbConnected)
             {
@@ -474,7 +414,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireDevelopers]
         [Command("Blacklistcheck", RunMode = RunMode.Async)]
-        public async Task blacklistcheck(RestUser user)
+        public async Task BlacklistCheckAsync(RestUser user)
         {
             if (!_cachingService._dbConnected)
             {
@@ -502,7 +442,7 @@ namespace Sketch_Bot.Modules
         }
         [RequireDevelopers]
         [Command("Blacklistcheckid", RunMode = RunMode.Async)]
-        public async Task blacklistcheckid(ulong id)
+        public async Task BlacklistCheckByIdAsync(ulong id)
         {
             if (!_cachingService._dbConnected)
             {
