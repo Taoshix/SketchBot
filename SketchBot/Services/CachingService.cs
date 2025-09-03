@@ -48,45 +48,28 @@ namespace Sketch_Bot.Services
             int levelup = guild.MemberCount >= 100 ? 0 : 1;
             try
             {
-                var result = ServerSettingsDB.GetSettings(guild.Id);
-                if (result.Any())
+                var serverSettings = ServerSettingsDB.GetSettings(guild.Id);
+                if (serverSettings != null)
                 {
-                    _prefixes.Add(guild.Id, result.First().Prefix);
+                    _prefixes.Add(guild.Id, serverSettings.Prefix);
                     return;
                 }
                 else
                 {
                     ServerSettingsDB.MakeSettings(guild.Id, levelup);
+                    Console.WriteLine($"Created default settings for guild {guild.Name} ({guild.Id})");
                 }
 
-                    CreateGuildTables(guild.Id, levelup);
+                ServerSettingsDB.CreateTableRole(guild.Id);
+                ServerSettingsDB.CreateTableWords(guild.Id);
                 var gottenPrefix = ServerSettingsDB.GetSettings(guild.Id);
-                var prefix = gottenPrefix.FirstOrDefault()?.Prefix ?? "?";
-                Console.WriteLine($"Prefix: {prefix}");
-                Console.WriteLine("Prefix has been set up");
+                var prefix = gottenPrefix?.Prefix ?? "?";
                 _prefixes.Add(guild.Id, prefix);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
-                if (ex.Message.Contains(guild.Id.ToString()))
-                {
-                    CreateGuildTables(guild.Id, levelup);
-                    var gottenPrefix = ServerSettingsDB.GetSettings(guild.Id);
-                    var prefix = gottenPrefix.FirstOrDefault()?.Prefix ?? "?";
-                    Console.WriteLine($"Prefix: {prefix}");
-                    Console.WriteLine("Prefix has been set up");
-                    _prefixes.Add(guild.Id, prefix);
-                }
             }
-        }
-
-        private void CreateGuildTables(ulong guildId, int levelup)
-        {
-            Console.WriteLine("Creating Role Table...");
-            ServerSettingsDB.CreateTableRole(guildId);
-            Console.WriteLine("Creating Words Table...");
-            ServerSettingsDB.CreateTableWords(guildId);
         }
         public void SetupUserInDatabase(ulong guildId, SocketGuildUser user)
         {

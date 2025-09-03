@@ -86,7 +86,7 @@ namespace Sketch_Bot.Modules
         {
             if (Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
-                string prefix = ServerSettingsDB.GetSettings(Context.Guild.Id).FirstOrDefault().Prefix;  /* put your chosen prefix here */
+                string prefix = ServerSettingsDB.GetSettings(Context.Guild.Id).Prefix;  /* put your chosen prefix here */
                 var builder = new EmbedBuilder()
                 {
                     Color = new Discord.Color(114, 137, 218),
@@ -267,8 +267,8 @@ namespace Sketch_Bot.Modules
         [Command("welcomechannel", RunMode = RunMode.Async)]
         public async Task welcomechannel()
         {
-            var userTable = ServerSettingsDB.GetSettings(Context.Guild.Id);
-            var channel = userTable.FirstOrDefault().WelcomeChannel;
+            var serverSettings = ServerSettingsDB.GetSettings(Context.Guild.Id);
+            var channel = serverSettings.WelcomeChannel;
             if (channel == 0)
             {
                 await ReplyAsync("Welcome channel is not enabled. use `?setwelcome` in a channel to enable it");
@@ -283,8 +283,8 @@ namespace Sketch_Bot.Modules
         [Command("modlogchannel", RunMode = RunMode.Async)]
         public async Task modlogchannel()
         {
-            var usertable = ServerSettingsDB.GetSettings(Context.Guild.Id);
-            var channel = usertable.FirstOrDefault().ModlogChannel;
+            var serverSettings = ServerSettingsDB.GetSettings(Context.Guild.Id);
+            var channel = serverSettings.ModlogChannel;
             if (channel == 0)
             {
                 await ReplyAsync("Modlog is not enabled. use `?setmodlog` in a channel to enable it");
@@ -463,7 +463,7 @@ namespace Sketch_Bot.Modules
             }
             catch(IndexOutOfRangeException)
             {
-                await ReplyAsync($"Usage: {ServerSettingsDB.GetSettings(Context.Guild.Id).FirstOrDefault().Prefix ?? "?"}meme <template name>, <top text>, <bottom text>\nEach argument is seperated by comma ,\nhttps://api.imgflip.com/popular_meme_ids for a list of templates");
+                await ReplyAsync($"Usage: {ServerSettingsDB.GetSettings(Context.Guild.Id).Prefix ?? "?"}meme <template name>, <top text>, <bottom text>\nEach argument is seperated by comma ,\nhttps://api.imgflip.com/popular_meme_ids for a list of templates");
             }
 
         }

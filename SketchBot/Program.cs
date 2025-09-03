@@ -470,10 +470,13 @@ namespace Sketch_Bot
                 var settings = ServerSettingsDB.GetSettings(guildId);
                 int levelup = socketGuild.MemberCount >= 100 ? 0 : 1;
 
-                if (!settings.Any())
+                if (settings == null)
+                {
                     ServerSettingsDB.MakeSettings(guildId, levelup);
+                }
 
                 ServerSettingsDB.CreateTableWords(guildId);
+                ServerSettingsDB.CreateTableRole(guildId);
                 Database.CreateTable(guildId);
 
                 foreach (var channel in socketGuild.TextChannels)
@@ -544,7 +547,7 @@ namespace Sketch_Bot
                     var userData = Database.GetUserStats(guildUser);
                     if (userData == null)
                     {
-                        Console.WriteLine("UserData is null!");
+                        Console.WriteLine($"UserData for {guildUser.Id} is null!");
                         return;
                     }
 
@@ -573,7 +576,7 @@ namespace Sketch_Bot
                             newRoles.AddRange(roles.Where(r => r != null));
                         }
 
-                        bool showLevelupMsg = ServerSettingsDB.GetSettings(socketGuild.Id).FirstOrDefault().LevelupMessages;
+                        bool showLevelupMsg = ServerSettingsDB.GetSettings(socketGuild.Id).LevelupMessages;
                         if (showLevelupMsg)
                         {
                             var embed = new EmbedBuilder().WithColor(new Color(0x4d006d));
@@ -615,11 +618,11 @@ namespace Sketch_Bot
 
                 // Get welcome channel
                 var settingsTable = ServerSettingsDB.GetSettings(user.Guild.Id);
-                if (!settingsTable.Any())
+                if (settingsTable != null)
                 {
                     ServerSettingsDB.MakeSettings(user.Guild.Id, user.Guild.MemberCount >= 100 ? 0 : 1);
                 }
-                var welcomeChannel = settingsTable.FirstOrDefault().WelcomeChannel;
+                var welcomeChannel = settingsTable.WelcomeChannel;
                 if (welcomeChannel == 0)
                     return;
 

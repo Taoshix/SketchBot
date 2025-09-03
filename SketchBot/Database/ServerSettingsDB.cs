@@ -165,7 +165,7 @@ namespace Sketch_Bot
 
             return;
         }
-        public static List<Serversettings> GetSettings(ulong guildid)
+        public static Serversettings? GetSettings(ulong guildid)
         {
             var result = new List<Serversettings>();
             var database = new Database();
@@ -191,7 +191,7 @@ namespace Sketch_Bot
             }
 
             database.CloseConnection();
-            return result;
+            return result.FirstOrDefault();
         }
         public static void UpdateLevelupMessagesBool(ulong guildid, int boool)
         {
