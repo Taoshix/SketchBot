@@ -429,6 +429,18 @@ namespace Sketch_Bot.Modules
                 return;
             }
             var queue = player.GetQueue();
+            TimeSpan totalDuration = TimeSpan.Zero;
+            if (player.Track != null)
+            {
+                totalDuration += player.Track.Duration - player.Track.Position;
+            }
+            if (queue.Any())
+            {
+                foreach (var track in queue)
+                {
+                    totalDuration += track.Duration;
+                }
+            }
             string durationFormat = player.Track.Duration.Hours > 0 ? @"hh\:mm\:ss" : @"mm\:ss";
             string positionFormat = player.Track.Position.Hours > 0 ? @"hh\:mm\:ss" : @"mm\:ss";
             string positionStr = player.Track.Position.ToString(positionFormat);
@@ -443,7 +455,7 @@ namespace Sketch_Bot.Modules
                 .AddField("Ping", player.State.Ping, true)
                 .AddField("Is Paused", player.IsPaused, true)
                 .AddField("Is Playing", player.Track != null, true)
-                .AddField($"Queue ({queue.Count})", queue.Count > 0 ? HelperFunctions.JoinWithLimit(queue.Select(x => $"[{x.Title}]({x.Url})"), 1024, "\n") : "Empty")
+                .AddField($"Queue ({queue.Count} - {totalDuration:hh\\:mm\\:ss})", queue.Count > 0 ? HelperFunctions.JoinWithLimit(queue.Select(x => $"[{x.Title}]({x.Url})"), 1024, "\n") : "Empty")
                 .AddField("Current Track", $"[{player.Track?.Title}]({player.Track?.Url})" ?? "No track playing", true)
                 .AddField("Player Volume", player.Volume, true)
                 .AddField("Track Duration", player.Track != null ? $"{positionStr} / {durationStr} ({(player.Track.Position / player.Track.Duration * 100).ToString("0.00")}%)" : "N/A")
