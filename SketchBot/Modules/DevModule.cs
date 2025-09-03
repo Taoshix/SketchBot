@@ -534,10 +534,13 @@ namespace Sketch_Bot.Modules
         {
             var servers = Context.Client.Guilds.OrderByDescending(x => x.MemberCount).ToList();
             List<string> myList = new List<string>();
+            int position = 1;
             foreach (var server in servers.Take(20))
             {
+                string positionString = $"{position}\\.";
                 var percentage = Math.Round(server.Users.Count(x => x.IsBot) / (double)server.MemberCount * 100D, 2);
-                myList.Add($"{server.Name} - {server.MemberCount} members ({percentage}% bots)");
+                myList.Add($"{positionString,-4} {server.Name} - {server.MemberCount} members ({percentage}% bots)");
+                position++;
             }
             var output = string.Join("\n", myList);
             var embed = new EmbedBuilder()
