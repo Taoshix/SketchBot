@@ -561,11 +561,8 @@ namespace Sketch_Bot.Modules
             {
                 await guild.DownloadUsersAsync();
                 var embed = new EmbedBuilder()
-                    .WithTitle($"Guild Info: {guild.Name}")
-                    .AddField("ID", guild.Id, true)
                     .AddField("Owner", guild.Owner?.Mention ?? "Unknown", true)
                     .AddField("Member Count", $"{guild.MemberCount} ({guild.Users.Count(x => !x.IsBot)} users + {guild.Users.Count(x => x.IsBot)} bots)", true)
-                    .AddField("Created At", guild.CreatedAt.ToString("f"), true)
                     .AddField("Categories", guild.CategoryChannels.Count == 0 ? "None" : guild.CategoryChannels.Count.ToString(), true)
                     .AddField("Total Channels", guild.Channels.Count == 0 ? "None" : guild.Channels.Count.ToString(), true)
                     .AddField($"Text Channels ({guild.TextChannels.Count})", guild.TextChannels.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.TextChannels.Select(x => x.Name), 1024, "\n"), true)
@@ -580,8 +577,18 @@ namespace Sketch_Bot.Modules
                     .AddField("Banner URL", string.IsNullOrWhiteSpace(guild.BannerUrl) ? "No Banner" : guild.BannerUrl, true)
                     .WithThumbnailUrl(guild.IconUrl ?? "")
                     .WithColor(new Color(0, 255, 0))
-                    .Build();
-                await ReplyAsync("", false, embed);
+                    .WithFooter(footer =>
+                    {
+                        footer.Text = $"ID: {guild.Id} | Server Created";
+                        footer.IconUrl = guild.IconUrl;
+                    }).WithAuthor(author =>
+                    {
+                        author.Name = guild.Name;
+                        author.IconUrl = guild.IconUrl;
+                    })
+                    ;
+                embed.Timestamp = guild.CreatedAt;
+                await ReplyAsync("", false, embed.Build());
             }
             catch (Exception ex)
             {

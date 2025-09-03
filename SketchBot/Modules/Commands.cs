@@ -1110,35 +1110,47 @@ namespace Sketch_Bot.Modules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("serverinfo", "Displays info about the server")]
-        public async Task ServerInfoAsync()
+        public async Task GuildInfoAsync()
         {
             await DeferAsync();
             var guild = Context.Guild;
-            await guild.DownloadUsersAsync();
-            EmbedBuilder builder = new EmbedBuilder()
+            try
             {
-                Color = new Color(0, 0, 255),
-                Timestamp = guild.CreatedAt,
-            };
-            builder.WithAuthor(author =>
+                await guild.DownloadUsersAsync();
+                var embed = new EmbedBuilder()
+                    .AddField("Owner", guild.Owner?.Mention ?? "Unknown", true)
+                    .AddField("Member Count", $"{guild.MemberCount} ({guild.Users.Count(x => !x.IsBot)} users + {guild.Users.Count(x => x.IsBot)} bots)", true)
+                    .AddField("Categories", guild.CategoryChannels.Count == 0 ? "None" : guild.CategoryChannels.Count.ToString(), true)
+                    .AddField("Total Channels", guild.Channels.Count == 0 ? "None" : guild.Channels.Count.ToString(), true)
+                    .AddField($"Text Channels ({guild.TextChannels.Count})", guild.TextChannels.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.TextChannels.Select(x => x.Name), 1024, "\n"), true)
+                    .AddField($"Voice Channels ({guild.VoiceChannels.Count})", guild.VoiceChannels.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.VoiceChannels.Select(x => x.Name), 1024, "\n"), true)
+                    .AddField($"Emojis ({guild.Emotes.Count})", guild.Emotes.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.Emotes.Select(x => x.ToString()), 1024, ""), true)
+                    .AddField($"Roles ({guild.Roles.Count})", guild.Roles.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.Roles.OrderByDescending(x => x.Position).Select(x => x.Mention), 1024, "\n"), true)
+                    .AddField("Verification Level", guild.VerificationLevel.ToString(), true)
+                    .AddField("Boost Level", $"{guild.PremiumTier} ({guild.PremiumSubscriptionCount} boosts)", true)
+                    .AddField("Region", string.IsNullOrWhiteSpace(guild.VoiceRegionId) ? "None" : guild.VoiceRegionId, true)
+                    .AddField("Vanity", guild.Features.HasVanityUrl ? guild.VanityURLCode : "No Vanity", true)
+                    .AddField("Icon URL", string.IsNullOrWhiteSpace(guild.IconUrl) ? "No Icon" : guild.IconUrl, true)
+                    .AddField("Banner URL", string.IsNullOrWhiteSpace(guild.BannerUrl) ? "No Banner" : guild.BannerUrl, true)
+                    .WithThumbnailUrl(guild.IconUrl ?? "")
+                    .WithColor(new Color(0, 255, 0))
+                    .WithFooter(footer =>
+                    {
+                        footer.Text = $"ID: {guild.Id} | Server Created";
+                        footer.IconUrl = guild.IconUrl;
+                    }).WithAuthor(author =>
+                    {
+                        author.Name = guild.Name;
+                        author.IconUrl = guild.IconUrl;
+                    })
+                    ;
+                embed.Timestamp = guild.CreatedAt;
+                await FollowupAsync("", embed: embed.Build());
+            }
+            catch (Exception ex)
             {
-                author.Name = guild.Name;
-                author.IconUrl = guild.IconUrl;
-            });
-            builder.WithFooter(footer =>
-            {
-                footer.Text = $"ID: {guild.Id} | Server Created";
-            });
-            builder.AddField("Owner", guild.Owner.Username,true)
-                .AddField("Region", guild.VoiceRegionId, true)
-                .AddField("Channel Categories", guild.CategoryChannels.Count, true)
-                .AddField("Text Channels", guild.TextChannels.Count,true)
-                .AddField("Voice Channels", guild.VoiceChannels.Count, true)
-                .AddField("Members", guild.MemberCount, true)
-                .AddField("Humans", guild.Users.Count(x => !x.IsBot),true)
-                .AddField("Bots", guild.Users.Count(x => x.IsBot), true)
-                .AddField("Roles", guild.Roles.Count,true);
-            await FollowupAsync("", null, false, false, null, null, null, builder.Build());
+                await FollowupAsync($"{ex.GetType()}: {ex.Message}");
+            }
         }
         [RequireContext(ContextType.Guild)]
         [UserCommand("userinfo")]

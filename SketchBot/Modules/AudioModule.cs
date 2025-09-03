@@ -137,7 +137,7 @@ namespace Sketch_Bot.Modules
             }
 
             player.GetQueue().Enqueue(track);
-            await ReplyAsync($"Added {track.Title} to queue.");
+            await ReplyAsync($"Added [{track.Title}]({track.Url}) to queue.");
         }
 
         [Command("Queue")]
@@ -153,11 +153,11 @@ namespace Sketch_Bot.Modules
             var queue = player.GetQueue();
             if(player.Track != null)
             {
-                queueList += $"`0.` {player.Track.Title}\n----------------------------------\n";
+                queueList += $"`0.` [{player.Track.Title}]({player.Track.Url})\n----------------------------------\n";
             }
             if (queue.Any())
             {
-                queueList += string.Join("\n", queue.Select((track, index) => $"`{index + 1}.` {track.Title}"));
+                queueList += string.Join("\n", queue.Select((track, index) => $"`{index + 1}.` [{track.Title}]({track.Url})"));
             }
 
             await ReplyAsync($"Current Queue:\n{queueList}");
@@ -392,25 +392,57 @@ namespace Sketch_Bot.Modules
                 await ReplyAsync(exception.Message);
             }
         }
-        [Command("playerstate"), RequirePlayer]
-        public async Task PlayerStateAsync()
+        [Command("playerstate")]
+        public async Task PlayerStateAsync(ulong guildId = 0)
         {
-            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
-            if (player == null)
+            if (guildId == 0 || Context.User.Id != 135446225565515776)
+            {
+                guildId = Context.Guild.Id;
+            }
+            var player = await lavaNode.TryGetPlayerAsync(guildId);
+            var voiceChannel = Context.Client.GetGuild(guildId)?.VoiceChannels.FirstOrDefault(x => x.ConnectedUsers.Select(x => x.Id).Contains(Context.Client.CurrentUser.Id));
+            if (player == null || voiceChannel == null)
             {
                 await ReplyAsync("I'm not connected to a voice channel.");
                 return;
             }
+            var queue = player.GetQueue();
             var embed = new EmbedBuilder()
-                .WithTitle("Player State")
-                .AddField("Is Connected", player.State.IsConnected)
-                .AddField("Ping", player.State.Ping)
-                .AddField("Is Paused", player.IsPaused)
-                .AddField("Is Playing", player.Track != null)
-                .AddField("Queue Count", player.GetQueue().Count)
-                .AddField("Player Volume", player.Volume)
-                .AddField("Current Track", player.Track?.Title ?? "No track playing")
+                .WithAuthor(author =>
+                {
+                    author.Name = $"Player State for {Context.Client.GetGuild(guildId)?.Name ?? "Unknown Guild"}";
+                    author.IconUrl = Context.Client.GetGuild(guildId)?.IconUrl;
+                })
+                .AddField("Is Connected", player.State.IsConnected, true)
+                .AddField("Ping", player.State.Ping, true)
+                .AddField("Is Paused", player.IsPaused, true)
+                .AddField("Is Playing", player.Track != null, true)
+                .AddField($"Queue ({queue.Count})", queue.Count > 0 ? HelperFunctions.JoinWithLimit(queue.Select(x => $"[{x.Title}]({x.Url})"), 1024, "\n") : "Empty")
+                .AddField("Player Volume", player.Volume, true)
+                .AddField("Current Track", $"[{player.Track?.Title}]({player.Track?.Url})" ?? "No track playing", true)
+                .AddField("Track Duration", player.Track != null ? $"{player.Track.Position} / {player.Track.Duration} ({(player.Track.Position / player.Track.Duration * 100).ToString("0.00")}%)" : "N/A")
+                .AddField($"VC - {(voiceChannel != null ? $"{voiceChannel.Name} ({voiceChannel.ConnectedUsers.Count})" : "Not connected")}", voiceChannel != null ? HelperFunctions.JoinWithLimit(voiceChannel.ConnectedUsers.Select(x => $"{x.DisplayName} ({x.Username} - {x.Id})"), 1024, "\n") : "N/A")
+                .WithFooter(footer => footer.Text = $"Guild ID: {guildId}")
+                .WithCurrentTimestamp()
                 .WithColor(Color.Blue)
+                .Build();
+            await ReplyAsync(embed: embed);
+        }
+        [RequireDevelopers]
+        [Command("lavaplayers")]
+        public async Task LavaPlayersAsync()
+        {
+            var players = await lavaNode.GetPlayersAsync();
+            if (!players.Any())
+            {
+                await ReplyAsync("No active players.");
+                return;
+            }
+            var embed = new EmbedBuilder()
+                .WithTitle($"Active Lavalink Players ({players.Count})")
+                .WithDescription(HelperFunctions.JoinWithLimit(players.Select(x => $"**{Context.Client.GetGuild(x.GuildId).Name}** - `{x.GuildId}` - {(x.State.IsConnected ? (x.Track != null ? $"Playing: [{x.Track.Title}]({x.Track.Url})" : "Connected, not playing") : "Not connected")}"), 4096, "\n"))
+                .WithColor(Color.Red)
+                .WithCurrentTimestamp()
                 .Build();
             await ReplyAsync(embed: embed);
         }
