@@ -141,26 +141,48 @@ namespace Sketch_Bot.Modules
         }
 
         [Command("Queue")]
-        public async Task QueueAsync()
+        public async Task ShowQueueAsync()
         {
             var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
-            string queueList = "";
             if (player == null || !player.State.IsConnected)
             {
                 await ReplyAsync("I'm not connected to a voice channel.");
                 return;
             }
+
             var queue = player.GetQueue();
-            if(player.Track != null)
+            var queueList = new StringBuilder();
+            TimeSpan totalDuration = TimeSpan.Zero;
+
+            if (player.Track != null)
             {
-                queueList += $"`0.` [{player.Track.Title}]({player.Track.Url})\n----------------------------------\n";
-            }
-            if (queue.Any())
-            {
-                queueList += string.Join("\n", queue.Select((track, index) => $"`{index + 1}.` [{track.Title}]({track.Url})"));
+                queueList.AppendLine($"`0.` [{player.Track.Title}]({player.Track.Url})");
+                queueList.AppendLine("----------------------------------");
+                totalDuration += player.Track.Duration - player.Track.Position;
             }
 
-            await ReplyAsync($"Current Queue:\n{queueList}");
+            if (queue.Any())
+            {
+                foreach (var (track, index) in queue.Select((track, index) => (track, index)))
+                {
+                    totalDuration += track.Duration;
+                    queueList.AppendLine($"`{index + 1}.` [{track.Title}]({track.Url})");
+                }
+            }
+
+            var embed = new EmbedBuilder()
+                .WithAuthor(author =>
+                {
+                    author.Name = $"Queue for {Context.Guild.Name}";
+                    author.IconUrl = Context.Guild.IconUrl;
+                })
+                .WithTitle($"{queue.Count} track(s) in queue - {totalDuration:hh\\:mm\\:ss}")
+                .WithDescription(queueList.Length == 0 ? "The queue is empty." : queueList.ToString())
+                .WithColor(Color.Blue)
+                .WithCurrentTimestamp()
+                .Build();
+
+            await ReplyAsync(embed: embed);
         }
         [Command("NowPlaying"), Alias("NP")]
         public async Task NowPlayingAsync()
