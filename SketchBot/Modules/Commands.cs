@@ -1120,7 +1120,7 @@ namespace Sketch_Bot.Modules
                 var embed = new EmbedBuilder()
                     .AddField("Owner", guild.Owner?.Mention ?? "Unknown", true)
                     .AddField("Member Count", $"{guild.MemberCount} ({guild.Users.Count(x => !x.IsBot)} users + {guild.Users.Count(x => x.IsBot)} bots)", true)
-                    .AddField("Categories", guild.CategoryChannels.Count == 0 ? "None" : guild.CategoryChannels.Count.ToString(), true)
+                    .AddField("Categories", guild.CategoryChannels.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.CategoryChannels.Select(x => x.Name), 1024, "\n"), true)
                     .AddField("Total Channels", guild.Channels.Count == 0 ? "None" : guild.Channels.Count.ToString(), true)
                     .AddField($"Text Channels ({guild.TextChannels.Count})", guild.TextChannels.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.TextChannels.Select(x => x.Name), 1024, "\n"), true)
                     .AddField($"Voice Channels ({guild.VoiceChannels.Count})", guild.VoiceChannels.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.VoiceChannels.Select(x => x.Name), 1024, "\n"), true)
