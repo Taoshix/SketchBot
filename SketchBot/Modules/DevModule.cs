@@ -471,22 +471,22 @@ namespace Sketch_Bot.Modules
         }
         [RequireDevelopers]
         [Command("topservers", RunMode = RunMode.Async)]
-        public async Task TopServersAsync()
+        public async Task TopServersAsync(int amount = 20)
         {
             var servers = Context.Client.Guilds.OrderByDescending(x => x.MemberCount).ToList();
-            List<string> myList = new List<string>();
+            List<string> serverList = new List<string>();
             int position = 1;
-            foreach (var server in servers.Take(20))
+            foreach (var server in servers.Take(amount))
             {
                 string positionString = $"{position}\\.";
                 var percentage = Math.Round(server.Users.Count(x => x.IsBot) / (double)server.MemberCount * 100D, 2);
-                myList.Add($"{positionString,-4} {server.Name} - {server.MemberCount} members ({percentage}% bots)");
+                serverList.Add($"{positionString,-4} {server.Name} - {server.MemberCount} members ({percentage}% bots)");
                 position++;
             }
-            var output = string.Join("\n", myList);
+            var topServersList = HelperFunctions.JoinWithLimit(serverList, 2048, "\n");
             var embed = new EmbedBuilder()
-                .WithTitle("Top 20 Servers")
-                .WithDescription(output)
+                .WithTitle($"Top **{amount}** Servers")
+                .WithDescription(topServersList)
                 .WithColor(new Color(0, 0, 255))
                 .Build();
             await ReplyAsync("", false, embed);
