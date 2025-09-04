@@ -317,7 +317,7 @@ namespace Sketch_Bot.Models
             {
                 // Calculate the "and X more" message in advance
                 int remaining = total - (count + 1);
-                moreMsg = remaining > 0 ? $" and **{remaining}** more" : "";
+                moreMsg = remaining > 0 ? $"\nand **{remaining}** more" : "";
 
                 // Predict length if we add this item and the message
                 int predictedLength = result.Length + (count > 0 ? separator.Length : 0) + item.Length + moreMsg.Length;
@@ -333,7 +333,7 @@ namespace Sketch_Bot.Models
 
             if (count < total)
             {
-                result.Append($" and **{total - count}** more");
+                result.Append($"\nand **{total - count}** more");
             }
             return result.ToString();
         }
