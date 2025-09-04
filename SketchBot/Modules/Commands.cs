@@ -1117,15 +1117,99 @@ namespace Sketch_Bot.Modules
             try
             {
                 await guild.DownloadUsersAsync();
+
+                var textChannels = guild.TextChannels
+                    .Select(x => (x.Id, x.Mention))
+                    .Where(x => !guild.VoiceChannels.Select(y => y.Id).Contains(x.Id));
+
+                var voiceChannels = guild.VoiceChannels
+                    .Where(x => x is not SocketStageChannel)
+                    .Select(x => (x.Id, x.Mention));
+
+                var stageChannels = guild.VoiceChannels
+                    .Where(x => x is SocketStageChannel)
+                    .Select(x => (x.Id, x.Mention));
+
+                var forumChannels = guild.Channels
+                    .Where(x => x is SocketForumChannel)
+                    .Select(x => (x.Id, x.Name));
+
+                var mediaChannels = guild.Channels
+                    .Where(x => x is SocketMediaChannel)
+                    .Select(x => (x.Id, x.Name));
+
+                // Separate forum threads from text channels
+                var forumThreads = guild.ThreadChannels
+                    .Where(x => x.ParentChannel is SocketForumChannel)
+                    .Select(x => (x.Id, x.Mention));
+
+                var textThreads = guild.ThreadChannels
+                    .Where(x => x.ParentChannel is SocketTextChannel)
+                    .Select(x => (x.Id, x.Mention));
+
+                // Remove forum threads from text channels field
+                var textChannelsAndThreadsEnumerable = textChannels
+                    .Concat(textThreads)
+                    .Where(x => !(guild.ThreadChannels.Any(t => t.Id == x.Id && t.ParentChannel is SocketForumChannel)))
+                    .GroupBy(x => x.Id)
+                    .Select(g => g.First().Mention);
+
+                int realCount = guild.MemberCount;
+                int userCount = guild.Users.Count(x => !x.IsBot);
+                int botCount = guild.Users.Count(x => x.IsBot);
+                int totalCount = userCount + botCount;
+                int unavailableCount = realCount - totalCount;
+
+                string memberCountField = unavailableCount > 0
+                    ? $"{userCount} Users\n{botCount} Bots\n{unavailableCount} Unavailable"
+                    : $"{userCount} Users\n{botCount} Bots";
+
+                string textChannelsAndThreads = HelperFunctions.JoinWithLimit(textChannelsAndThreadsEnumerable, 1024, "\n");
+                string voiceChannelsList = voiceChannels.Any()
+                    ? HelperFunctions.JoinWithLimit(voiceChannels.Select(x => x.Mention), 1024, "\n")
+                    : "None";
+                string stageChannelsList = stageChannels.Any()
+                    ? HelperFunctions.JoinWithLimit(stageChannels.Select(x => x.Mention), 1024, "\n")
+                    : "None";
+                string forumChannelsList = forumChannels.Any()
+                    ? HelperFunctions.JoinWithLimit(forumChannels.Select(x => x.Name), 1024, "\n")
+                    : "None";
+                string mediaChannelsList = mediaChannels.Any()
+                    ? HelperFunctions.JoinWithLimit(mediaChannels.Select(x => x.Name), 1024, "\n")
+                    : "None";
+                string forumThreadsList = forumThreads.Any()
+                    ? HelperFunctions.JoinWithLimit(forumThreads.Select(x => x.Mention), 1024, "\n")
+                    : "None";
+
                 var embed = new EmbedBuilder()
                     .AddField("Owner", guild.Owner?.Mention ?? "Unknown", true)
-                    .AddField("Member Count", $"{guild.MemberCount} ({guild.Users.Count(x => !x.IsBot)} users + {guild.Users.Count(x => x.IsBot)} bots)", true)
-                    .AddField("Categories", guild.CategoryChannels.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.CategoryChannels.Select(x => x.Name), 1024, "\n"), true)
-                    .AddField("Total Channels", guild.Channels.Count == 0 ? "None" : guild.Channels.Count.ToString(), true)
-                    .AddField($"Text Channels ({guild.TextChannels.Count})", guild.TextChannels.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.TextChannels.Select(x => x.Name), 1024, "\n"), true)
-                    .AddField($"Voice Channels ({guild.VoiceChannels.Count})", guild.VoiceChannels.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.VoiceChannels.Select(x => x.Name), 1024, "\n"), true)
-                    .AddField($"Emojis ({guild.Emotes.Count})", guild.Emotes.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.Emotes.Select(x => x.ToString()), 1024, ""), true)
-                    .AddField($"Roles ({guild.Roles.Count})", guild.Roles.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.Roles.OrderByDescending(x => x.Position).Select(x => x.Mention), 1024, "\n"), true)
+                    .AddField($"Member Count ({realCount})", memberCountField, true)
+                    .AddField($"Total Channels ({guild.Channels.Count})",
+                        $"{textChannels.Count()} Text\n" +
+                        $"{voiceChannels.Count()} Voice\n" +
+                        $"{stageChannels.Count()} Stage\n" +
+                        $"{forumChannels.Count()} Forum\n" +
+                        $"{forumThreads.Count()} Forum threads\n" +
+                        $"{guild.CategoryChannels.Count} Category channels\n" +
+                        $"{mediaChannels.Count()} Media", true)
+                    .AddField($"Categories ({guild.CategoryChannels.Count})",
+                        guild.CategoryChannels.Count == 0
+                            ? "None"
+                            : HelperFunctions.JoinWithLimit(guild.CategoryChannels.Select(x => x.Name), 1024, "\n"), true)
+                    .AddField($"Emojis ({guild.Emotes.Count})",
+                        guild.Emotes.Count == 0
+                            ? "None"
+                            : HelperFunctions.JoinWithLimit(guild.Emotes.Select(x => x.ToString()), 1024, ""), true)
+                    .AddField($"Text Channels ({textChannelsAndThreadsEnumerable.Count()})",
+                        guild.TextChannels.Count == 0
+                            ? "None"
+                            : textChannelsAndThreads)
+                    .AddField($"Voice Channels ({voiceChannels.Count()})", voiceChannelsList, true)
+                    .AddField($"Stage Channels ({stageChannels.Count()})", stageChannelsList, true)
+                    .AddField($"Forum Channels ({forumChannels.Count()})", forumChannelsList, true)
+                    .AddField($"Forum Threads ({forumThreads.Count()})", forumThreadsList, true)
+                    .AddField($"Media Channels ({mediaChannels.Count()})", mediaChannelsList, true)
+                    .AddField($"Roles ({guild.Roles.Count})", guild.Roles.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.Roles.OrderByDescending(x => x.Position).Select(x => x.Mention), 1024, guild.Roles.Count > 10 ? " " : "\n"))
                     .AddField("Verification Level", guild.VerificationLevel.ToString(), true)
                     .AddField("Boost Level", $"{guild.PremiumTier} ({guild.PremiumSubscriptionCount} boosts)", true)
                     .AddField("Region", string.IsNullOrWhiteSpace(guild.VoiceRegionId) ? "None" : guild.VoiceRegionId, true)
@@ -1138,12 +1222,13 @@ namespace Sketch_Bot.Modules
                     {
                         footer.Text = $"ID: {guild.Id} | Server Created";
                         footer.IconUrl = guild.IconUrl;
-                    }).WithAuthor(author =>
+                    })
+                    .WithAuthor(author =>
                     {
                         author.Name = guild.Name;
                         author.IconUrl = guild.IconUrl;
-                    })
-                    ;
+                    });
+
                 embed.Timestamp = guild.CreatedAt;
                 await FollowupAsync("", embed: embed.Build());
             }
