@@ -34,21 +34,15 @@ namespace Sketch_Bot
             if (shouldRunSetup)
             {
                 var connectionStringNoDb = stringBuilder.ToString();
-                using (var tempConnection = new MySqlConnection(connectionStringNoDb))
+                using var tempConnection = new MySqlConnection(connectionStringNoDb);
+                tempConnection.Open();
+                using var cmd = new MySqlCommand("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'server settings'", tempConnection);
+                var exists = cmd.ExecuteScalar() != null;
+                if (!exists)
                 {
-                    tempConnection.Open();
-                    using (var cmd = new MySqlCommand("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'server settings'", tempConnection))
-                    {
-                        var exists = cmd.ExecuteScalar() != null;
-                        if (!exists)
-                        {
-                            using (var createCmd = new MySqlCommand("CREATE DATABASE `server settings`", tempConnection))
-                            {
-                                createCmd.ExecuteNonQuery();
-                                Console.WriteLine("Created new server settings database");
-                            }
-                        }
-                    }
+                    using var createCmd = new MySqlCommand("CREATE DATABASE `server settings`", tempConnection);
+                    createCmd.ExecuteNonQuery();
+                    Console.WriteLine("Created new server settings database");
                 }
             }
 
@@ -205,25 +199,23 @@ namespace Sketch_Bot
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
                 cmd.Parameters.AddWithValue("@Id", guildid);
-                using (var table = cmd.ExecuteReader())
+                using var table = cmd.ExecuteReader();
+                while (table.Read())
                 {
-                    while (table.Read())
-                    {
-                        var prefix = table["prefix"] == DBNull.Value ? string.Empty : (string)table["prefix"];
-                        var welcomechannel = table["welcomechannel"] == DBNull.Value ? 0ul : Convert.ToUInt64(table["welcomechannel"]);
-                        var modlogchannel = table["modlogchannel"] == DBNull.Value ? 0ul : Convert.ToUInt64(table["modlogchannel"]);
-                        var xprate = table["xpmultiplier"] == DBNull.Value ? 1 : (int)table["xpmultiplier"];
-                        var levelupmessages = table["LevelupMessages"] == DBNull.Value ? 1 : (int)table["LevelupMessages"];
+                    var prefix = table["prefix"] == DBNull.Value ? string.Empty : (string)table["prefix"];
+                    var welcomechannel = table["welcomechannel"] == DBNull.Value ? 0ul : Convert.ToUInt64(table["welcomechannel"]);
+                    var modlogchannel = table["modlogchannel"] == DBNull.Value ? 0ul : Convert.ToUInt64(table["modlogchannel"]);
+                    var xprate = table["xpmultiplier"] == DBNull.Value ? 1 : (int)table["xpmultiplier"];
+                    var levelupmessages = table["LevelupMessages"] == DBNull.Value ? 1 : (int)table["LevelupMessages"];
 
-                        result.Add(new Serversettings
-                        {
-                            Prefix = prefix,
-                            ModlogChannel = modlogchannel,
-                            WelcomeChannel = welcomechannel,
-                            XpMultiplier = xprate,
-                            LevelupMessages = levelupmessages == 1
-                        });
-                    }
+                    result.Add(new Serversettings
+                    {
+                        Prefix = prefix,
+                        ModlogChannel = modlogchannel,
+                        WelcomeChannel = welcomechannel,
+                        XpMultiplier = xprate,
+                        LevelupMessages = levelupmessages == 1
+                    });
                 }
             }
             database.CloseConnection();
@@ -274,16 +266,14 @@ namespace Sketch_Bot
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
                 cmd.Parameters.AddWithValue("@Level", level);
-                using (var table = cmd.ExecuteReader())
+                using var table = cmd.ExecuteReader();
+                while (table.Read())
                 {
-                    while (table.Read())
+                    var roleId = Convert.ToUInt64(table["roleId"]);
+                    result.Add(new Serversettings
                     {
-                        var roleId = Convert.ToUInt64(table["roleId"]);
-                        result.Add(new Serversettings
-                        {
-                            roleId = roleId,
-                        });
-                    }
+                        roleId = roleId,
+                    });
                 }
             }
             database.CloseConnection();
@@ -296,18 +286,16 @@ namespace Sketch_Bot
             var query = $"SELECT * FROM `{guildid}_roles`";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
-                using (var table = cmd.ExecuteReader())
+                using var table = cmd.ExecuteReader();
+                while (table.Read())
                 {
-                    while (table.Read())
+                    var roleId = Convert.ToUInt64(table["roleId"]);
+                    var roleLevel = (int)table["level"];
+                    result.Add(new Serversettings
                     {
-                        var roleId = Convert.ToUInt64(table["roleId"]);
-                        var roleLevel = (int)table["level"];
-                        result.Add(new Serversettings
-                        {
-                            roleId = roleId,
-                            roleLevel = roleLevel
-                        });
-                    }
+                        roleId = roleId,
+                        roleLevel = roleLevel
+                    });
                 }
             }
             database.CloseConnection();
@@ -320,16 +308,14 @@ namespace Sketch_Bot
             var query = $"SELECT * FROM `{guildid}_words`";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
-                using (var table = cmd.ExecuteReader())
+                using var table = cmd.ExecuteReader();
+                while (table.Read())
                 {
-                    while (table.Read())
+                    var words = (string)table["words"];
+                    result.Add(new Serversettings
                     {
-                        var words = (string)table["words"];
-                        result.Add(new Serversettings
-                        {
-                            Words = words,
-                        });
-                    }
+                        Words = words,
+                    });
                 }
             }
             database.CloseConnection();

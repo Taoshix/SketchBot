@@ -40,20 +40,18 @@ namespace Sketch_Bot.Modules
                     {
                         
                         var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                        using (var stream = new MemoryStream())
+                        using var stream = new MemoryStream();
+                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                         {
-                            using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                            {
-                                image.Mutate(x => x.Invert());
-                                image.Save(stream, encoder);
-    
-                                image.Dispose();
-                            }
-                            stream.Position = 0;
-                            await Context.Channel.SendFileAsync(stream, $"Invert.png");
-                            await stream.FlushAsync();
-                            stream.Dispose();
+                            image.Mutate(x => x.Invert());
+                            image.Save(stream, encoder);
+
+                            image.Dispose();
                         }
+                        stream.Position = 0;
+                        await Context.Channel.SendFileAsync(stream, $"Invert.png");
+                        await stream.FlushAsync();
+                        stream.Dispose();
                     }
                     catch (Exception ex)
                     {
@@ -85,18 +83,16 @@ namespace Sketch_Bot.Modules
                     {
                         
                         var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                        using (var stream = new MemoryStream())
+                        using var stream = new MemoryStream();
+                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                         {
-                            using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                            {
-                                image.Mutate(x => x.Grayscale());
-                                image.Save(stream, encoder);
-    
-                            }
-                            stream.Position = 0;
-                            await Context.Channel.SendFileAsync(stream, $"Grayscale.png");
-                            await stream.FlushAsync();
+                            image.Mutate(x => x.Grayscale());
+                            image.Save(stream, encoder);
+
                         }
+                        stream.Position = 0;
+                        await Context.Channel.SendFileAsync(stream, $"Grayscale.png");
+                        await stream.FlushAsync();
                     }
                     catch (Exception)
                     {
@@ -124,18 +120,16 @@ namespace Sketch_Bot.Modules
                     {
                         
                         var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                        using (var stream = new MemoryStream())
+                        using var stream = new MemoryStream();
+                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                         {
-                            using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                            {
-                                image.Mutate(x => x.RotateFlip(RotateMode.Rotate180, FlipMode.None));
-                                image.Save(stream, encoder);
-    
-                            }
-                            stream.Position = 0;
-                            await Context.Channel.SendFileAsync(stream, $"Flip.png");
-                            await stream.FlushAsync();
+                            image.Mutate(x => x.RotateFlip(RotateMode.Rotate180, FlipMode.None));
+                            image.Save(stream, encoder);
+
                         }
+                        stream.Position = 0;
+                        await Context.Channel.SendFileAsync(stream, $"Flip.png");
+                        await stream.FlushAsync();
                     }
                     catch (Exception)
                     {
@@ -167,20 +161,18 @@ namespace Sketch_Bot.Modules
                     {
                         
                         var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                        using (var stream = new MemoryStream())
+                        using var stream = new MemoryStream();
+                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                         {
-                            using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                            {
-                                image.Mutate(x => x.Sepia((float) amount));
-                                image.Save(stream, encoder);
-    
-                                image.Dispose();
-                            }
-                            stream.Position = 0;
-                            await Context.Channel.SendFileAsync(stream, $"Sepia.png");
-                            await stream.FlushAsync();
-                            stream.Dispose();
+                            image.Mutate(x => x.Sepia((float)amount));
+                            image.Save(stream, encoder);
+
+                            image.Dispose();
                         }
+                        stream.Position = 0;
+                        await Context.Channel.SendFileAsync(stream, $"Sepia.png");
+                        await stream.FlushAsync();
+                        stream.Dispose();
                     }
                     catch (Exception ex)
                     {
@@ -211,22 +203,20 @@ namespace Sketch_Bot.Modules
                     {
                         
                         var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                        using (var stream = new MemoryStream())
+                        using var stream = new MemoryStream();
+                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                         {
-                            using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                            {
-                                //float padding = 10f;
-                                //float textMaxWidth = image.Width - (padding * 2);
-                                image.Mutate(x => x.DrawText(text, SystemFonts.CreateFont("Ubuntu", 26), SixLabors.ImageSharp.Color.Black, new PointF(20, 20)));//SystemFonts.CreateFont("Ubuntu", 26), Rgba32, new PointF(20, 20)));//, new TextGraphicsOptions(true) {WrapTextWidth = textMaxWidth,VerticalAlignment = VerticalAlignment.Top,HorizontalAlignment = HorizontalAlignment.Left });
-                                image.Save(stream, encoder);
-    
-                                image.Dispose();
-                            }
-                            stream.Position = 0;
-                            await Context.Channel.SendFileAsync(stream, $"ImageText.png");
-                            await stream.FlushAsync();
-                            stream.Dispose();
+                            //float padding = 10f;
+                            //float textMaxWidth = image.Width - (padding * 2);
+                            image.Mutate(x => x.DrawText(text, SystemFonts.CreateFont("Ubuntu", 26), SixLabors.ImageSharp.Color.Black, new PointF(20, 20)));//SystemFonts.CreateFont("Ubuntu", 26), Rgba32, new PointF(20, 20)));//, new TextGraphicsOptions(true) {WrapTextWidth = textMaxWidth,VerticalAlignment = VerticalAlignment.Top,HorizontalAlignment = HorizontalAlignment.Left });
+                            image.Save(stream, encoder);
+
+                            image.Dispose();
                         }
+                        stream.Position = 0;
+                        await Context.Channel.SendFileAsync(stream, $"ImageText.png");
+                        await stream.FlushAsync();
+                        stream.Dispose();
                     }
                     catch (Exception ex)
                     {
@@ -260,19 +250,17 @@ namespace Sketch_Bot.Modules
                         {
                             
                             var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                            using (var stream = new MemoryStream())
-                            {
-                                using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                                {
-                                    image.Mutate(x => x.Pixelate(size));
-                                    image.Save(stream, encoder);
-        
-                                }
-                                stream.Position = 0;
-                                await Context.Channel.SendFileAsync(stream, $"Pixelate.png", $"Factor: `{size}`");
-                                await stream.FlushAsync();
-                            }
+                        using var stream = new MemoryStream();
+                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
+                        {
+                            image.Mutate(x => x.Pixelate(size));
+                            image.Save(stream, encoder);
+
                         }
+                        stream.Position = 0;
+                        await Context.Channel.SendFileAsync(stream, $"Pixelate.png", $"Factor: `{size}`");
+                        await stream.FlushAsync();
+                    }
                         catch (Exception)
                         {
                             await ReplyAsync($"Unable to download the image or verify the url");
@@ -303,18 +291,16 @@ namespace Sketch_Bot.Modules
                     {
                         
                         var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                        using (var stream = new MemoryStream())
+                        using var stream = new MemoryStream();
+                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                         {
-                            using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                            {
-                                image.Mutate(x => x.Contrast(size));
-                                image.Save(stream, encoder);
-    
-                            }
-                            stream.Position = 0;
-                            await Context.Channel.SendFileAsync(stream, $"Contrast.png", $"Factor: `{size}`");
-                            await stream.FlushAsync();
+                            image.Mutate(x => x.Contrast(size));
+                            image.Save(stream, encoder);
+
                         }
+                        stream.Position = 0;
+                        await Context.Channel.SendFileAsync(stream, $"Contrast.png", $"Factor: `{size}`");
+                        await stream.FlushAsync();
                     }
                     catch (Exception)
                     {
@@ -346,18 +332,16 @@ namespace Sketch_Bot.Modules
                     {
                         
                         var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                        using (var stream = new MemoryStream())
+                        using var stream = new MemoryStream();
+                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                         {
-                            using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                            {
-                                image.Mutate(x => x.Glow(size));
-                                image.Save(stream, encoder);
-    
-                            }
-                            stream.Position = 0;
-                            await Context.Channel.SendFileAsync(stream, $"Glow.png", $"Factor: `{size}`");
-                            await stream.FlushAsync();
+                            image.Mutate(x => x.Glow(size));
+                            image.Save(stream, encoder);
+
                         }
+                        stream.Position = 0;
+                        await Context.Channel.SendFileAsync(stream, $"Glow.png", $"Factor: `{size}`");
+                        await stream.FlushAsync();
                     }
                     catch (Exception)
                     {
@@ -385,18 +369,16 @@ namespace Sketch_Bot.Modules
                     {
                         
                         var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                        using (var stream = new MemoryStream())
+                        using var stream = new MemoryStream();
+                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                         {
-                            using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                            {
-                                image.Mutate(m => m.Skew(x,y));
-                                image.Save(stream, encoder);
-    
-                            }
-                            stream.Position = 0;
-                            await Context.Channel.SendFileAsync(stream, $"Skew.png", $"X: `{x}` Y: `{y}`");
-                            await stream.FlushAsync();
+                            image.Mutate(m => m.Skew(x, y));
+                            image.Save(stream, encoder);
+
                         }
+                        stream.Position = 0;
+                        await Context.Channel.SendFileAsync(stream, $"Skew.png", $"X: `{x}` Y: `{y}`");
+                        await stream.FlushAsync();
                     }
                     catch (Exception)
                     {
@@ -424,18 +406,16 @@ namespace Sketch_Bot.Modules
                     {
                         
                         var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                        using (var stream = new MemoryStream())
+                        using var stream = new MemoryStream();
+                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                         {
-                            using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                            {
-                                image.Mutate(x => x.OilPaint());
-                                image.Save(stream, encoder);
-    
-                            }
-                            stream.Position = 0;
-                            await Context.Channel.SendFileAsync(stream, $"Oil.png");
-                            await stream.FlushAsync();
+                            image.Mutate(x => x.OilPaint());
+                            image.Save(stream, encoder);
+
                         }
+                        stream.Position = 0;
+                        await Context.Channel.SendFileAsync(stream, $"Oil.png");
+                        await stream.FlushAsync();
                     }
                     catch (Exception)
                     {
@@ -463,18 +443,16 @@ namespace Sketch_Bot.Modules
                     {
                         
                         var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                        using (var stream = new MemoryStream())
+                        using var stream = new MemoryStream();
+                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                         {
-                            using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                            {
-                                image.Mutate(x => x.DetectEdges());
-                                image.Save(stream, encoder);
-    
-                            }
-                            stream.Position = 0;
-                            await Context.Channel.SendFileAsync(stream, $"DetectEdges.png");
-                            await stream.FlushAsync();
+                            image.Mutate(x => x.DetectEdges());
+                            image.Save(stream, encoder);
+
                         }
+                        stream.Position = 0;
+                        await Context.Channel.SendFileAsync(stream, $"DetectEdges.png");
+                        await stream.FlushAsync();
                     }
                     catch (Exception)
                     {
@@ -502,18 +480,16 @@ namespace Sketch_Bot.Modules
                     {
                         
                         var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                        using (var stream = new MemoryStream())
+                        using var stream = new MemoryStream();
+                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                         {
-                            using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                            {
-                                image.Mutate(x => x.Crop(width,height));
-                                image.Save(stream, encoder);
-    
-                            }
-                            stream.Position = 0;
-                            await Context.Channel.SendFileAsync(stream, $"Crop.png", $"Width: `{width}` Height: `{height}`");
-                            await stream.FlushAsync();
+                            image.Mutate(x => x.Crop(width, height));
+                            image.Save(stream, encoder);
+
                         }
+                        stream.Position = 0;
+                        await Context.Channel.SendFileAsync(stream, $"Crop.png", $"Width: `{width}` Height: `{height}`");
+                        await stream.FlushAsync();
                     }
                     catch (Exception)
                     {
@@ -545,18 +521,16 @@ namespace Sketch_Bot.Modules
                     {
                         
                         var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                        using (var stream = new MemoryStream())
+                        using var stream = new MemoryStream();
+                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                         {
-                            using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                            {
-                                image.Mutate(x => x.Brightness(size));
-                                image.Save(stream, encoder);
-    
-                            }
-                            stream.Position = 0;
-                            await Context.Channel.SendFileAsync(stream, $"Brightness.png", $"Factor: `{size}`");
-                            await stream.FlushAsync();
+                            image.Mutate(x => x.Brightness(size));
+                            image.Save(stream, encoder);
+
                         }
+                        stream.Position = 0;
+                        await Context.Channel.SendFileAsync(stream, $"Brightness.png", $"Factor: `{size}`");
+                        await stream.FlushAsync();
                     }
                     catch (Exception)
                     {
@@ -584,18 +558,16 @@ namespace Sketch_Bot.Modules
                     {
                         
                         var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                        using (var stream = new MemoryStream())
+                        using var stream = new MemoryStream();
+                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                         {
-                            using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                            {
-                                image.Mutate(x => x.Rotate(size));
-                                image.Save(stream, encoder);
-    
-                            }
-                            stream.Position = 0;
-                            await Context.Channel.SendFileAsync(stream, $"Rotate.png", $"Degrees `{size}`");
-                            await stream.FlushAsync();
+                            image.Mutate(x => x.Rotate(size));
+                            image.Save(stream, encoder);
+
                         }
+                        stream.Position = 0;
+                        await Context.Channel.SendFileAsync(stream, $"Rotate.png", $"Degrees `{size}`");
+                        await stream.FlushAsync();
                     }
                     catch (Exception)
                     {
@@ -625,18 +597,16 @@ namespace Sketch_Bot.Modules
                 {
                     
                     var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                    using (var stream = new MemoryStream())
+                    using var stream = new MemoryStream();
+                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                     {
-                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                        {
-                            image.Mutate(x => x.Saturate(size));
-                            image.Save(stream, encoder);
+                        image.Mutate(x => x.Saturate(size));
+                        image.Save(stream, encoder);
 
-                        }
-                        stream.Position = 0;
-                        await Context.Channel.SendFileAsync(stream, $"Saturate.png", $"Factor: `{size}`");
-                        await stream.FlushAsync();
                     }
+                    stream.Position = 0;
+                    await Context.Channel.SendFileAsync(stream, $"Saturate.png", $"Factor: `{size}`");
+                    await stream.FlushAsync();
                 }
                 catch (Exception)
                 {
@@ -665,18 +635,16 @@ namespace Sketch_Bot.Modules
                 {
                     
                     var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                    using (var stream = new MemoryStream())
+                    using var stream = new MemoryStream();
+                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                     {
-                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                        {
-                            image.Mutate(x => x.BoxBlur(size));
-                            image.Save(stream, encoder);
+                        image.Mutate(x => x.BoxBlur(size));
+                        image.Save(stream, encoder);
 
-                        }
-                        stream.Position = 0;
-                        await Context.Channel.SendFileAsync(stream, $"Blur.png", $"Factor: `{size}`");
-                        await stream.FlushAsync();
                     }
+                    stream.Position = 0;
+                    await Context.Channel.SendFileAsync(stream, $"Blur.png", $"Factor: `{size}`");
+                    await stream.FlushAsync();
                 }
                 catch (Exception)
                 {
@@ -707,20 +675,18 @@ namespace Sketch_Bot.Modules
                     {
                         
                         var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                        using (var stream = new MemoryStream())
+                        using var stream = new MemoryStream();
+                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                         {
-                            using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                            {
-                                image.Mutate(x => x.GaussianSharpen(size));
-                                image.Save(stream, encoder);
-    
-                                image.Dispose();
-                            }
-                            stream.Position = 0;
-                            await Context.Channel.SendFileAsync(stream, $"Sharpen.png", $"Factor: `{size}`");
-                            await stream.FlushAsync();
-                            stream.Dispose();
+                            image.Mutate(x => x.GaussianSharpen(size));
+                            image.Save(stream, encoder);
+
+                            image.Dispose();
                         }
+                        stream.Position = 0;
+                        await Context.Channel.SendFileAsync(stream, $"Sharpen.png", $"Factor: `{size}`");
+                        await stream.FlushAsync();
+                        stream.Dispose();
                     }
                     catch (Exception)
                     {
@@ -750,30 +716,25 @@ namespace Sketch_Bot.Modules
                         int height;
                         
                         var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                        using (var stream = new MemoryStream())
+                        using var stream = new MemoryStream();
+                        using SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes);
+                        if (image.Width > 3840 || image.Height > 2160)
                         {
-                            using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                            {
-                                if (image.Width > 3840 || image.Height > 2160)
-                                {
-                                    await ReplyAsync("Image is larger than `3840x2160`");
-                                    image.Dispose();
-                                }
-                                else
-                                {
-                                    image.Mutate(x => x.Resize(image.Width * 2, image.Height * 2));
-                                    image.Save(stream, encoder);
-        
-                                    width = image.Width;
-                                    height = image.Height;
-                                    image.Dispose();
-                                    stream.Position = 0;
-                                    await Context.Channel.SendFileAsync(stream, $"Upscale.png", $"Image upscaled by `2` (`{width}x{height}`)");
-                                    await stream.FlushAsync();
-                                    stream.Dispose();
-                                }
-                            }
+                            await ReplyAsync("Image is larger than `3840x2160`");
+                            image.Dispose();
+                        }
+                        else
+                        {
+                            image.Mutate(x => x.Resize(image.Width * 2, image.Height * 2));
+                            image.Save(stream, encoder);
 
+                            width = image.Width;
+                            height = image.Height;
+                            image.Dispose();
+                            stream.Position = 0;
+                            await Context.Channel.SendFileAsync(stream, $"Upscale.png", $"Image upscaled by `2` (`{width}x{height}`)");
+                            await stream.FlushAsync();
+                            stream.Dispose();
                         }
                     }
                     catch (Exception)
@@ -810,20 +771,18 @@ namespace Sketch_Bot.Modules
                     {
                         
                         var photoBytes = await client.GetByteArrayAsync(fileUrl);
-                        using (var stream = new MemoryStream())
+                        using var stream = new MemoryStream();
+                        using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                         {
-                            using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
-                            {
-                                image.Mutate(x => x.Resize(width, height));
-                                image.Save(stream, encoder);
-    
-                                image.Dispose();
-                            }
-                            stream.Position = 0;
-                            await Context.Channel.SendFileAsync(stream, $"Resize.png", $"Image resized to `{width}x{height}`");
-                            await stream.FlushAsync();
-                            stream.Dispose();
+                            image.Mutate(x => x.Resize(width, height));
+                            image.Save(stream, encoder);
+
+                            image.Dispose();
                         }
+                        stream.Position = 0;
+                        await Context.Channel.SendFileAsync(stream, $"Resize.png", $"Image resized to `{width}x{height}`");
+                        await stream.FlushAsync();
+                        stream.Dispose();
                     }
                     catch (Exception)
                     {

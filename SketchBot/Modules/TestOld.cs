@@ -368,32 +368,28 @@ namespace Sketch_Bot.Modules
         [Command("duck",RunMode = RunMode.Async)]
         public async Task duck()
         {
-            using (var client = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate }))//This is like the 'webbrowser' (?)
-            {
-                string websiteUrl = "https://random-d.uk/api/v1/random";
-                client.BaseAddress = new Uri(websiteUrl);
-                HttpResponseMessage response = client.GetAsync("").Result;
-                response.EnsureSuccessStatusCode();
-                string result = await response.Content.ReadAsStringAsync();
-                var json = JObject.Parse(result);
-                string catImage = json["url"].ToString();
-                await ReplyAsync(catImage);
-            }
+            using var client = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });//This is like the 'webbrowser' (?)
+            string websiteUrl = "https://random-d.uk/api/v1/random";
+            client.BaseAddress = new Uri(websiteUrl);
+            HttpResponseMessage response = client.GetAsync("").Result;
+            response.EnsureSuccessStatusCode();
+            string result = await response.Content.ReadAsStringAsync();
+            var json = JObject.Parse(result);
+            string catImage = json["url"].ToString();
+            await ReplyAsync(catImage);
         }
         [Command("dog", RunMode = RunMode.Async)]
         public async Task dog()
         {
-            using (var client = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate }))//This is like the 'webbrowser' (?)
-            {
-                string websiteurl = "https://random.dog/woof.json";
-                client.BaseAddress = new Uri(websiteurl);
-                HttpResponseMessage response = client.GetAsync("").Result;
-                response.EnsureSuccessStatusCode();
-                string result = await response.Content.ReadAsStringAsync();
-                var json = JObject.Parse(result);
-                string catImage = json["url"].ToString();
-                await ReplyAsync(catImage);
-            }
+            using var client = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });//This is like the 'webbrowser' (?)
+            string websiteurl = "https://random.dog/woof.json";
+            client.BaseAddress = new Uri(websiteurl);
+            HttpResponseMessage response = client.GetAsync("").Result;
+            response.EnsureSuccessStatusCode();
+            string result = await response.Content.ReadAsStringAsync();
+            var json = JObject.Parse(result);
+            string catImage = json["url"].ToString();
+            await ReplyAsync(catImage);
         }
         [RequireContext(ContextType.Guild)]
         [Command("unsetmodlog", RunMode = RunMode.Async)]

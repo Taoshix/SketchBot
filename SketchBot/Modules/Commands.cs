@@ -417,17 +417,15 @@ namespace Sketch_Bot.Modules
                 {
                     websiteUrl = "https://" + websiteUrl;
                 }
-                using (var httpClient = new HttpClient())
+                using var httpClient = new HttpClient();
+                HttpResponseMessage response = await httpClient.GetAsync(websiteUrl);
+                if (response.IsSuccessStatusCode)
                 {
-                    HttpResponseMessage response = await httpClient.GetAsync(websiteUrl);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        description = "server is **online**";
-                    }
-                    else
-                    {
-                        description = "server is **offline**";
-                    }
+                    description = "server is **online**";
+                }
+                else
+                {
+                    description = "server is **offline**";
                 }
             }
             catch (WebException)

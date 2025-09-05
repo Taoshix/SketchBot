@@ -35,21 +35,15 @@ namespace Sketch_Bot
             if (shouldRunSetup)
             {
                 var connectionStringNoDb = stringBuilder.ToString();
-                using (var tempConnection = new MySqlConnection(connectionStringNoDb))
+                using var tempConnection = new MySqlConnection(connectionStringNoDb);
+                tempConnection.Open();
+                using var cmd = new MySqlCommand("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'sketchbot'", tempConnection);
+                var exists = cmd.ExecuteScalar() != null;
+                if (!exists)
                 {
-                    tempConnection.Open();
-                    using (var cmd = new MySqlCommand("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'sketchbot'", tempConnection))
-                    {
-                        var exists = cmd.ExecuteScalar() != null;
-                        if (!exists)
-                        {
-                            using (var createCmd = new MySqlCommand("CREATE DATABASE `sketchbot`", tempConnection))
-                            {
-                                createCmd.ExecuteNonQuery();
-                                Console.WriteLine("Created new sketchbot database");
-                            }
-                        }
-                    }
+                    using var createCmd = new MySqlCommand("CREATE DATABASE `sketchbot`", tempConnection);
+                    createCmd.ExecuteNonQuery();
+                    Console.WriteLine("Created new sketchbot database");
                 }
             }
 
@@ -108,13 +102,11 @@ namespace Sketch_Bot
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
                 cmd.Parameters.AddWithValue("@UserId", user.Id.ToString());
-                using (var userTable = cmd.ExecuteReader())
+                using var userTable = cmd.ExecuteReader();
+                while (userTable.Read())
                 {
-                    while (userTable.Read())
-                    {
-                        var userId = (string)userTable["user_id"];
-                        result.Add(userId);
-                    }
+                    var userId = (string)userTable["user_id"];
+                    result.Add(userId);
                 }
             }
             database.CloseConnection();
@@ -252,25 +244,23 @@ namespace Sketch_Bot
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
                 cmd.Parameters.AddWithValue("@UserId", user.Id.ToString());
-                using (var userTable = cmd.ExecuteReader())
+                using var userTable = cmd.ExecuteReader();
+                while (userTable.Read())
                 {
-                    while (userTable.Read())
-                    {
-                        var userId = Convert.ToUInt64(userTable["user_id"]);
-                        var currentTokens = (long)userTable["tokens"];
-                        var daily = (DateTime)userTable["daily"];
-                        var level = (long)userTable["level"];
-                        var xp = (long)userTable["xp"];
+                    var userId = Convert.ToUInt64(userTable["user_id"]);
+                    var currentTokens = (long)userTable["tokens"];
+                    var daily = (DateTime)userTable["daily"];
+                    var level = (long)userTable["level"];
+                    var xp = (long)userTable["xp"];
 
-                        result.Add(new UserStats
-                        {
-                            UserId = userId,
-                            Tokens = currentTokens,
-                            Daily = daily,
-                            Level = level,
-                            XP = xp
-                        });
-                    }
+                    result.Add(new UserStats
+                    {
+                        UserId = userId,
+                        Tokens = currentTokens,
+                        Daily = daily,
+                        Level = level,
+                        XP = xp
+                    });
                 }
             }
             database.CloseConnection();
@@ -284,25 +274,23 @@ namespace Sketch_Bot
             var query = $"SELECT * FROM `{realguildid}` ORDER BY tokens DESC LIMIT 10000";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
-                using (var userTable = cmd.ExecuteReader())
+                using var userTable = cmd.ExecuteReader();
+                while (userTable.Read())
                 {
-                    while (userTable.Read())
-                    {
-                        var userId = Convert.ToUInt64(userTable["user_id"]);
-                        var currentTokens = (long)userTable["tokens"];
-                        var daily = (DateTime)userTable["daily"];
-                        var level = (long)userTable["level"];
-                        var xp = (long)userTable["xp"];
+                    var userId = Convert.ToUInt64(userTable["user_id"]);
+                    var currentTokens = (long)userTable["tokens"];
+                    var daily = (DateTime)userTable["daily"];
+                    var level = (long)userTable["level"];
+                    var xp = (long)userTable["xp"];
 
-                        result.Add(new UserStats
-                        {
-                            UserId = userId,
-                            Tokens = currentTokens,
-                            Daily = daily,
-                            Level = level,
-                            XP = xp
-                        });
-                    }
+                    result.Add(new UserStats
+                    {
+                        UserId = userId,
+                        Tokens = currentTokens,
+                        Daily = daily,
+                        Level = level,
+                        XP = xp
+                    });
                 }
             }
             database.CloseConnection();
@@ -316,25 +304,23 @@ namespace Sketch_Bot
             var query = $"SELECT * FROM `{realguildid}` ORDER BY level DESC, xp DESC LIMIT 10000";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
-                using (var userTable = cmd.ExecuteReader())
+                using var userTable = cmd.ExecuteReader();
+                while (userTable.Read())
                 {
-                    while (userTable.Read())
-                    {
-                        var userId = Convert.ToUInt64(userTable["user_id"]);
-                        var currentTokens = (long)userTable["tokens"];
-                        var daily = (DateTime)userTable["daily"];
-                        var level = (long)userTable["level"];
-                        var xp = (long)userTable["xp"];
+                    var userId = Convert.ToUInt64(userTable["user_id"]);
+                    var currentTokens = (long)userTable["tokens"];
+                    var daily = (DateTime)userTable["daily"];
+                    var level = (long)userTable["level"];
+                    var xp = (long)userTable["xp"];
 
-                        result.Add(new UserStats
-                        {
-                            UserId = userId,
-                            Tokens = currentTokens,
-                            Daily = daily,
-                            Level = level,
-                            XP = xp
-                        });
-                    }
+                    result.Add(new UserStats
+                    {
+                        UserId = userId,
+                        Tokens = currentTokens,
+                        Daily = daily,
+                        Level = level,
+                        XP = xp
+                    });
                 }
             }
             database.CloseConnection();
@@ -347,21 +333,19 @@ namespace Sketch_Bot
             var query = "SELECT * FROM blacklist ORDER BY user_id DESC LIMIT 10000";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
-                using (var userTable = cmd.ExecuteReader())
+                using var userTable = cmd.ExecuteReader();
+                while (userTable.Read())
                 {
-                    while (userTable.Read())
-                    {
-                        var userId = Convert.ToUInt64(userTable["user_id"]);
-                        var reason = (string)userTable["reason"];
-                        var blacklister = (string)userTable["blacklister"];
+                    var userId = Convert.ToUInt64(userTable["user_id"]);
+                    var reason = (string)userTable["reason"];
+                    var blacklister = (string)userTable["blacklister"];
 
-                        result.Add(new Blacklist
-                        {
-                            UserId = userId,
-                            Reason = reason,
-                            Blacklister = blacklister
-                        });
-                    }
+                    result.Add(new Blacklist
+                    {
+                        UserId = userId,
+                        Reason = reason,
+                        Blacklister = blacklister
+                    });
                 }
             }
             database.CloseConnection();
@@ -493,23 +477,21 @@ namespace Sketch_Bot
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
                 cmd.Parameters.AddWithValue("@UserId", Id.ToString());
-                using (var blacklist = cmd.ExecuteReader())
+                using var blacklist = cmd.ExecuteReader();
+                while (blacklist.Read())
                 {
-                    while (blacklist.Read())
-                    {
-                        var userId = Convert.ToUInt64(blacklist["user_id"]);
-                        var userName = (string)blacklist["username"];
-                        var reason = (string)blacklist["reason"];
-                        var blacklister = (string)blacklist["blacklister"];
+                    var userId = Convert.ToUInt64(blacklist["user_id"]);
+                    var userName = (string)blacklist["username"];
+                    var reason = (string)blacklist["reason"];
+                    var blacklister = (string)blacklist["blacklister"];
 
-                        result.Add(new Blacklist
-                        {
-                            UserId = userId,
-                            Username = userName,
-                            Reason = reason,
-                            Blacklister = blacklister
-                        });
-                    }
+                    result.Add(new Blacklist
+                    {
+                        UserId = userId,
+                        Username = userName,
+                        Reason = reason,
+                        Blacklister = blacklister
+                    });
                 }
             }
             database.CloseConnection();

@@ -599,19 +599,16 @@ namespace Sketch_Bot.Modules
         {
             try
             {
-                using (var client = new HttpClient(new HttpClientHandler
-                { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate })
-                ) //This is like the 'webbrowser' (?)
-                {
-                    var websitee = "https://randomfox.ca/floof/";
-                    client.BaseAddress = new Uri(websitee);
-                    HttpResponseMessage response = client.GetAsync("").Result;
-                    response.EnsureSuccessStatusCode();
-                    string result = await response.Content.ReadAsStringAsync();
-                    var json = JObject.Parse(result);
-                    string catImage = json["image"].ToString();
-                    await ReplyAsync($"{catImage}");
-                }
+                using var client = new HttpClient(new HttpClientHandler
+                { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate }); //This is like the 'webbrowser' (?)
+                var websitee = "https://randomfox.ca/floof/";
+                client.BaseAddress = new Uri(websitee);
+                HttpResponseMessage response = client.GetAsync("").Result;
+                response.EnsureSuccessStatusCode();
+                string result = await response.Content.ReadAsStringAsync();
+                var json = JObject.Parse(result);
+                string catImage = json["image"].ToString();
+                await ReplyAsync($"{catImage}");
             }
             catch (Exception ex)
             {
@@ -623,20 +620,17 @@ namespace Sketch_Bot.Modules
         {
             try
             {
-                using (var client = new HttpClient(new HttpClientHandler
-                { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate })
-                ) //This is like the 'webbrowser' (?)
-                {
-                    var websitee = "https://random.birb.pw/img/";
-                    string websiteurl = "http://random.birb.pw/tweet.json/";
-                    client.BaseAddress = new Uri(websiteurl);
-                    HttpResponseMessage response = client.GetAsync("").Result;
-                    response.EnsureSuccessStatusCode();
-                    string result = await response.Content.ReadAsStringAsync();
-                    var json = JObject.Parse(result);
-                    string CatImage = json["file"].ToString();
-                    await ReplyAsync($"{websitee}{CatImage}");
-                }
+                using var client = new HttpClient(new HttpClientHandler
+                { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate }); //This is like the 'webbrowser' (?)
+                var websitee = "https://random.birb.pw/img/";
+                string websiteurl = "http://random.birb.pw/tweet.json/";
+                client.BaseAddress = new Uri(websiteurl);
+                HttpResponseMessage response = client.GetAsync("").Result;
+                response.EnsureSuccessStatusCode();
+                string result = await response.Content.ReadAsStringAsync();
+                var json = JObject.Parse(result);
+                string CatImage = json["file"].ToString();
+                await ReplyAsync($"{websitee}{CatImage}");
             }
             catch (Exception ex)
             {

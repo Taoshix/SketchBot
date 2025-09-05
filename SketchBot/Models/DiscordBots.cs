@@ -32,15 +32,13 @@ namespace Sketch_Bot.Models
             try
             {
                 Config config = Config.Load();
-                using (var httpClient = new HttpClient())
-                {
-                    httpClient.DefaultRequestHeaders.Add("Authorization", config.DbggApiKey);
-                    var json = JsonConvert.SerializeObject(new { guildCount = servercount });
-                    var content = new StringContent(json, Encoding.UTF8, "application/json");
-                    var response = await httpClient.PostAsync($"https://discord.bots.gg/api/v1/bots/{botId}/stats", content);
-                    var responseText = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine(responseText);    
-                }
+                using var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Add("Authorization", config.DbggApiKey);
+                var json = JsonConvert.SerializeObject(new { guildCount = servercount });
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await httpClient.PostAsync($"https://discord.bots.gg/api/v1/bots/{botId}/stats", content);
+                var responseText = await response.Content.ReadAsStringAsync();
+                Console.WriteLine(responseText);
             }
             catch (HttpRequestException ex)
             {

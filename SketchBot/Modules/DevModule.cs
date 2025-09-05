@@ -175,16 +175,14 @@ namespace Sketch_Bot.Modules
                     return;
                 }
 
-                using (var httpClient = new HttpClient())
-                using (var stream = await httpClient.GetStreamAsync(url))
+                using var httpClient = new HttpClient();
+                using var stream = await httpClient.GetStreamAsync(url);
+                if (stream == null)
                 {
-                    if (stream == null)
-                    {
-                        await ReplyAsync("Unable to download/verify the URL");
-                        return;
-                    }
-                    await Context.Client.CurrentUser.ModifyAsync(x => x.Avatar = new Discord.Image(stream));
+                    await ReplyAsync("Unable to download/verify the URL");
+                    return;
                 }
+                await Context.Client.CurrentUser.ModifyAsync(x => x.Avatar = new Discord.Image(stream));
             }
             catch
             {
