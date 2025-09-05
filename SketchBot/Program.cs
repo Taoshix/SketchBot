@@ -353,7 +353,15 @@ namespace Sketch_Bot
                         await component.RespondAsync("If you want to claim your own daily tokens do /daily", ephemeral: true);
                         return;
                     }
-                    var user = _client.GetUser(ulong.Parse(args.Last())) as SocketGuildUser;
+                    
+                    var user = await _client.GetUserAsync(ulong.Parse(args.Last())) as SocketGuildUser;
+                    user ??= _client.Guilds.FirstOrDefault(x => x.Id == component.GuildId).GetUser(ulong.Parse(args.Last()));
+                    if (user == null)
+                    {
+                        await component.FollowupAsync("Error Fetching User!", ephemeral: true);
+                        return;
+                    }
+                    
                     var userStats = Database.GetUserStats(user);
                     DateTime now = DateTime.Now;
                     DateTime daily = userStats.Daily;
@@ -420,6 +428,8 @@ namespace Sketch_Bot
             if (_provider.GetRequiredService<CachingService>()._dbConnected)
             {
                 Database.CreateSettingsTable();
+                Database.CreateBlacklistTable();
+                Database.CreateStatsTable();
                 cachingservice.SetupBlackList();
             }
             await _interactionService.RegisterCommandsGloballyAsync();

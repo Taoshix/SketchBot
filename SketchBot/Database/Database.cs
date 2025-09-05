@@ -15,7 +15,6 @@ namespace Sketch_Bot
 {
     public class Database
     {
-
         private MySqlConnection? dbConnection;
         private Config config;
 
@@ -86,7 +85,6 @@ namespace Sketch_Bot
             }
 
             MySqlCommand command = new MySqlCommand(query, dbConnection);
-            
             var mySqlReader = command.ExecuteReader();
             return mySqlReader;
         }
@@ -101,19 +99,23 @@ namespace Sketch_Bot
         {
             MySqlConnection.ClearAllPools();
         }
-        public static bool CheckExistingUser(IGuildUser user) // TODO refactor to boolean return
+        public static bool CheckExistingUser(IGuildUser user)
         {
             var result = new List<string>();
             var database = new Database();
             var realguildid = user.Guild.Id;
-            var str = string.Format("SELECT * FROM `{1}` WHERE user_id = '{0}'", user.Id, realguildid.ToString());
-            var userTable = database.FireCommand(str);
-            
-            while (userTable.Read())
+            var query = $"SELECT * FROM `{realguildid}` WHERE user_id = @UserId";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
-                var userId = (string)userTable["user_id"];
-
-                result.Add(userId);
+                cmd.Parameters.AddWithValue("@UserId", user.Id.ToString());
+                using (var userTable = cmd.ExecuteReader())
+                {
+                    while (userTable.Read())
+                    {
+                        var userId = (string)userTable["user_id"];
+                        result.Add(userId);
+                    }
+                }
             }
             database.CloseConnection();
             return result.Count > 0;
@@ -121,9 +123,47 @@ namespace Sketch_Bot
         public static void CreateSettingsTable()
         {
             var database = new Database();
-            var str = string.Format("CREATE TABLE IF NOT EXISTS `server_settings` (id varchar(50) PRIMARY KEY, prefix varchar(50) DEFAULT '?', welcomechannel varchar(50) DEFAULT NULL, modlogchannel varchar(50) DEFAULT NULL, xpmultiplier int DEFAULT 1, LevelupMessages int DEFAULT 1)");
+            var str = @"
+                CREATE TABLE IF NOT EXISTS `server_settings` (
+                    id varchar(50) PRIMARY KEY,
+                    prefix varchar(50) DEFAULT '?',
+                    welcomechannel varchar(50) DEFAULT NULL,
+                    modlogchannel varchar(50) DEFAULT NULL,
+                    xpmultiplier int DEFAULT 1,
+                    LevelupMessages int DEFAULT 1
+                )";
             var table = database.FireCommand(str);
-
+            database.CloseConnection();
+        }
+        public static void CreateBlacklistTable()
+        {
+            var database = new Database();
+            var str = @"
+                CREATE TABLE IF NOT EXISTS `blacklist` (
+                    user_id varchar(50) PRIMARY KEY,
+                    username varchar(50),
+                    reason TEXT,
+                    blacklister varchar(50)
+                )";
+            var table = database.FireCommand(str);
+            database.CloseConnection();
+        }
+        public static void CreateStatsTable()
+        {
+            var database = new Database();
+            var str = @"
+                CREATE TABLE IF NOT EXISTS `stats` (
+                    `servers` INT(10) NOT NULL DEFAULT '0',
+                    `users` INT(10) NOT NULL DEFAULT '0',
+                    `msg_since_startup` INT(10) NOT NULL DEFAULT '0',
+                    `msg_per_min` FLOAT NOT NULL DEFAULT '0',
+                    `startup_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    `cmd_since_startup` INT(10) NOT NULL DEFAULT '0',
+                    `cmd_per_min` FLOAT NOT NULL DEFAULT '0',
+                    `tao_avatar` TINYTEXT NULL DEFAULT NULL,
+                    `tjamp_avatar` TINYTEXT NULL DEFAULT NULL
+                )";
+            var table = database.FireCommand(str);
             database.CloseConnection();
         }
         public static void UpdateStats(BotStats stats)
@@ -131,12 +171,21 @@ namespace Sketch_Bot
             var database = new Database();
             try
             {
-                var strings = string.Format("UPDATE `stats` SET servers = {0}, users = '{1}', msg_since_startup = '{2}', msg_per_min = '{3}', startup_time = '{4}', cmd_since_startup = '{5}', cmd_per_min = '{6}'", stats.Servers, stats.Users, stats.MsgSinceStartup, stats.MsgPerMin, $"{stats.StartUpTime.Year}-{stats.StartUpTime.Month}-{stats.StartUpTime.Day} {stats.StartUpTime.Hour}:{stats.StartUpTime.Minute}:{stats.StartUpTime.Second}", stats.CmdsSinceStartup, stats.CmdsPerMin);
-                var reader = database.FireCommand(strings);
-                reader.Close();
+                var query = "UPDATE `stats` SET servers = @Servers, users = @Users, msg_since_startup = @MsgSinceStartup, msg_per_min = @MsgPerMin, startup_time = @StartUpTime, cmd_since_startup = @CmdsSinceStartup, cmd_per_min = @CmdsPerMin";
+                using (var cmd = new MySqlCommand(query, database.dbConnection))
+                {
+                    cmd.Parameters.AddWithValue("@Servers", stats.Servers);
+                    cmd.Parameters.AddWithValue("@Users", stats.Users);
+                    cmd.Parameters.AddWithValue("@MsgSinceStartup", stats.MsgSinceStartup);
+                    cmd.Parameters.AddWithValue("@MsgPerMin", stats.MsgPerMin);
+                    cmd.Parameters.AddWithValue("@StartUpTime", stats.StartUpTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                    cmd.Parameters.AddWithValue("@CmdsSinceStartup", stats.CmdsSinceStartup);
+                    cmd.Parameters.AddWithValue("@CmdsPerMin", stats.CmdsPerMin);
+                    cmd.ExecuteNonQuery();
+                }
                 database.CloseConnection();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 database.CloseConnection();
                 Console.WriteLine(ex);
@@ -148,12 +197,16 @@ namespace Sketch_Bot
             var database = new Database();
             try
             {
-                var strings = string.Format("UPDATE `stats` SET tao_avatar = '{0}', tjamp_avatar = '{1}'", url1, url2);
-                var reader = database.FireCommand(strings);
-                reader.Close();
+                var query = "UPDATE `stats` SET tao_avatar = @Url1, tjamp_avatar = @Url2";
+                using (var cmd = new MySqlCommand(query, database.dbConnection))
+                {
+                    cmd.Parameters.AddWithValue("@Url1", url1);
+                    cmd.Parameters.AddWithValue("@Url2", url2);
+                    cmd.ExecuteNonQuery();
+                }
                 database.CloseConnection();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 database.CloseConnection();
                 Console.WriteLine(ex);
@@ -163,17 +216,31 @@ namespace Sketch_Bot
         {
             var database = new Database();
             var realguildid = user.Guild.Id;
-            var str = string.Format("INSERT INTO `{1}` (user_id, tokens, daily, level, xp ) VALUES ('{0}', '100', '0001-01-01 00:00:00', '1', '1')", user.Id, realguildid);
-            var table = database.FireCommand(str);
-
+            var query = $@"INSERT INTO `{realguildid}` (user_id, tokens, daily, level, xp) VALUES (@UserId, @Tokens, @Daily, @Level, @XP)";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
+            {
+                cmd.Parameters.AddWithValue("@UserId", user.Id.ToString());
+                cmd.Parameters.AddWithValue("@Tokens", 100);
+                cmd.Parameters.AddWithValue("@Daily", "0001-01-01 00:00:00");
+                cmd.Parameters.AddWithValue("@Level", 1);
+                cmd.Parameters.AddWithValue("@XP", 1);
+                cmd.ExecuteNonQuery();
+            }
             database.CloseConnection();
         }
         public static void CreateTable(ulong guildid)
         {
             var database = new Database();
-            var str = string.Format("CREATE TABLE IF NOT EXISTS `{0}` (user_id varchar(50), tokens bigint(20), daily datetime DEFAULT '0001-01-01 00:00:00', level bigint(20) DEFAULT '1', xp bigint(20) DEFAULT '1', PRIMARY KEY (user_id))", guildid);
+            var str = $@"
+                CREATE TABLE IF NOT EXISTS `{guildid}` (
+                    user_id varchar(50),
+                    tokens bigint(20),
+                    daily datetime DEFAULT '0001-01-01 00:00:00',
+                    level bigint(20) DEFAULT '1',
+                    xp bigint(20) DEFAULT '1',
+                    PRIMARY KEY (user_id)
+                )";
             var table = database.FireCommand(str);
-
             database.CloseConnection();
         }
         public static UserStats? GetUserStats(IGuildUser user)
@@ -181,57 +248,64 @@ namespace Sketch_Bot
             var result = new List<UserStats>();
             var database = new Database();
             var realguildid = user.Guild.Id;
-            var str = string.Format("SELECT * FROM `{1}` WHERE user_id = '{0}'", user.Id, realguildid);
-            var userTable = database.FireCommand(str);
-
-            while (userTable.Read())
+            var query = $"SELECT * FROM `{realguildid}` WHERE user_id = @UserId";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
-                var userId = Convert.ToUInt64(userTable["user_id"]);
-                var currentTokens = (long)userTable["tokens"];
-                var daily = (DateTime)userTable["daily"];
-                var level = (long)userTable["level"];
-                var xp = (long)userTable["xp"];
-
-                result.Add(new UserStats
+                cmd.Parameters.AddWithValue("@UserId", user.Id.ToString());
+                using (var userTable = cmd.ExecuteReader())
                 {
-                    UserId = userId,
-                    Tokens = currentTokens,
-                    Daily = daily,
-                    Level = level,
-                    XP = xp
-                });
+                    while (userTable.Read())
+                    {
+                        var userId = Convert.ToUInt64(userTable["user_id"]);
+                        var currentTokens = (long)userTable["tokens"];
+                        var daily = (DateTime)userTable["daily"];
+                        var level = (long)userTable["level"];
+                        var xp = (long)userTable["xp"];
+
+                        result.Add(new UserStats
+                        {
+                            UserId = userId,
+                            Tokens = currentTokens,
+                            Daily = daily,
+                            Level = level,
+                            XP = xp
+                        });
+                    }
+                }
             }
             database.CloseConnection();
             return result.FirstOrDefault();
-
         }
         public static List<UserStats> GetAllUserStats(IGuildUser user)
         {
             var result = new List<UserStats>();
             var database = new Database();
             var realguildid = user.Guild.Id;
-            var str = string.Format("SELECT * FROM `{0}` ORDER BY tokens DESC LIMIT 10000", realguildid);
-            var userTable = database.FireCommand(str);
-
-            while (userTable.Read())
+            var query = $"SELECT * FROM `{realguildid}` ORDER BY tokens DESC LIMIT 10000";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
-                var userId = Convert.ToUInt64(userTable["user_id"]);
-                var currentTokens = (long)userTable["tokens"];
-                var daily = (DateTime)userTable["daily"];
-                var level = (long)userTable["level"];
-                var xp = (long)userTable["xp"];
-
-                result.Add(new UserStats
+                using (var userTable = cmd.ExecuteReader())
                 {
-                    UserId = userId,
-                    Tokens = currentTokens,
-                    Daily = daily,
-                    Level = level,
-                    XP = xp
-                });
+                    while (userTable.Read())
+                    {
+                        var userId = Convert.ToUInt64(userTable["user_id"]);
+                        var currentTokens = (long)userTable["tokens"];
+                        var daily = (DateTime)userTable["daily"];
+                        var level = (long)userTable["level"];
+                        var xp = (long)userTable["xp"];
+
+                        result.Add(new UserStats
+                        {
+                            UserId = userId,
+                            Tokens = currentTokens,
+                            Daily = daily,
+                            Level = level,
+                            XP = xp
+                        });
+                    }
+                }
             }
             database.CloseConnection();
-
             return result;
         }
         public static List<UserStats> GetAllUsersLeveling(IGuildUser user)
@@ -239,52 +313,58 @@ namespace Sketch_Bot
             var result = new List<UserStats>();
             var database = new Database();
             var realguildid = user.Guild.Id;
-            var str = string.Format("SELECT * FROM `{0}` ORDER BY level DESC, xp DESC LIMIT 10000;", realguildid);
-            var userTable = database.FireCommand(str);
-
-            while (userTable.Read())
+            var query = $"SELECT * FROM `{realguildid}` ORDER BY level DESC, xp DESC LIMIT 10000";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
-                var userId = Convert.ToUInt64(userTable["user_id"]);
-                var currentTokens = (long)userTable["tokens"];
-                var daily = (DateTime)userTable["daily"];
-                var level = (long)userTable["level"];
-                var xp = (long)userTable["xp"];
-
-                result.Add(new UserStats
+                using (var userTable = cmd.ExecuteReader())
                 {
-                    UserId = userId,
-                    Tokens = currentTokens,
-                    Daily = daily,
-                    Level = level,
-                    XP = xp
-                });
+                    while (userTable.Read())
+                    {
+                        var userId = Convert.ToUInt64(userTable["user_id"]);
+                        var currentTokens = (long)userTable["tokens"];
+                        var daily = (DateTime)userTable["daily"];
+                        var level = (long)userTable["level"];
+                        var xp = (long)userTable["xp"];
+
+                        result.Add(new UserStats
+                        {
+                            UserId = userId,
+                            Tokens = currentTokens,
+                            Daily = daily,
+                            Level = level,
+                            XP = xp
+                        });
+                    }
+                }
             }
             database.CloseConnection();
-
             return result;
         }
         public static List<Blacklist> GetAllBlacklistedUsers()
         {
             var result = new List<Blacklist>();
             var database = new Database();
-            var str = string.Format("SELECT * FROM blacklist ORDER BY user_id DESC LIMIT 10000");
-            var userTable = database.FireCommand(str);
-
-            while (userTable.Read())
+            var query = "SELECT * FROM blacklist ORDER BY user_id DESC LIMIT 10000";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
-                var userId = Convert.ToUInt64(userTable["user_id"]);
-                var reason = (string)userTable["reason"];
-                var blacklister = (string)userTable["blacklister"];
-
-                result.Add(new Blacklist
+                using (var userTable = cmd.ExecuteReader())
                 {
-                    UserId = userId,
-                    Reason = reason,
-                    Blacklister = blacklister
-                });
+                    while (userTable.Read())
+                    {
+                        var userId = Convert.ToUInt64(userTable["user_id"]);
+                        var reason = (string)userTable["reason"];
+                        var blacklister = (string)userTable["blacklister"];
+
+                        result.Add(new Blacklist
+                        {
+                            UserId = userId,
+                            Reason = reason,
+                            Blacklister = blacklister
+                        });
+                    }
+                }
             }
             database.CloseConnection();
-
             return result;
         }
         public static void AddXP(IGuildUser user, long xp)
@@ -293,9 +373,13 @@ namespace Sketch_Bot
             var database = new Database();
             try
             {
-                var strings = string.Format("UPDATE `{0}` SET xp = xp + {1} WHERE user_id = {2}", realguildid, xp, user.Id);
-                var reader = database.FireCommand(strings);
-                reader.Close();
+                var query = $"UPDATE `{realguildid}` SET xp = xp + @XP WHERE user_id = @UserId";
+                using (var cmd = new MySqlCommand(query, database.dbConnection))
+                {
+                    cmd.Parameters.AddWithValue("@XP", xp);
+                    cmd.Parameters.AddWithValue("@UserId", user.Id.ToString());
+                    cmd.ExecuteNonQuery();
+                }
                 database.CloseConnection();
                 return;
             }
@@ -312,9 +396,14 @@ namespace Sketch_Bot
             var database = new Database();
             try
             {
-                var strings = string.Format("UPDATE `{0}` SET level = level + {3}, xp = xp + {1} WHERE user_id = '{2}'", realguildid, xp, user.Id, level);
-                var reader = database.FireCommand(strings);
-                reader.Close(); 
+                var query = $"UPDATE `{realguildid}` SET level = level + @Level, xp = xp + @XP WHERE user_id = @UserId";
+                using (var cmd = new MySqlCommand(query, database.dbConnection))
+                {
+                    cmd.Parameters.AddWithValue("@Level", level);
+                    cmd.Parameters.AddWithValue("@XP", xp);
+                    cmd.Parameters.AddWithValue("@UserId", user.Id.ToString());
+                    cmd.ExecuteNonQuery();
+                }
                 database.CloseConnection();
                 return;
             }
@@ -331,9 +420,13 @@ namespace Sketch_Bot
             var realguildid = user.Guild.Id;
             try
             {
-                var strings = string.Format("UPDATE `{2}` SET tokens = tokens + '{1}' WHERE user_id = '{0}'", user.Id, tokens, realguildid);
-                var reader = database.FireCommand(strings);
-                reader.Close();
+                var query = $"UPDATE `{realguildid}` SET tokens = tokens + @Tokens WHERE user_id = @UserId";
+                using (var cmd = new MySqlCommand(query, database.dbConnection))
+                {
+                    cmd.Parameters.AddWithValue("@Tokens", tokens);
+                    cmd.Parameters.AddWithValue("@UserId", user.Id.ToString());
+                    cmd.ExecuteNonQuery();
+                }
                 database.CloseConnection();
                 return;
             }
@@ -350,9 +443,13 @@ namespace Sketch_Bot
             var realguildid = user.Guild.Id;
             try
             {
-                var strings = string.Format("UPDATE `{2}` SET tokens = tokens - '{1}' WHERE user_id = '{0}'", user.Id, tokens, realguildid);
-                var reader = database.FireCommand(strings);
-                reader.Close();
+                var query = $"UPDATE `{realguildid}` SET tokens = tokens - @Tokens WHERE user_id = @UserId";
+                using (var cmd = new MySqlCommand(query, database.dbConnection))
+                {
+                    cmd.Parameters.AddWithValue("@Tokens", tokens);
+                    cmd.Parameters.AddWithValue("@UserId", user.Id.ToString());
+                    cmd.ExecuteNonQuery();
+                }
                 database.CloseConnection();
                 return;
             }
@@ -366,43 +463,54 @@ namespace Sketch_Bot
         public static void BlacklistAdd(RestUser user, string reason, IUser blacklister)
         {
             var database = new Database();
-
-            var str = string.Format("INSERT INTO blacklist (user_id, username, reason, blacklister ) VALUES ('{0}', '{1}', '{2}', '{3}')", user.Id, HelperFunctions.CapitalizeFirstLetter(user.Username), reason, HelperFunctions.CapitalizeFirstLetter(blacklister.Username));
-            var table = database.FireCommand(str);
-
+            var query = "INSERT INTO blacklist (user_id, username, reason, blacklister) VALUES (@UserId, @Username, @Reason, @Blacklister)";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
+            {
+                cmd.Parameters.AddWithValue("@UserId", user.Id.ToString());
+                cmd.Parameters.AddWithValue("@Username", HelperFunctions.CapitalizeFirstLetter(user.Username));
+                cmd.Parameters.AddWithValue("@Reason", reason);
+                cmd.Parameters.AddWithValue("@Blacklister", HelperFunctions.CapitalizeFirstLetter(blacklister.Username));
+                cmd.ExecuteNonQuery();
+            }
             database.CloseConnection();
         }
         public static void BlacklistDel(ulong Id)
         {
             var database = new Database();
-
-            var str = string.Format("DELETE FROM blacklist WHERE (user_id ) = '{0}'", Id);
-            var table = database.FireCommand(str);
-
+            var query = "DELETE FROM blacklist WHERE user_id = @UserId";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
+            {
+                cmd.Parameters.AddWithValue("@UserId", Id.ToString());
+                cmd.ExecuteNonQuery();
+            }
             database.CloseConnection();
         }
         public static Blacklist? BlacklistCheck(ulong Id)
         {
             var result = new List<Blacklist>();
             var database = new Database();
-
-            var str = string.Format("SELECT * FROM blacklist WHERE user_id = '{0}'", Id);
-            var blacklist = database.FireCommand(str);
-
-            while (blacklist.Read())
+            var query = "SELECT * FROM blacklist WHERE user_id = @UserId";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
-                var userId = Convert.ToUInt64(blacklist["user_id"]);
-                var userName = (string)blacklist["username"];
-                var reason = (string)blacklist["reason"];
-                var blacklister = (string)blacklist["blacklister"];
-
-                result.Add(new Blacklist
+                cmd.Parameters.AddWithValue("@UserId", Id.ToString());
+                using (var blacklist = cmd.ExecuteReader())
                 {
-                    UserId = userId,
-                    Username = userName,
-                    Reason = reason,
-                    Blacklister = blacklister
-                });
+                    while (blacklist.Read())
+                    {
+                        var userId = Convert.ToUInt64(blacklist["user_id"]);
+                        var userName = (string)blacklist["username"];
+                        var reason = (string)blacklist["reason"];
+                        var blacklister = (string)blacklist["blacklister"];
+
+                        result.Add(new Blacklist
+                        {
+                            UserId = userId,
+                            Username = userName,
+                            Reason = reason,
+                            Blacklister = blacklister
+                        });
+                    }
+                }
             }
             database.CloseConnection();
             return result.FirstOrDefault();
@@ -413,9 +521,12 @@ namespace Sketch_Bot
             var realguildid = user.Guild.Id;
             try
             {
-                var strings = string.Format("UPDATE `{0}` SET daily = curtime() WHERE user_id = '{1}'", realguildid, user.Id);
-                var reader = database.FireCommand(strings);
-                reader.Close();
+                var query = $"UPDATE `{realguildid}` SET daily = curtime() WHERE user_id = @UserId";
+                using (var cmd = new MySqlCommand(query, database.dbConnection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", user.Id.ToString());
+                    cmd.ExecuteNonQuery();
+                }
                 database.CloseConnection();
             }
             catch (Exception)
@@ -427,12 +538,13 @@ namespace Sketch_Bot
         {
             var guildid = user.Guild.Id;
             var database = new Database();
-
-            var str = string.Format("DELETE FROM `{1}` WHERE (user_id ) = '{0}'", user.Id, guildid);
-            var table = database.FireCommand(str);
-
+            var query = $"DELETE FROM `{guildid}` WHERE user_id = @UserId";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
+            {
+                cmd.Parameters.AddWithValue("@UserId", user.Id.ToString());
+                cmd.ExecuteNonQuery();
+            }
             database.CloseConnection();
-
             return;
         }
     }

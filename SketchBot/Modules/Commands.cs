@@ -899,17 +899,18 @@ namespace Sketch_Bot.Modules
         public async Task ClaimDailyAsync(IGuildUser user = null)
         {
             await DeferAsync();
+
             if (!_cachingService._dbConnected)
             {
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
+            user ??= Context.User as IGuildUser;
             if (user.IsBot)
             {
                 await FollowupAsync("Bots don't have stats");
                 return;
             }
-            user ??= Context.User as IGuildUser;
             var isUserInDatabase = _cachingService.IsInDatabase(Context.Guild.Id, user.Id);
             if (!isUserInDatabase)
             {
