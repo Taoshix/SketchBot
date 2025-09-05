@@ -15,7 +15,7 @@ namespace Sketch_Bot
 {
     public class Database
     {
-        private MySqlConnection? dbConnection;
+        public MySqlConnection? dbConnection;
         private Config config;
 
         public Database(bool shouldRunSetup = false)

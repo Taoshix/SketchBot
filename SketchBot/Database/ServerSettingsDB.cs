@@ -15,8 +15,7 @@ namespace Sketch_Bot
 {
     public class ServerSettingsDB
     {
-
-        private MySqlConnection? dbConnection;
+        public MySqlConnection? dbConnection;
         private Config config;
         public ServerSettingsDB(bool shouldRunSetup = false)
         {
@@ -84,7 +83,6 @@ namespace Sketch_Bot
             }
 
             MySqlCommand command = new MySqlCommand(query, dbConnection);
-
             var mySqlReader = command.ExecuteReader();
             return mySqlReader;
         }
@@ -98,216 +96,243 @@ namespace Sketch_Bot
         public static void CreateTableRole(ulong guildid)
         {
             var database = new ServerSettingsDB();
-            var str = string.Format("CREATE TABLE IF NOT EXISTS `{0}_roles` (roleId varchar(50), level int, PRIMARY KEY (roleId))", guildid);
+            var str = $"CREATE TABLE IF NOT EXISTS `{guildid}_roles` (roleId varchar(50), level int, PRIMARY KEY (roleId))";
             var table = database.FireCommand(str);
-
             database.CloseConnection();
         }
         public static void CreateTableWords(ulong guildid)
         {
             var database = new ServerSettingsDB();
-            var str = string.Format("CREATE TABLE IF NOT EXISTS `{0}_words` (words text)", guildid);
+            var str = $"CREATE TABLE IF NOT EXISTS `{guildid}_words` (words text)";
             var table = database.FireCommand(str);
-
             database.CloseConnection();
         }
         public static void MakeSettings(ulong guildid, int levelup)
         {
             var database = new Database();
-            var str = string.Format("INSERT INTO `server_settings` (id, prefix, welcomechannel, modlogchannel, xpmultiplier, LevelupMessages) VALUES ({0}, '?', 0, 0, 1, {1})", guildid, levelup);
-            var table = database.FireCommand(str);
-
+            var query = "INSERT INTO `server_settings` (id, prefix, welcomechannel, modlogchannel, xpmultiplier, LevelupMessages) VALUES (@Id, '?', 0, 0, 1, @Levelup)";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
+            {
+                cmd.Parameters.AddWithValue("@Id", guildid);
+                cmd.Parameters.AddWithValue("@Levelup", levelup);
+                cmd.ExecuteNonQuery();
+            }
             database.CloseConnection();
         }
         public static void UpdateAllTables(ulong guilid)
         {
             var database = new ServerSettingsDB();
-            var str = string.Format("ALTER TABLE `{0}` ADD COLUMN `LevelupMessages` INT NOT NULL DEFAULT '1' AFTER `xpmultiplier`; ", guilid);
+            var str = $"ALTER TABLE `{guilid}` ADD COLUMN `LevelupMessages` INT NOT NULL DEFAULT '1' AFTER `xpmultiplier`; ";
             var table = database.FireCommand(str);
-
             database.CloseConnection();
         }
         public static void UpdateXprate(ulong guildid, int rate)
         {
             var database = new Database();
-            var str = string.Format("UPDATE `server_settings` SET xpmultiplier = '{1}' WHERE id = {0}", guildid, rate);
-            var table = database.FireCommand(str);
-
+            var query = "UPDATE `server_settings` SET xpmultiplier = @Rate WHERE id = @Id";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
+            {
+                cmd.Parameters.AddWithValue("@Rate", rate);
+                cmd.Parameters.AddWithValue("@Id", guildid);
+                cmd.ExecuteNonQuery();
+            }
             database.CloseConnection();
-
             return;
         }
         public static void AddWord(ulong guildid, string words)
         {
             var database = new ServerSettingsDB();
-            var str = string.Format("INSERT INTO `{0}_words` (words) VALUES ('{1}')", guildid, words);
-            var table = database.FireCommand(str);
-
+            var query = $"INSERT INTO `{guildid}_words` (words) VALUES (@Words)";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
+            {
+                cmd.Parameters.AddWithValue("@Words", words);
+                cmd.ExecuteNonQuery();
+            }
             database.CloseConnection();
-
-            
         }
         public static void AddRole(ulong guildid, ulong roleId, int level)
         {
             var database = new ServerSettingsDB();
-            var str = string.Format("INSERT INTO `{0}_roles` (roleId, level) VALUES ('{1}', {2})", guildid, roleId, level);
-            var table = database.FireCommand(str);
-
+            var query = $"INSERT INTO `{guildid}_roles` (roleId, level) VALUES (@RoleId, @Level)";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
+            {
+                cmd.Parameters.AddWithValue("@RoleId", roleId);
+                cmd.Parameters.AddWithValue("@Level", level);
+                cmd.ExecuteNonQuery();
+            }
             database.CloseConnection();
-
-            
         }
         public static void RemoveRole(ulong guildid, ulong roleId)
         {
             var database = new ServerSettingsDB();
-            var str = string.Format("DELETE FROM `{0}_roles` WHERE roleId = '{1}'", guildid, roleId);
-            var table = database.FireCommand(str);
-
+            var query = $"DELETE FROM `{guildid}_roles` WHERE roleId = @RoleId";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
+            {
+                cmd.Parameters.AddWithValue("@RoleId", roleId);
+                cmd.ExecuteNonQuery();
+            }
             database.CloseConnection();
-
-            
         }
         public static void DelWord(ulong guildid, string words)
         {
             var database = new ServerSettingsDB();
-            var str = string.Format("DELETE FROM `{0}_words` WHERE words = ('{1}')", guildid, words);
-            var table = database.FireCommand(str);
-
+            var query = $"DELETE FROM `{guildid}_words` WHERE words = @Words";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
+            {
+                cmd.Parameters.AddWithValue("@Words", words);
+                cmd.ExecuteNonQuery();
+            }
             database.CloseConnection();
-
-            
         }
         public static void UpdatePrefix(ulong guildid, string newprefix)
         {
             var database = new Database();
-            var str = string.Format("UPDATE `server_settings` SET prefix = ('{1}') WHERE id = {0}", guildid, newprefix);
-            var table = database.FireCommand(str);
-
+            var query = "UPDATE `server_settings` SET prefix = @Prefix WHERE id = @Id";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
+            {
+                cmd.Parameters.AddWithValue("@Prefix", newprefix);
+                cmd.Parameters.AddWithValue("@Id", guildid);
+                cmd.ExecuteNonQuery();
+            }
             database.CloseConnection();
-
             return;
         }
         public static Serversettings? GetSettings(ulong guildid)
         {
             var result = new List<Serversettings>();
             var database = new Database();
-            var str = $"SELECT * FROM `server_settings` WHERE id = {guildid}";
-            var table = database.FireCommand(str);
-
-            while (table.Read())
+            var query = "SELECT * FROM `server_settings` WHERE id = @Id";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
-                var prefix = table["prefix"] == DBNull.Value ? string.Empty : (string)table["prefix"];
-                var welcomechannel = table["welcomechannel"] == DBNull.Value ? 0ul : Convert.ToUInt64(table["welcomechannel"]);
-                var modlogchannel = table["modlogchannel"] == DBNull.Value ? 0ul : Convert.ToUInt64(table["modlogchannel"]);
-                var xprate = table["xpmultiplier"] == DBNull.Value ? 1 : (int)table["xpmultiplier"];
-                var levelupmessages = table["LevelupMessages"] == DBNull.Value ? 1 : (int)table["LevelupMessages"];
-
-                result.Add(new Serversettings
+                cmd.Parameters.AddWithValue("@Id", guildid);
+                using (var table = cmd.ExecuteReader())
                 {
-                    Prefix = prefix,
-                    ModlogChannel = modlogchannel,
-                    WelcomeChannel = welcomechannel,
-                    XpMultiplier = xprate,
-                    LevelupMessages = levelupmessages == 1
-                });
-            }
+                    while (table.Read())
+                    {
+                        var prefix = table["prefix"] == DBNull.Value ? string.Empty : (string)table["prefix"];
+                        var welcomechannel = table["welcomechannel"] == DBNull.Value ? 0ul : Convert.ToUInt64(table["welcomechannel"]);
+                        var modlogchannel = table["modlogchannel"] == DBNull.Value ? 0ul : Convert.ToUInt64(table["modlogchannel"]);
+                        var xprate = table["xpmultiplier"] == DBNull.Value ? 1 : (int)table["xpmultiplier"];
+                        var levelupmessages = table["LevelupMessages"] == DBNull.Value ? 1 : (int)table["LevelupMessages"];
 
+                        result.Add(new Serversettings
+                        {
+                            Prefix = prefix,
+                            ModlogChannel = modlogchannel,
+                            WelcomeChannel = welcomechannel,
+                            XpMultiplier = xprate,
+                            LevelupMessages = levelupmessages == 1
+                        });
+                    }
+                }
+            }
             database.CloseConnection();
             return result.FirstOrDefault();
         }
         public static void UpdateLevelupMessagesBool(ulong guildid, int boool)
         {
             var database = new Database();
-            var str = string.Format("UPDATE `server_settings` SET LevelupMessages = ('{1}') WHERE id = {0}", guildid, boool);
-            var table = database.FireCommand(str);
-
+            var query = "UPDATE `server_settings` SET LevelupMessages = @Bool WHERE id = @Id";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
+            {
+                cmd.Parameters.AddWithValue("@Bool", boool);
+                cmd.Parameters.AddWithValue("@Id", guildid);
+                cmd.ExecuteNonQuery();
+            }
             database.CloseConnection();
-
             return;
         }
         public static void SetWelcomeChannel(ulong id, ulong guildid)
         {
             var database = new Database();
-            var str = string.Format("UPDATE `server_settings` SET welcomechannel = '{1}' WHERE id = {0}", guildid, id);
-            var table = database.FireCommand(str);
-
+            var query = "UPDATE `server_settings` SET welcomechannel = @WelcomeChannel WHERE id = @Id";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
+            {
+                cmd.Parameters.AddWithValue("@WelcomeChannel", id);
+                cmd.Parameters.AddWithValue("@Id", guildid);
+                cmd.ExecuteNonQuery();
+            }
             database.CloseConnection();
-
-            
         }
         public static void SetModlogChannel(ulong id, ulong guildid)
         {
             var database = new Database();
-            var str = string.Format("UPDATE `server_settings` SET modlogchannel = '{1}' WHERE id = {0}", guildid, id);
-            var table = database.FireCommand(str);
-
+            var query = "UPDATE `server_settings` SET modlogchannel = @ModlogChannel WHERE id = @Id";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
+            {
+                cmd.Parameters.AddWithValue("@ModlogChannel", id);
+                cmd.Parameters.AddWithValue("@Id", guildid);
+                cmd.ExecuteNonQuery();
+            }
             database.CloseConnection();
-
-            
         }
         public static List<Serversettings> GetRole(ulong guildid, long level)
         {
             var result = new List<Serversettings>();
             var database = new ServerSettingsDB();
-            var str = string.Format("SELECT * FROM `{0}_roles` WHERE level = '{1}'", guildid, level);
-            var table = database.FireCommand(str);
-
-            while (table.Read())
+            var query = $"SELECT * FROM `{guildid}_roles` WHERE level = @Level";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
-                var roleId = Convert.ToUInt64(table["roleId"]);
-
-                result.Add(new Serversettings
+                cmd.Parameters.AddWithValue("@Level", level);
+                using (var table = cmd.ExecuteReader())
                 {
-                    roleId = roleId,
-                });
+                    while (table.Read())
+                    {
+                        var roleId = Convert.ToUInt64(table["roleId"]);
+                        result.Add(new Serversettings
+                        {
+                            roleId = roleId,
+                        });
+                    }
+                }
             }
-
             database.CloseConnection();
-
             return result;
         }
         public static List<Serversettings> GetRoles(ulong guildid)
         {
             var result = new List<Serversettings>();
             var database = new ServerSettingsDB();
-            var str = string.Format("SELECT * FROM `{0}_roles`", guildid);
-            var table = database.FireCommand(str);
-
-            while (table.Read())
+            var query = $"SELECT * FROM `{guildid}_roles`";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
-                var roleId = Convert.ToUInt64(table["roleId"]);
-                var roleLevel = (int)table["level"];
-
-                result.Add(new Serversettings
+                using (var table = cmd.ExecuteReader())
                 {
-                    roleId = roleId,
-                    roleLevel = roleLevel
-                });
+                    while (table.Read())
+                    {
+                        var roleId = Convert.ToUInt64(table["roleId"]);
+                        var roleLevel = (int)table["level"];
+                        result.Add(new Serversettings
+                        {
+                            roleId = roleId,
+                            roleLevel = roleLevel
+                        });
+                    }
+                }
             }
-
             database.CloseConnection();
-
             return result;
         }
         public static List<Serversettings> GetWords(ulong guildid)
         {
             var result = new List<Serversettings>();
             var database = new ServerSettingsDB();
-            var str = string.Format("SELECT * FROM `{0}_words`", guildid);
-            var table = database.FireCommand(str);
-
-            while (table.Read())
+            var query = $"SELECT * FROM `{guildid}_words`";
+            using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
-                var words = (string)table["words"];
-
-                result.Add(new Serversettings
+                using (var table = cmd.ExecuteReader())
                 {
-                    Words = words,
-                });
+                    while (table.Read())
+                    {
+                        var words = (string)table["words"];
+                        result.Add(new Serversettings
+                        {
+                            Words = words,
+                        });
+                    }
+                }
             }
-
             database.CloseConnection();
-
             return result;
         }
     }
