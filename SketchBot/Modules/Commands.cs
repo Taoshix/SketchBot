@@ -753,9 +753,10 @@ namespace Sketch_Bot.Modules
         [RequireContext(ContextType.Guild)]
         [SlashCommand("stats", "Display a user's level and token")]
         //[Alias("level","profile")]
-        public async Task SlashUserStatsAsync(IGuildUser user)
+        public async Task SlashUserStatsAsync(IGuildUser user = null)
         {
             await DeferAsync();
+            user ??= Context.User as IGuildUser;
             if (user.IsBot)
             {
                 await FollowupAsync("Bots don't have stats");
