@@ -132,6 +132,9 @@ namespace Sketch_Bot
             _client.ButtonExecuted += MyButtonHandler;
             _client.SelectMenuExecuted += MyMenuHandler;
             //_commands.CommandExecuted += OnCommandExecutedAsync;
+
+            _ = new Database(true);
+            _ = new ServerSettingsDB(true);
         }
 
         private static Task Logger(LogMessage message)

@@ -18,21 +18,43 @@ namespace Sketch_Bot
 
         private MySqlConnection? dbConnection;
         private Config config;
-        public ServerSettingsDB()
+        public ServerSettingsDB(bool shouldRunSetup = false)
         {
             config = Config.Load();
+            var stringBuilder = new MySqlConnectionStringBuilder
+            {
+                Server = config.DatabaseHost,
+                UserID = config.DatabaseUsername,
+                Password = config.DatabasePassword,
+                SslMode = MySqlSslMode.Disabled,
+                Pooling = false,
+                AllowPublicKeyRetrieval = true
+            };
 
-            MySqlConnectionStringBuilder stringBuilder = new MySqlConnectionStringBuilder();
-            stringBuilder.Server = config.DatabaseHost;
-            stringBuilder.UserID = config.DatabaseUsername;
-            stringBuilder.Password = config.DatabasePassword;
-            stringBuilder.Database = "Server settings";
-            stringBuilder.SslMode = MySqlSslMode.Disabled;
-            stringBuilder.Pooling = false;
-            stringBuilder.AllowPublicKeyRetrieval = true;
+            // Create the database if it doesn't exist
+            if (shouldRunSetup)
+            {
+                var connectionStringNoDb = stringBuilder.ToString();
+                using (var tempConnection = new MySqlConnection(connectionStringNoDb))
+                {
+                    tempConnection.Open();
+                    using (var cmd = new MySqlCommand("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'server settings'", tempConnection))
+                    {
+                        var exists = cmd.ExecuteScalar() != null;
+                        if (!exists)
+                        {
+                            using (var createCmd = new MySqlCommand("CREATE DATABASE `server settings`", tempConnection))
+                            {
+                                createCmd.ExecuteNonQuery();
+                                Console.WriteLine("Created new server settings database");
+                            }
+                        }
+                    }
+                }
+            }
 
+            stringBuilder.Database = "server settings";
             var connectionString = stringBuilder.ToString();
-
             dbConnection = new MySqlConnection(connectionString);
 
             try
