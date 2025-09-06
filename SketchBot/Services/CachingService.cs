@@ -240,12 +240,41 @@ namespace Sketch_Bot.Services
                 }
             }
         }
-        public void AddToBlacklist(ulong id)
+        public void AddToBlacklist(RestUser user, string reason, IUser blacklister)
         {
-            _blacklist.Add(id);
+            if (!_dbConnected)
+            {
+                Console.WriteLine("DB not connected");
+                return;
+            }
+            if (_blacklist.Contains(user.Id))
+            {
+                return;
+            }
+
+            Database.BlacklistAdd(user, reason, blacklister);
+            _cachedBlacklistChecks[user.Id] = new Blacklist
+            {
+                UserId = user.Id,
+                Username = user.Username,
+                Reason = reason,
+                Blacklister = HelperFunctions.CapitalizeFirstLetter(blacklister.Username)
+            };
+            _blacklist.Add(user.Id);
         }
         public void RemoveFromBlacklist(ulong id)
         {
+            if (!_dbConnected)
+            {
+                Console.WriteLine("DB not connected");
+                return;
+            }
+            if (!_blacklist.Contains(id))
+            {
+                return;
+            }
+            Database.BlacklistDel(id);
+            _cachedBlacklistChecks[id] = null;
             _blacklist.Remove(id);
         }
         public List<ulong> GetBlackList()

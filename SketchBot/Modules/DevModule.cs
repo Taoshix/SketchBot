@@ -301,14 +301,13 @@ namespace Sketch_Bot.Modules
                 return;
             }
 
-            Database.BlacklistAdd(user, reason, Context.User);
+            _cachingService.AddToBlacklist(user, reason, Context.User);
             var embed = new EmbedBuilder()
                 .WithTitle("Blacklist")
                 .WithDescription($"{user.Mention} has been blacklisted!\n\nReason: {reason}")
                 .WithColor(new Color(0, 0, 0))
                 .Build();
             await Context.Channel.SendMessageAsync("", false, embed);
-            _cachingService.AddToBlacklist(user.Id);
         }
         [RequireDevelopers]
         [Command("blacklistid", RunMode = RunMode.Async)]
@@ -343,8 +342,7 @@ namespace Sketch_Bot.Modules
                 return;
             }
 
-            Database.BlacklistAdd(user, reason, Context.User);
-
+            _cachingService.AddToBlacklist(user, reason, Context.User);
             var embed = new EmbedBuilder()
                 .WithTitle("Blacklist")
                 .WithDescription($"{user.Mention} has been blacklisted!\n\nReason: {reason}")
@@ -352,7 +350,6 @@ namespace Sketch_Bot.Modules
                 .Build();
 
             await Context.Channel.SendMessageAsync("", false, embed);
-            _cachingService.AddToBlacklist(user.Id);
         }
         [RequireDevelopers]
         [Command("unblacklist", RunMode = RunMode.Async)]
@@ -369,7 +366,6 @@ namespace Sketch_Bot.Modules
 
             if (blacklist.Contains(user.Id))
             {
-                Database.BlacklistDel(user.Id);
                 embedBuilder.Description = $"{user.Mention} has been removed from the blacklist!";
                 _cachingService.RemoveFromBlacklist(user.Id);
             }
@@ -643,7 +639,7 @@ namespace Sketch_Bot.Modules
                 .AddField("Blacklisted Users", _cachingService._blacklist.Count, true)
                 .AddField("Users in Database (Guilds/Users)", $"{guildsWithUsers} / {totalUsersInDatabase}", true)
                 .AddField("Bad Words (Guilds/Words)", $"{guildsWithBadWords} / {totalBadWords}", true)
-                .WithFooter(footer => footer.Text = "Use with caution, data might be outdated")
+                .WithCurrentTimestamp()
                 .Build();
             await ReplyAsync("", false, embed);
         }
