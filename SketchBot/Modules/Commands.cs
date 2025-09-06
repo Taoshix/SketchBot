@@ -724,8 +724,8 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            var blacklistCheck = _cachingService.GetBlacklistCheck(user.Id);
-            if (blacklistCheck != null)
+            var blacklistCheck = _cachingService.GetBlackList().Contains(user.Id);
+            if (blacklistCheck)
             {
                 await FollowupAsync("This user is blacklisted from using this command.");
                 return;
@@ -736,7 +736,7 @@ namespace Sketch_Bot.Modules
             };
             var displayName = user.Nickname ?? user.DisplayName;
             Database.CreateTable(Context.Guild.Id);
-            var userCheckResult = Database.CheckExistingUser(user);
+            var userCheckResult = _cachingService.IsInDatabase(Context.Guild.Id, user.Id);
 
             if (!userCheckResult)
             {
@@ -767,8 +767,8 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            var blacklistCheck = _cachingService.GetBlacklistCheck(user.Id);
-            if (blacklistCheck != null)
+            var blacklistCheck = _cachingService.GetBlackList().Contains(user.Id);
+            if (blacklistCheck)
             {
                 await FollowupAsync("This user is blacklisted from using this command.");
                 return;

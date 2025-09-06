@@ -17,7 +17,7 @@ namespace Sketch_Bot.Services
         public Dictionary<ulong, List<string>> _badWords = new Dictionary<ulong, List<string>>();
         public Dictionary<ulong, List<ulong>> _usersInDatabase = new Dictionary<ulong, List<ulong>>();
         public Dictionary<ulong, Serversettings> _cachedServerSettings = new Dictionary<ulong, Serversettings>();
-        public Dictionary<ulong, Blacklist> _cachedBlacklistChecks = new Dictionary<ulong, Blacklist>();
+        public Dictionary<ulong, Blacklist?> _cachedBlacklistChecks = new Dictionary<ulong, Blacklist?>();
         public List<ulong> _blacklist = new List<ulong>();
         public bool _dbConnected = true;
 
@@ -252,19 +252,16 @@ namespace Sketch_Bot.Services
         {
             return _blacklist;
         }
-        public Blacklist GetBlacklistCheck(ulong Id)
+        public Blacklist? GetBlacklistCheck(ulong Id)
         {
             if (_cachedBlacklistChecks.ContainsKey(Id))
             {
                 return _cachedBlacklistChecks[Id];
             }
             var blacklistCheck = Database.BlacklistCheck(Id);
-            if (blacklistCheck != null)
-            {
-                _cachedBlacklistChecks[Id] = blacklistCheck;
-                return blacklistCheck;
-            }
-            return null;
+            _cachedBlacklistChecks[Id] = blacklistCheck;
+            return blacklistCheck;
+
         }
         public List<string> GetBadWords(ulong Id)
         {

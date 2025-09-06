@@ -420,20 +420,20 @@ namespace Sketch_Bot.Modules
                 return;
             }
 
-            var result = _cachingService.GetBlacklistCheck(user.Id);
+            var blacklistCheck = _cachingService.GetBlacklistCheck(user.Id);
             var embedBuilder = new EmbedBuilder()
                 .WithColor(new Color(0, 0, 0))
                 .WithTitle("Blacklist Check");
 
-            if (result == null)
+            if (blacklistCheck == null)
             {
                 embedBuilder.Description = $"{user.Mention} is not on the blacklist!";
             }
             else
             {
                 embedBuilder.Description = $"{user.Mention} is blacklisted!" +
-                    $"\n\n*Reason:* {result.Reason}" +
-                    $"\n\nBlacklisted by {result.Blacklister}";
+                    $"\n\n*Reason:* {blacklistCheck.Reason}" +
+                    $"\n\nBlacklisted by {blacklistCheck.Blacklister}";
             }
 
             await Context.Channel.SendMessageAsync("", false, embedBuilder.Build());
@@ -449,20 +449,20 @@ namespace Sketch_Bot.Modules
             }
 
             var user = await Context.Client.Rest.GetUserAsync(id);
-            var result = _cachingService.GetBlacklistCheck(id);
+            var blacklistCheck = _cachingService.GetBlacklistCheck(id);
             var embedBuilder = new EmbedBuilder()
                 .WithColor(new Color(0, 0, 0))
                 .WithTitle("Blacklist Check");
 
-            if (result == null)
+            if (blacklistCheck == null)
             {
                 embedBuilder.Description = $"{user?.Username ?? id.ToString()} is not on the blacklist!";
             }
             else
             {
                 embedBuilder.Description = $"{user?.Username ?? id.ToString()} is blacklisted!" +
-                    $"\n\n*Reason:* {result.Reason}" +
-                    $"\n\nBlacklisted by {result.Blacklister}";
+                    $"\n\n*Reason:* {blacklistCheck.Reason}" +
+                    $"\n\nBlacklisted by {blacklistCheck.Blacklister}";
             }
 
             await Context.Channel.SendMessageAsync("", false, embedBuilder.Build());
@@ -631,12 +631,15 @@ namespace Sketch_Bot.Modules
             int guildsWithBadWords = _cachingService._badWords.Count;
             int totalBadWords = _cachingService._badWords.Values.Sum(list => list.Count);
 
+            int cachedBlacklistChecksCount = _cachingService._cachedBlacklistChecks.Count;
+            int cachedBlacklistChecksNullCount = _cachingService._cachedBlacklistChecks.Values.Count(x => x == null);
+
             var embed = new EmbedBuilder()
                 .WithTitle("Cache Status")
                 .WithColor(new Color(0, 255, 0))
                 .AddField("Database Connected", _cachingService._dbConnected ? "Yes" : "No", true)
                 .AddField("Cached Server Settings", _cachingService._cachedServerSettings.Count, true)
-                .AddField("Cached Blacklist Checks", _cachingService._cachedBlacklistChecks.Count, true)
+                .AddField("Cached Blacklist Checks", $"{cachedBlacklistChecksCount} (Not blacklisted: {cachedBlacklistChecksNullCount})", true)
                 .AddField("Blacklisted Users", _cachingService._blacklist.Count, true)
                 .AddField("Users in Database (Guilds/Users)", $"{guildsWithUsers} / {totalUsersInDatabase}", true)
                 .AddField("Bad Words (Guilds/Words)", $"{guildsWithBadWords} / {totalBadWords}", true)
