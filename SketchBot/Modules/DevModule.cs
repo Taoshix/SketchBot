@@ -622,5 +622,27 @@ namespace Sketch_Bot.Modules
                 await ReplyAsync($"{ex.GetType()}: {ex.Message}");
             }
         }
+        [RequireDevelopers]
+        [Command("cachestatus", RunMode = RunMode.Async)]
+        public async Task CacheStatusAsync()
+        {
+            int guildsWithUsers = _cachingService._usersInDatabase.Count;
+            int totalUsersInDatabase = _cachingService._usersInDatabase.Values.Sum(list => list.Count);
+            int guildsWithBadWords = _cachingService._badWords.Count;
+            int totalBadWords = _cachingService._badWords.Values.Sum(list => list.Count);
+
+            var embed = new EmbedBuilder()
+                .WithTitle("Cache Status")
+                .WithColor(new Color(0, 255, 0))
+                .AddField("Database Connected", _cachingService._dbConnected ? "Yes" : "No", true)
+                .AddField("Cached Server Settings", _cachingService._cachedServerSettings.Count, true)
+                .AddField("Cached Blacklist Checks", _cachingService._cachedBlacklistChecks.Count, true)
+                .AddField("Blacklisted Users", _cachingService._blacklist.Count, true)
+                .AddField("Users in Database (Guilds/Users)", $"{guildsWithUsers} / {totalUsersInDatabase}", true)
+                .AddField("Bad Words (Guilds/Words)", $"{guildsWithBadWords} / {totalBadWords}", true)
+                .WithFooter(footer => footer.Text = "Use with caution, data might be outdated")
+                .Build();
+            await ReplyAsync("", false, embed);
+        }
     }
 }

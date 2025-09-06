@@ -1027,14 +1027,12 @@ namespace Sketch_Bot.Modules
                 Title = "Server Settings"
             };
 
-            // Set author with guild name and icon
             embed.WithAuthor(author =>
             {
                 author.Name = Context.Guild.Name;
                 author.IconUrl = Context.Guild.IconUrl;
             });
 
-            // Set footer with guild id and timestamp
             embed.WithFooter(footer =>
             {
                 footer.Text = $"Guild ID: {Context.Guild.Id}";
@@ -1048,7 +1046,7 @@ namespace Sketch_Bot.Modules
             }
             else
             {
-                embed.AddField("Prefix", string.IsNullOrEmpty(settings.Prefix) ? "?" : settings.Prefix, true)
+                embed.AddField("Prefix", string.IsNullOrEmpty(settings.Prefix) ? "?" : settings.Prefix)
                     .AddField("Welcome Channel", settings.WelcomeChannel != 0 ? $"<#{settings.WelcomeChannel}>" : "Not set", true)
                     .AddField("Modlog Channel", settings.ModlogChannel != 0 ? $"<#{settings.ModlogChannel}>" : "Not set", true)
                     .AddField("Levelup Messages", settings.LevelupMessages ? "Enabled" : "Disabled", true);

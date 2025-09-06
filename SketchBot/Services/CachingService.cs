@@ -57,6 +57,7 @@ namespace Sketch_Bot.Services
                 ServerSettingsDB.CreateTableWords(guildId);
                 Console.WriteLine($"Created default settings for guild {guild?.Name ?? "Unknown"} ({guildId})");
             }
+            _cachedServerSettings[guildId] = settings;
             return settings;
         }
         public void SetLevelupMessages(ulong guildId, bool enabled)
