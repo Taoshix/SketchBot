@@ -101,7 +101,7 @@ namespace Sketch_Bot
             var table = database.FireCommand(str);
             database.CloseConnection();
         }
-        public static void MakeSettings(ulong guildid, int levelup)
+        public static Serversettings MakeSettings(ulong guildid, int levelup)
         {
             var database = new Database();
             var query = "INSERT INTO `server_settings` (id, prefix, welcomechannel, modlogchannel, xpmultiplier, LevelupMessages) VALUES (@Id, '?', 0, 0, 1, @Levelup)";
@@ -112,6 +112,16 @@ namespace Sketch_Bot
                 cmd.ExecuteNonQuery();
             }
             database.CloseConnection();
+            Serversettings settings = new Serversettings
+            {
+                GuildId = guildid,
+                Prefix = "?",
+                WelcomeChannel = 0,
+                ModlogChannel = 0,
+                XpMultiplier = 1,
+                LevelupMessages = levelup == 1
+            };
+            return settings;
         }
         public static void UpdateAllTables(ulong guilid)
         {
@@ -210,6 +220,7 @@ namespace Sketch_Bot
 
                     result.Add(new Serversettings
                     {
+                        GuildId = guildid,
                         Prefix = prefix,
                         ModlogChannel = modlogchannel,
                         WelcomeChannel = welcomechannel,
@@ -234,25 +245,25 @@ namespace Sketch_Bot
             database.CloseConnection();
             return;
         }
-        public static void SetWelcomeChannel(ulong id, ulong guildid)
+        public static void SetWelcomeChannel(ulong guildid, ulong channelId)
         {
             var database = new Database();
             var query = "UPDATE `server_settings` SET welcomechannel = @WelcomeChannel WHERE id = @Id";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
-                cmd.Parameters.AddWithValue("@WelcomeChannel", id);
+                cmd.Parameters.AddWithValue("@WelcomeChannel", channelId);
                 cmd.Parameters.AddWithValue("@Id", guildid);
                 cmd.ExecuteNonQuery();
             }
             database.CloseConnection();
         }
-        public static void SetModlogChannel(ulong id, ulong guildid)
+        public static void SetModlogChannel(ulong guildid, ulong channelId)
         {
             var database = new Database();
             var query = "UPDATE `server_settings` SET modlogchannel = @ModlogChannel WHERE id = @Id";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
-                cmd.Parameters.AddWithValue("@ModlogChannel", id);
+                cmd.Parameters.AddWithValue("@ModlogChannel", channelId);
                 cmd.Parameters.AddWithValue("@Id", guildid);
                 cmd.ExecuteNonQuery();
             }
@@ -272,7 +283,7 @@ namespace Sketch_Bot
                     var roleId = Convert.ToUInt64(table["roleId"]);
                     result.Add(new Serversettings
                     {
-                        roleId = roleId,
+                        RoleId = roleId,
                     });
                 }
             }
@@ -293,8 +304,8 @@ namespace Sketch_Bot
                     var roleLevel = (int)table["level"];
                     result.Add(new Serversettings
                     {
-                        roleId = roleId,
-                        roleLevel = roleLevel
+                        RoleId = roleId,
+                        RoleLevel = roleLevel
                     });
                 }
             }

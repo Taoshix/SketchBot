@@ -35,6 +35,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using TagLib.Asf;
 using Victoria;
 using static Sketch_Bot.Models.HelperFunctions;
 
@@ -288,8 +289,8 @@ namespace Sketch_Bot
                     var cachingService = _provider.GetRequiredService<CachingService>();
                     if (socketguild != null)
                     {
-                        cachingService.SetupPrefixes(socketguild);
-                        prefix = cachingService.GetPrefix(socketguild.Id);
+                        prefix = cachingService.GetServerSettings(socketguild.Id).Prefix;
+                        
                     }
                 }
                 if (msg.HasStringPrefix(prefix, ref pos) || msg.HasMentionPrefix(_client.CurrentUser, ref pos))
@@ -480,13 +481,8 @@ namespace Sketch_Bot
             try
             {
                 var guildId = socketGuild.Id;
-                var settings = ServerSettingsDB.GetSettings(guildId);
+                var settings = _provider.GetRequiredService<CachingService>().GetServerSettings(guildId);
                 int levelup = socketGuild.MemberCount >= 100 ? 0 : 1;
-
-                if (settings == null)
-                {
-                    ServerSettingsDB.MakeSettings(guildId, levelup);
-                }
 
                 ServerSettingsDB.CreateTableWords(guildId);
                 ServerSettingsDB.CreateTableRole(guildId);
@@ -583,13 +579,13 @@ namespace Sketch_Bot
 
                         if (rolesToAward.Count > 0)
                         {
-                            var filteredRoles = rolesToAward.Where(x => x.roleLevel <= newLevel).OrderByDescending(o => o.roleLevel);
-                            var roles = filteredRoles.Select(x => socketGuild.GetRole(x.roleId)).ToList();
+                            var filteredRoles = rolesToAward.Where(x => x.RoleLevel <= newLevel).OrderByDescending(o => o.RoleLevel);
+                            var roles = filteredRoles.Select(x => socketGuild.GetRole(x.RoleId)).ToList();
                             await guildUser.AddRolesAsync(roles);
                             newRoles.AddRange(roles.Where(r => r != null));
                         }
 
-                        bool showLevelupMsg = ServerSettingsDB.GetSettings(socketGuild.Id).LevelupMessages;
+                        bool showLevelupMsg = _provider.GetRequiredService<CachingService>().GetServerSettings(socketGuild.Id).LevelupMessages;
                         if (showLevelupMsg)
                         {
                             var embed = new EmbedBuilder().WithColor(new Color(0x4d006d));
@@ -630,11 +626,7 @@ namespace Sketch_Bot
                     Database.EnterUser(user);
 
                 // Get welcome channel
-                var settingsTable = ServerSettingsDB.GetSettings(user.Guild.Id);
-                if (settingsTable != null)
-                {
-                    ServerSettingsDB.MakeSettings(user.Guild.Id, user.Guild.MemberCount >= 100 ? 0 : 1);
-                }
+                var settingsTable = _provider.GetRequiredService<CachingService>().GetServerSettings(user.Guild.Id);
                 var welcomeChannel = settingsTable.WelcomeChannel;
                 if (welcomeChannel == 0)
                     return;

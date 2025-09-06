@@ -4,15 +4,16 @@ using System.Text;
 
 namespace Sketch_Bot.Models
 {
-    public class Serversettings
+    public class Serversettings()
     {
-        public string Prefix { get; set; }
-        public ulong WelcomeChannel { get; set; }
-        public string Words { get; set; }
-        public ulong ModlogChannel { get; set; }
-        public ulong roleId { get; set; }
-        public int roleLevel { get; set; }
-        public int XpMultiplier { get; set; }
-        public bool LevelupMessages { get; set; }
+        public ulong GuildId { get; set; } = 0;
+        public string Prefix { get; set; } = "?";
+        public ulong WelcomeChannel { get; set; } = 0;
+        public string Words { get; set; } = "";
+        public ulong ModlogChannel { get; set; } = 0;
+        public ulong RoleId { get; set; } = 0;
+        public int RoleLevel { get; set; } = 0;
+        public int XpMultiplier { get; set; } = 1;
+        public bool LevelupMessages { get; set; } = true;
     }
 }

@@ -1010,6 +1010,53 @@ namespace Sketch_Bot.Modules
 
         }
         [RequireContext(ContextType.Guild)]
+        [SlashCommand("serversettings", "View the server settings")]
+        public async Task ViewSettingsAsync()
+        {
+            await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
+            Serversettings? settings = _cachingService.GetServerSettings(Context.Guild.Id);
+
+            var embed = new EmbedBuilder()
+            {
+                Color = new Color(0, 0, 255),
+                Title = "Server Settings"
+            };
+
+            // Set author with guild name and icon
+            embed.WithAuthor(author =>
+            {
+                author.Name = Context.Guild.Name;
+                author.IconUrl = Context.Guild.IconUrl;
+            });
+
+            // Set footer with guild id and timestamp
+            embed.WithFooter(footer =>
+            {
+                footer.Text = $"Guild ID: {Context.Guild.Id}";
+                footer.IconUrl = Context.Guild.IconUrl;
+            });
+            embed.Timestamp = DateTimeOffset.Now;
+
+            if (settings == null)
+            {
+                embed.Description = "No settings found for this server.";
+            }
+            else
+            {
+                embed.AddField("Prefix", string.IsNullOrEmpty(settings.Prefix) ? "?" : settings.Prefix, true)
+                    .AddField("Welcome Channel", settings.WelcomeChannel != 0 ? $"<#{settings.WelcomeChannel}>" : "Not set", true)
+                    .AddField("Modlog Channel", settings.ModlogChannel != 0 ? $"<#{settings.ModlogChannel}>" : "Not set", true)
+                    .AddField("Levelup Messages", settings.LevelupMessages ? "Enabled" : "Disabled", true);
+            }
+
+            await FollowupAsync("", null, false, false, null, null, null, embed.Build());
+        }
+        [RequireContext(ContextType.Guild)]
         [SlashCommand("pay", "Pay someone else some of your tokens")]
         public async Task PayTokensAsync(IGuildUser usertopay, int amount, string comment = "No comment")
         {

@@ -40,7 +40,7 @@ namespace Sketch_Bot.Modules
             string prefix;
             try
             {
-                prefix = _service.GetPrefix(Context.Guild.Id);
+                prefix = _service.GetServerSettings(Context.Guild.Id).Prefix;
             }
             catch
             {

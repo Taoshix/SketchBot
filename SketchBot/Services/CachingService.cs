@@ -6,15 +6,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using TagLib.Asf;
+using static Mysqlx.Notice.Warning.Types;
 
 namespace Sketch_Bot.Services
 {
     public class CachingService
     {
         private DiscordSocketClient _client;
-        public Dictionary<ulong, string> _prefixes = new Dictionary<ulong, string>();
         public Dictionary<ulong, List<string>> _badWords = new Dictionary<ulong, List<string>>();
         public Dictionary<ulong, List<ulong>> _usersInDatabase = new Dictionary<ulong, List<ulong>>();
+        public Dictionary<ulong, Serversettings> _cachedServerSettings = new Dictionary<ulong, Serversettings>();
         public Dictionary<ulong, Blacklist> _cachedBlacklistChecks = new Dictionary<ulong, Blacklist>();
         public List<ulong> _blacklist = new List<ulong>();
         public bool _dbConnected = true;
@@ -34,42 +36,60 @@ namespace Sketch_Bot.Services
         {
             return _dbConnected;
         }
-        public void SetupPrefixes(SocketGuild guild)
+        public Serversettings? GetServerSettings(ulong guildId)
         {
             if (!_dbConnected)
             {
                 Console.WriteLine("DB not connected");
-                return;
+                return null;
             }
-
-            if (_prefixes.ContainsKey(guild.Id))
-                return;
-
-            int levelup = guild.MemberCount >= 100 ? 0 : 1;
-            try
+            if (_cachedServerSettings.ContainsKey(guildId))
             {
-                var serverSettings = ServerSettingsDB.GetSettings(guild.Id);
-                if (serverSettings != null)
-                {
-                    _prefixes.Add(guild.Id, serverSettings.Prefix);
-                    return;
-                }
-                else
-                {
-                    ServerSettingsDB.MakeSettings(guild.Id, levelup);
-                    Console.WriteLine($"Created default settings for guild {guild.Name} ({guild.Id})");
-                }
-
-                ServerSettingsDB.CreateTableRole(guild.Id);
-                ServerSettingsDB.CreateTableWords(guild.Id);
-                var gottenPrefix = ServerSettingsDB.GetSettings(guild.Id);
-                var prefix = gottenPrefix?.Prefix ?? "?";
-                _prefixes.Add(guild.Id, prefix);
+                return _cachedServerSettings[guildId];
             }
-            catch (Exception ex)
+            var settings = ServerSettingsDB.GetSettings(guildId);
+            if (settings == null)
             {
-                Console.WriteLine(ex);
+                var guild = _client.GetGuild(guildId);
+                int levelup = guild == null ? 0 : (guild.MemberCount >= 100 ? 0 : 1);
+                settings = ServerSettingsDB.MakeSettings(guildId, levelup);
+                ServerSettingsDB.CreateTableRole(guildId);
+                ServerSettingsDB.CreateTableWords(guildId);
+                Console.WriteLine($"Created default settings for guild {guild?.Name ?? "Unknown"} ({guildId})");
             }
+            return settings;
+        }
+        public void SetLevelupMessages(ulong guildId, bool enabled)
+        {
+            if (_cachedServerSettings.ContainsKey(guildId))
+            {
+                _cachedServerSettings[guildId].LevelupMessages = enabled;
+            }
+            ServerSettingsDB.UpdateLevelupMessagesBool(guildId, enabled ? 1 : 0);
+        }
+        public void SetWelcomeChannel(ulong guildId, ulong channelId)
+        {
+            if (_cachedServerSettings.ContainsKey(guildId))
+            {
+                _cachedServerSettings[guildId].WelcomeChannel = channelId;
+            }
+            ServerSettingsDB.SetWelcomeChannel(guildId, channelId);
+        }
+        public void SetModlogChannel(ulong guildId, ulong channelId)
+        {
+            if (_cachedServerSettings.ContainsKey(guildId))
+            {
+                _cachedServerSettings[guildId].ModlogChannel = channelId;
+            }
+            ServerSettingsDB.SetModlogChannel(guildId, channelId);
+        }
+        public void SetXpMultiplier(ulong guildId, int multiplier)
+        {
+            if (_cachedServerSettings.ContainsKey(guildId))
+            {
+                _cachedServerSettings[guildId].XpMultiplier = multiplier;
+            }
+            ServerSettingsDB.UpdateXprate(guildId, multiplier);
         }
         public void SetupUserInDatabase(ulong guildId, SocketGuildUser user)
         {
@@ -249,22 +269,13 @@ namespace Sketch_Bot.Services
         {
             return _badWords[Id];
         }
-        public string GetPrefix(ulong Id)
-        {
-            SetupPrefixes(_client.GetGuild(Id));
-            return _prefixes[Id];
-        }
-        public void UpdatePrefix(ulong Id, string prefix)
-        {
-            _prefixes[Id] = prefix;
-        }
         public void UpdateBadWords(ulong Id, List<string> words)
         {
             _badWords[Id] = words;
         }
         public void ClearCache()
         {
-            _prefixes.Clear();
+            _cachedServerSettings.Clear();
             _badWords.Clear();
             _usersInDatabase.Clear();
             _blacklist.Clear();

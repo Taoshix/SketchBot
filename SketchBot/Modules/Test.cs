@@ -115,7 +115,7 @@ namespace Sketch_Bot.Modules
                 return;
             }
             var channel = Context.Channel;
-            ServerSettingsDB.SetWelcomeChannel(channel.Id, Context.Guild.Id);
+            _cachingService.SetWelcomeChannel(Context.Guild.Id, channel.Id);
             await FollowupAsync("This will be the new welcome channel 👍");
         }
         [RequireContext(ContextType.Guild)]
@@ -129,7 +129,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            ServerSettingsDB.SetWelcomeChannel(0, Context.Guild.Id);
+            _cachingService.SetWelcomeChannel(Context.Guild.Id, 0);
             await FollowupAsync("Welcome messages has been disabled");
         }
         [RequireContext(ContextType.Guild)]
@@ -142,7 +142,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            ServerSettingsDB.UpdateLevelupMessagesBool(Context.Guild.Id, 0);
+            _cachingService.SetLevelupMessages(Context.Guild.Id, false);
             await FollowupAsync("Levelup messages are now disabled!");
         }
         [RequireContext(ContextType.Guild)]
@@ -155,7 +155,7 @@ namespace Sketch_Bot.Modules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            ServerSettingsDB.UpdateLevelupMessagesBool(Context.Guild.Id, 1);
+            _cachingService.SetLevelupMessages(Context.Guild.Id, true);
             await FollowupAsync("Levelup messages are now enabled!");
         }
         [RequireContext(ContextType.Guild)]
@@ -171,7 +171,7 @@ namespace Sketch_Bot.Modules
             if (((IGuildUser) Context.User).GuildPermissions.ManageChannels)
             {
                 var channel = Context.Channel;
-                ServerSettingsDB.SetModlogChannel(channel.Id, Context.Guild.Id);
+                _cachingService.SetModlogChannel(Context.Guild.Id, channel.Id);
                 await FollowupAsync("This will be the new mod-log channel 👍");
             }
             else
@@ -191,7 +191,7 @@ namespace Sketch_Bot.Modules
             }
             if (((IGuildUser) Context.User).GuildPermissions.ManageChannels || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
-                ServerSettingsDB.SetModlogChannel(0, Context.Guild.Id);
+                _cachingService.SetModlogChannel(Context.Guild.Id, 0);
                 await FollowupAsync("Mod-log disabled");
             }
             else

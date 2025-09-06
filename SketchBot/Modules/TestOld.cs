@@ -32,13 +32,13 @@ namespace Sketch_Bot.Modules
     {
         private CommandService _service;
         private MemeService _service2;
-        private CachingService _service3;
+        private CachingService _cachingService;
 
         public TestOld(CommandService service, MemeService service2, CachingService service3)           /* Create a constructor for the commandservice dependency */
         {
             _service = service;
             _service2 = service2;
-            _service3 = service3;
+            _cachingService = service3;
         }
         [RequireUserPermission(GuildPermission.ManageRoles)]
         [Command("addrole")]
@@ -86,7 +86,7 @@ namespace Sketch_Bot.Modules
         {
             if (Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
-                string prefix = ServerSettingsDB.GetSettings(Context.Guild.Id).Prefix;  /* put your chosen prefix here */
+                string prefix = _cachingService.GetServerSettings(Context.Guild.Id).Prefix;  /* put your chosen prefix here */
                 var builder = new EmbedBuilder()
                 {
                     Color = new Discord.Color(114, 137, 218),
@@ -182,7 +182,7 @@ namespace Sketch_Bot.Modules
             if (((IGuildUser)Context.User).GuildPermissions.ManageChannels || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
                 var channel = Context.Channel;
-                ServerSettingsDB.SetWelcomeChannel(channel.Id, Context.Guild.Id);
+                _cachingService.SetWelcomeChannel(Context.Guild.Id, channel.Id);
                 await ReplyAsync("This will be the new welcome channel 👍");
             }
             else
@@ -197,7 +197,7 @@ namespace Sketch_Bot.Modules
             if (((IGuildUser)Context.User).GuildPermissions.ManageChannels || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
                 var channel = Context.Channel;
-                ServerSettingsDB.SetWelcomeChannel(0, Context.Guild.Id);
+                _cachingService.SetWelcomeChannel(Context.Guild.Id, 0);
                 await ReplyAsync("Welcome messages has been disabled");
             }
             else
@@ -217,9 +217,9 @@ namespace Sketch_Bot.Modules
             else
             {
                 await ReplyAsync("The word `" + word + "` has been banned and will now be deleted when written");
-                var words = _service3.GetBadWords(Context.Guild.Id);
+                var words = _cachingService.GetBadWords(Context.Guild.Id);
                 words.Add(word);
-                _service3.UpdateBadWords(Context.Guild.Id, words);
+                _cachingService.UpdateBadWords(Context.Guild.Id, words);
                 ServerSettingsDB.AddWord(Context.Guild.Id, word);
             }
         }
@@ -235,9 +235,9 @@ namespace Sketch_Bot.Modules
             else
             {
                 ServerSettingsDB.DelWord(Context.Guild.Id, word);
-                var words = _service3.GetBadWords(Context.Guild.Id);
+                var words = _cachingService.GetBadWords(Context.Guild.Id);
                 words.Remove(word);
-                _service3.UpdateBadWords(Context.Guild.Id, words);
+                _cachingService.UpdateBadWords(Context.Guild.Id, words);
                 await ReplyAsync("The word `" + word + "` has been unbanned and will no longer be deleted when written");
             }
         }
@@ -267,7 +267,7 @@ namespace Sketch_Bot.Modules
         [Command("welcomechannel", RunMode = RunMode.Async)]
         public async Task welcomechannel()
         {
-            var serverSettings = ServerSettingsDB.GetSettings(Context.Guild.Id);
+            var serverSettings = _cachingService.GetServerSettings(Context.Guild.Id);
             var channel = serverSettings.WelcomeChannel;
             if (channel == 0)
             {
@@ -283,7 +283,7 @@ namespace Sketch_Bot.Modules
         [Command("modlogchannel", RunMode = RunMode.Async)]
         public async Task modlogchannel()
         {
-            var serverSettings = ServerSettingsDB.GetSettings(Context.Guild.Id);
+            var serverSettings = _cachingService.GetServerSettings(Context.Guild.Id);
             var channel = serverSettings.ModlogChannel;
             if (channel == 0)
             {
@@ -340,14 +340,14 @@ namespace Sketch_Bot.Modules
         [Command("DisableLevelMsg", RunMode = RunMode.Async)]
         public async Task disableleveling()
         {
-            ServerSettingsDB.UpdateLevelupMessagesBool(Context.Guild.Id, 0);
+            _cachingService.SetLevelupMessages(Context.Guild.Id, false);
             await ReplyAsync("Levelup messages are now disabled!");
         }
         [RequireContext(ContextType.Guild)]
         [Command("EnableLevelMsg", RunMode = RunMode.Async)]
         public async Task enableleveling()
         {
-            ServerSettingsDB.UpdateLevelupMessagesBool(Context.Guild.Id, 1);
+            _cachingService.SetLevelupMessages(Context.Guild.Id, true);
             await ReplyAsync("Levelup messages are now enabled!");
         }
         [RequireContext(ContextType.Guild)]
@@ -357,7 +357,7 @@ namespace Sketch_Bot.Modules
             if (((IGuildUser) Context.User).GuildPermissions.ManageChannels || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
                 var channel = Context.Channel;
-                ServerSettingsDB.SetModlogChannel(channel.Id, Context.Guild.Id);
+                _cachingService.SetModlogChannel(Context.Guild.Id, channel.Id);
                 await ReplyAsync("This will be the new mod-log channel 👍");
             }
             else
@@ -397,7 +397,7 @@ namespace Sketch_Bot.Modules
         {
             if (((IGuildUser) Context.User).GuildPermissions.ManageChannels || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
-                ServerSettingsDB.SetModlogChannel(0, Context.Guild.Id);
+                _cachingService.SetModlogChannel(Context.Guild.Id, 0);
                 await ReplyAsync("Mod-log disabled");
             }
             else
@@ -459,7 +459,7 @@ namespace Sketch_Bot.Modules
             }
             catch(IndexOutOfRangeException)
             {
-                await ReplyAsync($"Usage: {ServerSettingsDB.GetSettings(Context.Guild.Id).Prefix ?? "?"}meme <template name>, <top text>, <bottom text>\nEach argument is seperated by comma ,\nhttps://api.imgflip.com/popular_meme_ids for a list of templates");
+                await ReplyAsync($"Usage: {_cachingService.GetServerSettings(Context.Guild.Id).Prefix ?? "?"}meme <template name>, <top text>, <bottom text>\nEach argument is seperated by comma ,\nhttps://api.imgflip.com/popular_meme_ids for a list of templates");
             }
 
         }
