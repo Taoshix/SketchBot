@@ -594,7 +594,7 @@ namespace Sketch_Bot.Modules
                     .AddField($"Forum Channels ({forumChannels.Count()})", forumChannelsList, true)
                     .AddField($"Forum Threads ({forumThreads.Count()})", forumThreadsList, true)
                     .AddField($"Media Channels ({mediaChannels.Count()})", mediaChannelsList, true)
-                    .AddField($"Roles ({guild.Roles.Count})", guild.Roles.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.Roles.OrderByDescending(x => x.Position).Select(x => x.Mention), 1024, guild.Roles.Count > 10 ? " " : "\n"))
+                    .AddField($"Roles ({guild.Roles.Count})", guild.Roles.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.Roles.OrderByDescending(x => x.Position).Select(x => x.Name), 1024, guild.Roles.Count > 10 ? " " : "\n"))
                     .AddField("Verification Level", guild.VerificationLevel.ToString(), true)
                     .AddField("Boost Level", $"{guild.PremiumTier} ({guild.PremiumSubscriptionCount} boosts)", true)
                     .AddField("Region", string.IsNullOrWhiteSpace(guild.VoiceRegionId) ? "None" : guild.VoiceRegionId, true)
