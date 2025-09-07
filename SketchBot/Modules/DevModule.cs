@@ -581,6 +581,10 @@ namespace Sketch_Bot.Modules
                         guild.Emotes.Count == 0
                             ? "None"
                             : HelperFunctions.JoinWithLimit(guild.Emotes.Select(x => x.ToString()), 1024, ""), true)
+                    .AddField($"Stickers ({guild.Stickers.Count})",
+                        guild.Stickers.Count == 0
+                            ? "None"
+                            : string.Join(", ", guild.Stickers.Select(s => s.Name)), true)
                     .AddField($"Text Channels ({textChannelsAndThreadsEnumerable.Count()})",
                         guild.TextChannels.Count == 0
                             ? "None"
