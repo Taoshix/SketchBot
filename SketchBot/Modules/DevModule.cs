@@ -630,6 +630,9 @@ namespace Sketch_Bot.Modules
             int cachedBlacklistChecksCount = _cachingService._cachedBlacklistChecks.Count;
             int cachedBlacklistChecksNullCount = _cachingService._cachedBlacklistChecks.Values.Count(x => x == null);
 
+            long memoryBytes = Process.GetCurrentProcess().PrivateMemorySize64;
+            double memoryMB = memoryBytes / (1024.0 * 1024.0);
+
             var embed = new EmbedBuilder()
                 .WithTitle("Cache Status")
                 .WithColor(new Color(0, 255, 0))
@@ -640,8 +643,9 @@ namespace Sketch_Bot.Modules
                 .AddField("Users in Database (Guilds/Users)", $"{guildsWithUsers} / {totalUsersInDatabase}", true)
                 .AddField("Bad Words (Guilds/Words)", $"{guildsWithBadWords} / {totalBadWords}", true)
                 .WithCurrentTimestamp()
-                .Build();
-            await ReplyAsync("", false, embed);
+                .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB");
+
+            await ReplyAsync("", false, embed.Build());
         }
     }
 }
