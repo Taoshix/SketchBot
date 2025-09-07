@@ -957,7 +957,7 @@ namespace Sketch_Bot.Modules
             else
             {
                 var builder = new ComponentBuilder()
-                    .WithButton("Claim Daily Tokens", $"daily-confirm:{Context.User.Id}:{user.Id}", ButtonStyle.Primary);
+                    .WithButton("Claim Daily Tokens", $"daily-confirm:{Context.User.Id}:{user.Id}", ButtonStyle.Primary, emote: new Emoji("💰"));
                 var promptMessage = await FollowupAsync(
                     $"You would have gotten 4x more tokens if you have voted today. See /upvote\nDo you want to claim your daily anyway?",
                     components: builder.Build()
