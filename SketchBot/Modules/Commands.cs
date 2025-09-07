@@ -963,11 +963,14 @@ namespace Sketch_Bot.Modules
                     components: builder.Build()
                 );
                 await Task.Delay(8000);
-                if (!(promptMessage.Components.FirstOrDefault() as ButtonComponent).IsDisabled)
+                var actionRow = promptMessage.Components.FirstOrDefault() as ActionRowComponent;
+                var button = actionRow?.Components.FirstOrDefault() as ButtonComponent;
+                if (!button.IsDisabled)
                 {
-                    var disabledBuilder = new ComponentBuilder().WithButton("Claim Daily Tokens", $"daily-confirm:{Context.User.Id}:{user.Id}", ButtonStyle.Primary, disabled: true);
+                    var disabledBuilder = new ComponentBuilder().WithButton("Claim Daily Tokens", $"daily-confirm:{Context.User.Id}:{user.Id}", ButtonStyle.Primary, emote: new Emoji("💰"), disabled: true);
                     await promptMessage.ModifyAsync(msg =>
                     {
+                        msg.Content = "Prompt Expired.";
                         msg.Components = disabledBuilder.Build();
                     });
                 }
@@ -997,7 +1000,9 @@ namespace Sketch_Bot.Modules
                 .WithButton("Confirm Reset", $"reset-user:{Context.User.Id}:{user.Id}", ButtonStyle.Danger, nukeEmoji);
             var promptMessage = await FollowupAsync("You sure?", components: builder.Build());
             await Task.Delay(8000);
-            if (!(promptMessage.Components.FirstOrDefault() as ButtonComponent).IsDisabled)
+            var actionRow = promptMessage.Components.FirstOrDefault() as ActionRowComponent;
+            var button = actionRow?.Components.FirstOrDefault() as ButtonComponent;
+            if (!button.IsDisabled)
             {
                 var disabledBuilder = new ComponentBuilder()
                     .WithButton("Confirm Reset", $"reset-user:{Context.User.Id}:{user.Id}", ButtonStyle.Danger, nukeEmoji, disabled: true);
