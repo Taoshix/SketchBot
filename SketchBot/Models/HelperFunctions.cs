@@ -337,5 +337,11 @@ namespace Sketch_Bot.Models
             }
             return result.ToString();
         }
+        public static string SafeField(object value)
+        {
+            if (value == null) return "N/A";
+            var str = value.ToString();
+            return string.IsNullOrWhiteSpace(str) ? "N/A" : str;
+        }
     }
 }

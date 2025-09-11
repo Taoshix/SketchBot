@@ -12,7 +12,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using UrbanDictionnet;
 using System.Diagnostics;
-using Discord.Addons.Interactive;
 using Discord.Addons.Preconditions;
 using Sketch_Bot.Custom_Preconditions;
 using Microsoft.CodeAnalysis.CSharp.Scripting;

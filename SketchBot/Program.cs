@@ -1,5 +1,4 @@
 ﻿using Discord;
-using Discord.Addons.Interactive;
 using Discord.Audio;
 using Discord.Commands;
 using Discord.Interactions;
@@ -7,12 +6,14 @@ using Discord.Net;
 using Discord.Net.Rest;
 using Discord.Rest;
 using Discord.WebSocket;
+using Fergun.Interactive;
 using JikanDotNet;
 using Microsoft.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 using MoreLinq;
 using MoreLinq.Extensions;
 using MySqlX.XDevAPI;
@@ -51,6 +52,7 @@ namespace Sketch_Bot
 
         private readonly DiscordSocketClient _client;
         private readonly InteractionService _interactionService;
+        private readonly InteractiveService _interactive;
 
         private readonly CommandService _commands;
         private ServiceProvider _provider;
@@ -81,8 +83,12 @@ namespace Sketch_Bot
                 {
                     x.SelfDeaf = false;
                 })
-                .AddSingleton<AudioService>()
+                .AddSingleton(new InteractiveConfig 
+                { 
+                    DefaultTimeout = TimeSpan.FromMinutes(5)  
+                })
                 .AddSingleton<InteractiveService>()
+                .AddSingleton<AudioService>()
                 .AddSingleton<TimerService>()
                 .AddSingleton<StatService>()
                 .AddSingleton<MemeService>()
@@ -115,6 +121,7 @@ namespace Sketch_Bot
             _provider.GetRequiredService<StatService>().AddCache(_provider.GetRequiredService<CachingService>());
             _interactionService.AddTypeConverter<Calculation>(new CalculationConverter());
             _interactionService.AddTypeConverter<ulong>(new UlongConverter());
+            _interactive = _provider.GetRequiredService<InteractiveService>();
 
             _client.Log += Logger;
             _commands.Log += Logger;
@@ -130,7 +137,7 @@ namespace Sketch_Bot
             _client.MessageReceived += HandleCommandAsync;
             _client.UserUpdated += UpdateProfilePictures;
             _client.InteractionCreated += HandleInteraction;
-            _client.ButtonExecuted += MyButtonHandler;
+            _interactive.Log += Logger;
             _client.SelectMenuExecuted += MyMenuHandler;
             //_commands.CommandExecuted += OnCommandExecutedAsync;
 
@@ -175,6 +182,9 @@ namespace Sketch_Bot
         }
         async Task HandleInteraction(SocketInteraction arg)
         {
+            if (_interactive.IsManaged(arg))
+                return;
+
             var context = new SocketInteractionContext(_client, arg);
             if (context.User.IsBot) return;
 
@@ -314,94 +324,6 @@ namespace Sketch_Bot
                 }
             });
             return Task.CompletedTask;
-        }
-        public async Task MyButtonHandler(SocketMessageComponent component)
-        {
-            var baseId = component.Data.CustomId.Split(':').FirstOrDefault();
-            var args = component.Data.CustomId.Split(':').Skip(1).ToArray();
-            switch (baseId)
-            {
-                case "reset-user":
-                    if (!_provider.GetRequiredService<CachingService>()._dbConnected)
-                    {
-                        await component.RespondAsync("Database is not connected!");
-                        return;
-                    }
-                    if (component.User.Id != ulong.Parse(args.FirstOrDefault()))
-                    {
-                        await component.RespondAsync("You can only reset your own user data!", ephemeral: true);
-                        return;
-                    }
-                    SocketGuildUser target = _client.Guilds.FirstOrDefault(x => x.Id == component.GuildId).GetUser(ulong.Parse(args[1]));
-                    Database.DeleteUser(target);
-                    Database.EnterUser(target);
-                    await component.RespondAsync($"{target.Mention} Your user data has been reset by {component.User.Mention}!");
-                    await component.Message.ModifyAsync(msg =>
-                    {
-                        msg.Components = new ComponentBuilder()
-                            .WithButton("Reset User", $"reset-user:{component.User.Id}:{target.Id}", ButtonStyle.Danger, disabled: true)
-                            .Build();
-                    });
-                    break;
-                case "daily-confirm":
-                    if (!_provider.GetRequiredService<CachingService>()._dbConnected)
-                    {
-                        await component.RespondAsync("Database is not connected!");
-                        return;
-                    }
-                    if (component.User.Id != ulong.Parse(args.FirstOrDefault()))
-                    {
-                        await component.RespondAsync("If you want to claim your own daily tokens do /daily", ephemeral: true);
-                        return;
-                    }
-                    
-                    var user = await _client.GetUserAsync(ulong.Parse(args.Last())) as SocketGuildUser;
-                    user ??= _client.Guilds.FirstOrDefault(x => x.Id == component.GuildId).GetUser(ulong.Parse(args.Last()));
-                    if (user == null)
-                    {
-                        await component.FollowupAsync("Error Fetching User!", ephemeral: true);
-                        return;
-                    }
-                    
-                    var userStats = Database.GetUserStats(user);
-                    DateTime now = DateTime.Now;
-                    DateTime daily = userStats.Daily;
-                    int difference = DateTime.Compare(daily, now);
-
-                    bool canClaim = (userStats?.Daily.ToString() == "0001-01-01 00:00:00") ||
-                                    (daily.DayOfYear < now.DayOfYear && difference < 0) ||
-                                    (difference >= 0) ||
-                                    (daily.Year < now.Year);
-
-                    if (!canClaim)
-                    {
-                        TimeSpan diff = now - daily;
-                        TimeSpan di = new TimeSpan(23 - diff.Hours, 60 - diff.Minutes, 60 - diff.Seconds);
-                        await component.RespondAsync($"Your tokens refresh in {di} !", ephemeral: true);
-                        return;
-                    }
-                    int dailyReward = 50;
-                    int giveBonus = rand.Next(dailyReward);
-                    // Give a bonus if given to someone else
-                    if (user.Id != component.User.Id)
-                    {
-                        dailyReward += giveBonus;
-                    }
-                    Database.UpdateDailyTimestamp(component.User as IGuildUser);
-                    Database.AddTokens(user, dailyReward);
-                    await component.RespondAsync($"{user.Mention} You have received {dailyReward} tokens for your daily reward!{(user.Id != component.User.Id ? $" (+{giveBonus})" : "")}");
-                    await component.Message.ModifyAsync(msg =>
-                    {
-                        msg.Components = new ComponentBuilder()
-                            .WithButton("Claim Daily Tokens", $"daily-confirm:{component.User.Id}:{user.Id}", ButtonStyle.Success, disabled: true)
-                            .Build();
-                    });
-                    break;
-                default:
-                    await component.RespondAsync("Unknown button interaction!", ephemeral: true);
-                    Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture)}Unknown button interaction: " + component.Data.CustomId);
-                    break;
-            }
         }
         public async Task MyMenuHandler(SocketMessageComponent arg)
         {
