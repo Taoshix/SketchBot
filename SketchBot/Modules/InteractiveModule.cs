@@ -131,11 +131,20 @@ namespace Sketch_Bot.Modules
                 foreach (var item in data.List)
                 {
                     var builder = new PageBuilder()
-                        .WithTitle(item.Word)
-                        .AddField("Definition", item.Definition)
-                        .AddField("Example", item.Example)
-                        .AddField("Rating", $"\n\n\\👍{item.ThumbsUp} \\👎{item.ThumbsDown}");
+                        .WithAuthor(new EmbedAuthorBuilder
+                        {
+                            Name = item.Word,
+                            Url = item.Permalink
+                        })
+                        .AddField("Definition", string.IsNullOrEmpty(item.Definition) ? "N/A" : item.Definition)
+                        .AddField("Example", string.IsNullOrEmpty(item.Example) ? "N/A" : item.Example)
+                        .AddField("Rating", $"\n\n\\👍{item?.ThumbsUp ?? 0} \\👎{item?.ThumbsDown ?? 0}");
                     pageBuilders.Add(builder);
+                }
+                if (pageBuilders.Count == 0)
+                {
+                    await FollowupAsync($"No results found for `{word}`");
+                    return;
                 }
                 var paginator = new StaticPaginatorBuilder()
                     .AddUser(Context.User)
