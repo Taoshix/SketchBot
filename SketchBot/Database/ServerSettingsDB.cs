@@ -33,16 +33,24 @@ namespace Sketch_Bot
             // Create the database if it doesn't exist
             if (shouldRunSetup)
             {
-                var connectionStringNoDb = stringBuilder.ToString();
-                using var tempConnection = new MySqlConnection(connectionStringNoDb);
-                tempConnection.Open();
-                using var cmd = new MySqlCommand("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'server settings'", tempConnection);
-                var exists = cmd.ExecuteScalar() != null;
-                if (!exists)
+                try
                 {
-                    using var createCmd = new MySqlCommand("CREATE DATABASE `server settings`", tempConnection);
-                    createCmd.ExecuteNonQuery();
-                    Console.WriteLine("Created new server settings database");
+                    var connectionStringNoDb = stringBuilder.ToString();
+                    using var tempConnection = new MySqlConnection(connectionStringNoDb);
+                    tempConnection.Open();
+                    using var cmd = new MySqlCommand("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'server settings'", tempConnection);
+                    var exists = cmd.ExecuteScalar() != null;
+                    if (!exists)
+                    {
+                        using var createCmd = new MySqlCommand("CREATE DATABASE `server settings`", tempConnection);
+                        createCmd.ExecuteNonQuery();
+                        Console.WriteLine("Created new server settings database");
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error during database setup: {ex.Message}");
                 }
             }
 

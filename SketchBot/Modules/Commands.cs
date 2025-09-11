@@ -945,14 +945,13 @@ namespace Sketch_Bot.Modules
                     _rand = new Random();
                     int giveBonus = _rand.Next(amount * 2);
                     amount += giveBonus;
-                    await FollowupAsync($"You have given {user.Nickname ?? user.Username} {amount} daily tokens! (4x vote bonus) (+{giveBonus} generosity bonus)");
-                    Database.AddTokens(user, amount);
+                    await FollowupAsync($"You have given {user.Nickname ?? user.Username} {amount} daily tokens! (4x vote bonus) (+{giveBonus} generosity bonus)");   
                 }
                 else
                 {
-                    Database.AddTokens(user, amount);
                     await FollowupAsync($"You received your {amount} tokens! (4x vote bonus)");
                 }
+                Database.AddTokens(user, amount);
             }
             else
             {
