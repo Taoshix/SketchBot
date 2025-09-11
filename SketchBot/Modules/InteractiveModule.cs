@@ -43,6 +43,7 @@ namespace Sketch_Bot.Modules
         [SlashCommand("paginator", "Makes a paginator using your input seperated by comma")]
         public async Task PaginateAsync(string input)
         {
+            await DeferAsync();
             string[] words = input.Split(",");
             if (words.Length == 0 || string.IsNullOrWhiteSpace(words[0]))
             {
@@ -63,7 +64,7 @@ namespace Sketch_Bot.Modules
                 .WithPages(pages)
                 .WithFooter(PaginatorFooter.PageNumber)
                 .Build();
-            await _interactive.SendPaginatorAsync(paginator, Context.Interaction, TimeSpan.FromMinutes(5));
+            await _interactive.SendPaginatorAsync(paginator, Context.Interaction, TimeSpan.FromMinutes(5), InteractionResponseType.DeferredChannelMessageWithSource);
 
         }
 
@@ -71,6 +72,8 @@ namespace Sketch_Bot.Modules
         [SlashCommand("rolemembers", "Displays the members of a role")]
         public async Task RoleMembersAsync(SocketRole role)
         {
+            await DeferAsync();
+            await role.Guild.DownloadUsersAsync();
             var members = role.Members.OrderBy(o => o.DisplayName).Select(x => x.Mention).ToList();
             if (members.Count <= 0)
             {
@@ -112,12 +115,13 @@ namespace Sketch_Bot.Modules
                 .WithPages(pageBuilders)
                 .WithFooter(PaginatorFooter.PageNumber)
                 .Build();
-            await _interactive.SendPaginatorAsync(paginator, Context.Interaction, TimeSpan.FromMinutes(5));
+            await _interactive.SendPaginatorAsync(paginator, Context.Interaction, TimeSpan.FromMinutes(5), InteractionResponseType.DeferredChannelMessageWithSource);
 
         }
         [SlashCommand("urban", "Search UrbanDictionary for the input term")]
         public async Task UrbanAsync(string word)
         {
+            await DeferAsync();
             try
             {
                 UrbanService client = new UrbanService();
@@ -137,7 +141,7 @@ namespace Sketch_Bot.Modules
                     .WithPages(pageBuilders)
                     .WithFooter(PaginatorFooter.PageNumber)
                     .Build();
-                await _interactive.SendPaginatorAsync(paginator, Context.Interaction, TimeSpan.FromMinutes(5));
+                await _interactive.SendPaginatorAsync(paginator, Context.Interaction, TimeSpan.FromMinutes(5), InteractionResponseType.DeferredChannelMessageWithSource);
             }
             catch (Exception e)
             {

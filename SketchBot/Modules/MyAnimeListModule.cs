@@ -30,6 +30,7 @@ namespace SketchBot.Modules
         [SlashCommand("anime", "Shows information about an Anime")]
         public async Task AnimeAsync(string name)
         {
+            await DeferAsync();
             try
             {
                 var anime = await _jikan.SearchAnimeAsync(name);
@@ -84,7 +85,7 @@ namespace SketchBot.Modules
                     .WithPages(pageBuilders)
                     .WithFooter(PaginatorFooter.PageNumber)
                     .Build();
-                await _interactive.SendPaginatorAsync(paginator, Context.Interaction, TimeSpan.FromMinutes(5));
+                await _interactive.SendPaginatorAsync(paginator, Context.Interaction, TimeSpan.FromMinutes(5), InteractionResponseType.DeferredChannelMessageWithSource);
 
 
             }
@@ -97,6 +98,7 @@ namespace SketchBot.Modules
         [SlashCommand("manga", "Shows information about a Manga")]
         public async Task MangaAsync(string name)
         {
+            await DeferAsync();
             try
             {
                 var manga = await _jikan.SearchMangaAsync(name);
@@ -145,7 +147,7 @@ namespace SketchBot.Modules
                     .WithPages(pageBuilders)
                     .WithFooter(PaginatorFooter.PageNumber)
                     .Build();
-                await _interactive.SendPaginatorAsync(paginator, Context.Interaction, TimeSpan.FromMinutes(5));
+                await _interactive.SendPaginatorAsync(paginator, Context.Interaction, TimeSpan.FromMinutes(5), InteractionResponseType.DeferredChannelMessageWithSource);
             }
             catch (Exception ex)
             {
@@ -156,6 +158,7 @@ namespace SketchBot.Modules
         [SlashCommand("maluser", "Searches for a user on MyAnimeList.net")]
         public async Task MALUserAsync(string username)
         {
+            await DeferAsync();
             var user = await _jikan.GetUserProfileAsync(username);
             if (user == null)
             {
@@ -241,7 +244,7 @@ namespace SketchBot.Modules
                 .WithPages(pages)
                 .WithFooter(PaginatorFooter.PageNumber)
                 .Build();
-            await _interactive.SendPaginatorAsync(paginator, Context.Interaction, TimeSpan.FromMinutes(5));
+            await _interactive.SendPaginatorAsync(paginator, Context.Interaction, TimeSpan.FromMinutes(5), InteractionResponseType.DeferredChannelMessageWithSource);
 
         }
     }
