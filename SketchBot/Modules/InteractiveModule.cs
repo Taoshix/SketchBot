@@ -10,6 +10,7 @@ using Org.BouncyCastle.Asn1.X509;
 using Sketch_Bot.Custom_Preconditions;
 using Sketch_Bot.Models;
 using Sketch_Bot.Services;
+using SketchBot.Handlers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -295,6 +296,86 @@ namespace Sketch_Bot.Modules
                 }
                 return;
             }
+        }
+        [RequireContext(ContextType.Guild)]
+        [SlashCommand("leaderboard", "Server leaderboard of Tokens or Leveling")]
+        public async Task LeaderboardAsync([Summary("Type"), Autocomplete(typeof(LeaderboardAutocompleteHandler))] string type, int index = 1)
+        {
+            await DeferAsync();
+            await Context.Guild.DownloadUsersAsync();
+            if (!_cache._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
+            type = type.ToLower();
+            string[] types = ["tokens", "leveling"];
+            index = index > 0 ? index : 1;
+            var userStatsList = Database.GetAllUserStats(Context.User as IGuildUser);
+            int totalUsers = userStatsList.Count;
+            int pageSize = 10;
+            int totalPages = (int)Math.Ceiling(totalUsers / (double)pageSize);
+            if (!types.Contains(type))
+            {
+                await FollowupAsync("Usage: /leaderboard <type> <page>" +
+                    "\nAvailable types:" +
+                    "\nTokens, Leveling");
+                return;
+            }
+            if (index > totalPages || totalUsers == 0)
+            {
+                await FollowupAsync("This page is empty");
+                return;
+            }
+
+            var pages = new List<IPageBuilder>();
+            for (int page = 1; page <= totalPages; page++)
+            {
+                var leaderboardEntries = new List<string>();
+                int start = (page - 1) * pageSize;
+                int end = Math.Min(start + pageSize, totalUsers);
+                for (int i = start; i < end; i++)
+                {
+                    var item = userStatsList[i];
+                    int position = i + 1;
+                    string padded = position.ToString() + ".";
+                    string userName;
+                    var currentUser = Context.Guild.GetUser(item.UserId);
+                    if (currentUser == null)
+                    {
+                        userName = $"Unknown({item.UserId})";
+                    }
+                    else
+                    {
+                        userName = currentUser.Nickname ?? currentUser.DisplayName;
+                    }
+                    string leftside = padded.PadRight(4) + userName;
+                    string levelProgress = item.Level.ToString() + " " + item.XP.ToString() + "/" + XP.caclulateNextLevel(item.Level);
+                    leaderboardEntries.Add(type == "tokens"
+                        ? (leftside.PadRight(25 + 19 - item.Tokens.ToString().Length) + item.Tokens.ToString())
+                        : leftside.PadRight(25 + 10 - item.Level.ToString().Length) + " " + levelProgress);
+                }
+                string longstring = string.Join("\n", leaderboardEntries);
+
+                pages.Add(new PageBuilder()
+                    .WithColor(Color.Blue)
+                    .WithTitle($"{type} leaderboard for {Context.Guild.Name}")
+                    .WithDescription($"```css\n{longstring}\n```"));
+            }
+
+            var paginator = new StaticPaginatorBuilder()
+                .AddUser(Context.User)
+                .WithPages(pages)
+                .WithFooter(PaginatorFooter.PageNumber)
+                .Build();
+
+            // Show the requested page, default to 1 if out of range
+            await _interactive.SendPaginatorAsync(
+                paginator,
+                Context.Interaction,
+                TimeSpan.FromMinutes(5),
+                InteractionResponseType.DeferredChannelMessageWithSource
+            );
         }
     }
 }

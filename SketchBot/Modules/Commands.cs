@@ -644,68 +644,7 @@ namespace Sketch_Bot.Modules
             await FollowupAsync("", null, false, false, null, null, null, embedBuilder.Build());
             
         }
-        [RequireContext(ContextType.Guild)]
-        [SlashCommand("leaderboard", "Server leaderboard of Tokens or Leveling")]
-        public async Task LeaderboardAsync([Summary("Type"), Autocomplete(typeof(LeaderboardAutocompleteHandler))] string type, int index = 1)
-        {
-            await DeferAsync();
-            if (!_cachingService._dbConnected)
-            {
-                await FollowupAsync("Database is down, please try again later");
-                return;
-            }
-            type = type.ToLower();
-            string[] types = { "tokens", "leveling" };
-            index = index > 0 ? index : 1;
-            int pageLimit = index - index + 10 * index - 10;
-            var embed = new EmbedBuilder()
-            {
-                Color = new Color(0, 0, 255)
-            };
-            var userStatsList = Database.GetAllUserStats(Context.User as IGuildUser);
-            var leaderboardEntries = new List<string>();
-            if (types.Contains(type))
-            {
-                foreach (var item in userStatsList.Skip(pageLimit).Take(10))
-                {
-                    int position = userStatsList.IndexOf(item) + 1;
-                    string padded = position.ToString() + ".";
-                    string userName;
-                    var currentUser = Context.Guild.GetUser(item.UserId);
-                    if (currentUser == null)
-                    {
-                        userName = $"Unknown({item.UserId})";
-                    }
-                    else
-                    {
-                        userName = currentUser.Nickname ?? currentUser.DisplayName;
-                    }
-                    string leftside = padded.PadRight(4) + userName;
-                    string levelProgress = item.Level.ToString() + " " + item.XP.ToString() + "/" + XP.caclulateNextLevel(item.Level);
-                    leaderboardEntries.Add(type == "tokens" ? (leftside.PadRight(25 + 19 - item.Tokens.ToString().Length) + item.Tokens.ToString()) : leftside.PadRight(25 + 10 - item.Level.ToString().Length) + " " + levelProgress);
-                }
-                double pageCount = userStatsList.Count / 10.0D;
-                var celing = Math.Ceiling(pageCount);
-                if (index > celing)
-                {
-                    await FollowupAsync("This page is empty");
-                }
-                else
-                {
-                    string longstring = string.Join("\n", leaderboardEntries);
-                    embed.Title = $"{type} leaderboard for {Context.Guild.Name}";
-                    embed.Description = ($"```css\n{longstring}\n```");
-                    embed.WithFooter($"Page {index}/{celing}");
-                    await FollowupAsync(embed: embed.Build());
-                }
-            }
-            else
-            {
-                await FollowupAsync("Usage: /leaderboard <type> <page>" +
-                    "\nAvailable types:" +
-                    "\nTokens, Leveling");
-            }
-        }
+        
         [RequireContext(ContextType.Guild)]
         [UserCommand("stats")]
         //[Alias("level","profile")]
