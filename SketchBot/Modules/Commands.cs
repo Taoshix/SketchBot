@@ -5,6 +5,8 @@ using Discord.Rest;
 using Discord.WebSocket;
 using DiscordBotsList;
 using DiscordBotsList.Api;
+using Fergun.Interactive;
+using Fergun.Interactive.Pagination;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
@@ -45,13 +47,15 @@ namespace Sketch_Bot.Modules
         private StatService _statService;
         private CachingService _cachingService;
         private InteractionService _interactionService;
-        public Commands(DiscordBotsListService service, TimerService service2, StatService service3, CachingService service4, InteractionService service5)
+        private readonly InteractiveService _interactive;
+        public Commands(DiscordBotsListService service, TimerService service2, StatService service3, CachingService service4, InteractionService service5, InteractiveService interactive)
         {
             _discordBotListService = service;
             _timerService = service2;
             _statService = service3;
             _cachingService = service4;
             _interactionService = service5;
+            _interactive = interactive;
         }
 
         [SlashCommand("repeat", "Echo a message")]
@@ -1049,63 +1053,148 @@ namespace Sketch_Bot.Modules
                     ? HelperFunctions.JoinWithLimit(forumThreads.Select(x => x.Mention), 1024, "\n")
                     : "None";
 
-                var embed = new EmbedBuilder()
-                    .AddField("Owner", guild.Owner?.Mention ?? "Unknown", true)
-                    .AddField($"Member Count ({realCount})", memberCountField, true)
+                var pages = new List<IPageBuilder>();
+
+                // Page 1: General summary
+                pages.Add(new PageBuilder()
+                    .WithTitle($"{guild.Name} - Overview")
+                    .WithDescription($"Owner: {guild.Owner?.Mention ?? "Unknown"}\nMembers: {realCount}\nChannels: {guild.Channels.Count}\nRoles: {guild.Roles.Count}\nEmojis: {guild.Emotes.Count}\nStickers: {guild.Stickers.Count}")
                     .AddField($"Total Channels ({guild.Channels.Count})",
-                        $"{textChannels.Count()} Text\n" +
-                        $"{voiceChannels.Count()} Voice\n" +
-                        $"{stageChannels.Count()} Stage\n" +
-                        $"{forumChannels.Count()} Forum\n" +
-                        $"{forumThreads.Count()} Forum threads\n" +
-                        $"{guild.CategoryChannels.Count} Category channels\n" +
-                        $"{mediaChannels.Count()} Media", true)
-                    .AddField($"Categories ({guild.CategoryChannels.Count})",
-                        guild.CategoryChannels.Count == 0
-                            ? "None"
-                            : HelperFunctions.JoinWithLimit(guild.CategoryChannels.Select(x => x.Name), 1024, "\n"), true)
-                    .AddField($"Emojis ({guild.Emotes.Count})",
-                        guild.Emotes.Count == 0
-                            ? "None"
-                            : HelperFunctions.JoinWithLimit(guild.Emotes.Select(x => x.ToString()), 1024, ""), true)
-                    .AddField($"Stickers ({guild.Stickers.Count})",
-                        guild.Stickers.Count == 0
-                            ? "None"
-                            : string.Join(", ", guild.Stickers.Select(s => s.Name)), true)
-                    .AddField($"Text Channels ({textChannelsAndThreadsEnumerable.Count()})",
-                        guild.TextChannels.Count == 0
-                            ? "None"
-                            : textChannelsAndThreads)
-                    .AddField($"Voice Channels ({voiceChannels.Count()})", voiceChannelsList, true)
-                    .AddField($"Stage Channels ({stageChannels.Count()})", stageChannelsList, true)
-                    .AddField($"Forum Channels ({forumChannels.Count()})", forumChannelsList, true)
-                    .AddField($"Forum Threads ({forumThreads.Count()})", forumThreadsList, true)
-                    .AddField($"Media Channels ({mediaChannels.Count()})", mediaChannelsList, true)
-                    .AddField($"Roles ({guild.Roles.Count})", guild.Roles.Count == 0 ? "None" : HelperFunctions.JoinWithLimit(guild.Roles.OrderByDescending(x => x.Position).Select(x => x.Mention), 1024, guild.Roles.Count > 10 ? " " : "\n"))
-                    .AddField("Verification Level", guild.VerificationLevel.ToString(), true)
-                    .AddField("Boost Level", $"{guild.PremiumTier} ({guild.PremiumSubscriptionCount} boosts)", true)
-                    .AddField("Region", string.IsNullOrWhiteSpace(guild.VoiceRegionId) ? "None" : guild.VoiceRegionId, true)
-                    .AddField("Vanity", guild.Features.HasVanityUrl ? guild.VanityURLCode : "No Vanity", true)
-                    .AddField("Icon URL", string.IsNullOrWhiteSpace(guild.IconUrl) ? "No Icon" : guild.IconUrl, true)
-                    .AddField("Banner URL", string.IsNullOrWhiteSpace(guild.BannerUrl) ? "No Banner" : guild.BannerUrl, true)
+                        $"{textChannels.Count()} Text\n{voiceChannels.Count()} Voice\n{stageChannels.Count()} Stage\n{forumChannels.Count()} Forum\n{forumThreads.Count()} Forum threads\n{guild.CategoryChannels.Count} Category channels\n{mediaChannels.Count()} Media", true)
+                    .AddField($"Member Count ({realCount})", memberCountField, true)
+                    .AddField($"Verification Level", guild.VerificationLevel.ToString(), true)
+                    .AddField($"Boost Level", $"{guild.PremiumTier} ({guild.PremiumSubscriptionCount} boosts)", true)
+                    .AddField($"Region", string.IsNullOrWhiteSpace(guild.VoiceRegionId) ? "None" : guild.VoiceRegionId, true)
+                    .AddField($"Vanity", guild.Features.HasVanityUrl ? guild.VanityURLCode : "No Vanity", true)
+                    .AddField($"Icon URL", string.IsNullOrWhiteSpace(guild.IconUrl) ? "No Icon" : guild.IconUrl, true)
+                    .AddField($"Banner URL", string.IsNullOrWhiteSpace(guild.BannerUrl) ? "No Banner" : guild.BannerUrl, true)
                     .WithThumbnailUrl(guild.IconUrl ?? "")
                     .WithColor(new Color(0, 255, 0))
-                    .WithFooter(footer =>
-                    {
-                        footer.Text = $"ID: {guild.Id} | Server Created";
-                        footer.IconUrl = guild.IconUrl;
-                    })
-                    .WithAuthor(author =>
-                    {
-                        author.Name = guild.Name;
-                        author.IconUrl = guild.IconUrl;
-                    });
+                    .WithFooter($"ID: {guild.Id} | Server Created: {guild.CreatedAt:yyyy-MM-dd}")
+                    .WithAuthor(guild.Name, guild.IconUrl)
+                );
 
-                embed.Timestamp = guild.CreatedAt;
-                await FollowupAsync("", embed: embed.Build());
+                // Page 2: Guild Features (all 'Has' boolean properties)
+                var featureProps = guild.Features.GetType().GetProperties()
+                    .Where(p => p.Name.StartsWith("Has", StringComparison.OrdinalIgnoreCase) && p.PropertyType == typeof(bool))
+                    .ToList();
+                var featuresPage = new PageBuilder()
+                    .WithTitle($"{guild.Name} - Features")
+                    .WithColor(new Color(0, 255, 0));
+                foreach (var prop in featureProps)
+                {
+                    var value = (bool)prop.GetValue(guild.Features);
+                    var displayName = prop.Name.StartsWith("Has") ? prop.Name.Substring(3) : prop.Name;
+                    featuresPage.AddField(displayName, value ? "True" : "False", true);
+                }
+                if (guild.Features.Experimental != null)
+                {
+                    var experimentalProps = guild.Features.Experimental;
+                    if (experimentalProps.Count > 0)
+                    {
+                        string expList = string.Join("\n", experimentalProps);
+                        featuresPage.AddField("Experimental Features", expList, false);
+                    }
+                }
+                pages.Add(featuresPage);
+
+                // Page 3: Text Channels & Threads
+                pages.Add(new PageBuilder()
+                    .WithTitle($"{guild.Name} - Text Channels & Threads")
+                    .WithDescription(textChannelsAndThreads.Any() ? HelperFunctions.JoinWithLimit(textChannelsAndThreadsEnumerable, 4096, "\n") : "None")
+                    .WithAuthor($"Guild info for {guild.Name}:", guild.IconUrl)
+                    .WithColor(new Color(0, 255, 0))
+                );
+
+                // Page 4: Voice, Stage, Forum, Media Channels
+                pages.Add(new PageBuilder()
+                    .WithTitle($"{guild.Name} - Other Channels")
+                    .AddField($"Voice Channels ({voiceChannels.Count()})", voiceChannelsList)
+                    .AddField($"Stage Channels ({stageChannels.Count()})", stageChannelsList)
+                    .AddField($"Forum Channels ({forumChannels.Count()})", forumChannelsList)
+                    .AddField($"Forum Threads ({forumThreads.Count()})", forumThreadsList)
+                    .AddField($"Media Channels ({mediaChannels.Count()})", mediaChannelsList)
+                    .WithAuthor($"Guild info for {guild.Name}:", guild.IconUrl)
+                    .WithColor(new Color(0, 255, 0))
+                );
+
+                // Page 5: Roles (split if needed)
+                var rolesList = guild.Roles.OrderByDescending(x => x.Position).Select(x => x.Mention).ToList();
+                var rolesPages = HelperFunctions.SplitListByCharLimit(rolesList, 4096, "\n");
+                for (int i = 0; i < rolesPages.Count; i++)
+                {
+                    pages.Add(new PageBuilder()
+                        .WithTitle($"{guild.Name} - Roles (Page {i + 1}/{rolesPages.Count})")
+                        .WithDescription(rolesPages[i])
+                        .WithAuthor($"Guild info for {guild.Name}:", guild.IconUrl)
+                        .WithColor(new Color(0, 255, 0))
+                    );
+                }
+
+                // Page 6 & 7: Emojis & Stickers
+                var emojis = guild.Emotes.Select(x => x.ToString()).ToList();
+                var stickers = guild.Stickers.Select(x => x.Name).ToList();
+
+                // Emojis page
+                if (emojis.Count > 0)
+                {
+                    var emojiPages = HelperFunctions.SplitListByCharLimit(emojis, 4096, "");
+                    for (int i = 0; i < emojiPages.Count; i++)
+                    {
+                        pages.Add(new PageBuilder()
+                            .WithTitle($"{guild.Name} - Emojis ({emojis.Count}) (Page {i + 1}/{emojiPages.Count})")
+                            .WithDescription(emojiPages[i])
+                            .WithAuthor($"Guild info for {guild.Name}:", guild.IconUrl)
+                            .WithColor(new Color(0, 255, 0))
+                        );
+                    }
+                }
+                else
+                {
+                    pages.Add(new PageBuilder()
+                        .WithTitle($"{guild.Name} - Emojis ({emojis.Count})")
+                        .WithDescription("None")
+                        .WithAuthor($"Guild info for {guild.Name}:", guild.IconUrl)
+                        .WithColor(new Color(0, 255, 0))
+                    );
+                }
+
+                // Stickers page
+                if (stickers.Count > 0)
+                {
+                    var stickerPages = HelperFunctions.SplitListByCharLimit(stickers, 4096, ", ");
+                    for (int i = 0; i < stickerPages.Count; i++)
+                    {
+                        pages.Add(new PageBuilder()
+                            .WithTitle($"{guild.Name} - Stickers ({stickers.Count}) (Page {i + 1}/{stickerPages.Count})")
+                            .WithDescription(stickerPages[i])
+                            .WithAuthor($"Guild info for {guild.Name}:", guild.IconUrl)
+                            .WithColor(new Color(0, 255, 0))
+                        );
+                    }
+                }
+                else
+                {
+                    pages.Add(new PageBuilder()
+                        .WithTitle($"{guild.Name} - Stickers ({stickers.Count})")
+                        .WithDescription("None")
+                        .WithAuthor($"Guild info for {guild.Name}:", guild.IconUrl)
+                        .WithColor(new Color(0, 255, 0))
+                    );
+                }
+
+                // Send paginator
+                var paginator = new StaticPaginatorBuilder()
+                    .AddUser(Context.User)
+                    .WithPages(pages)
+                    .WithFooter(PaginatorFooter.PageNumber)
+                    .Build();
+
+                await _interactive.SendPaginatorAsync(paginator, Context.Interaction, TimeSpan.FromMinutes(5), InteractionResponseType.DeferredChannelMessageWithSource);
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 await FollowupAsync($"{ex.GetType()}: {ex.Message}");
             }
         }

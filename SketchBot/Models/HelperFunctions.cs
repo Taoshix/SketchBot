@@ -343,5 +343,25 @@ namespace Sketch_Bot.Models
             var str = value.ToString();
             return string.IsNullOrWhiteSpace(str) ? "N/A" : str;
         }
+        // Helper to split a list of strings into pages by char limit
+        public static List<string> SplitListByCharLimit(List<string> items, int charLimit, string separator)
+        {
+            var pages = new List<string>();
+            var current = new StringBuilder();
+            foreach (var item in items)
+            {
+                if (current.Length + item.Length + separator.Length > charLimit)
+                {
+                    pages.Add(current.ToString());
+                    current.Clear();
+                }
+                if (current.Length > 0)
+                    current.Append(separator);
+                current.Append(item);
+            }
+            if (current.Length > 0)
+                pages.Add(current.ToString());
+            return pages;
+        }
     }
 }
