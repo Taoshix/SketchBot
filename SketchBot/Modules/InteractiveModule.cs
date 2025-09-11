@@ -42,7 +42,7 @@ namespace Sketch_Bot.Modules
             _discordBotsListService = discordBotsListService;
         }
         [SlashCommand("paginator", "Makes a paginator using your input seperated by comma")]
-        public async Task PaginateAsync(string input)
+        public async Task PaginateAsync(string input, bool allowEveryone = false)
         {
             await DeferAsync();
             string[] words = input.Split(",");
@@ -57,16 +57,28 @@ namespace Sketch_Bot.Modules
             foreach (var word in words)
             {
                 pages.Add(new PageBuilder()
-                    .WithTitle($"{Context.User.Username}'s Paginator")
+                    .WithTitle($"{Context.User.Username}'s Paginator" + (allowEveryone ? " (Usable by anyone)" : ""))
                     .WithDescription(word.Trim()));
             }
-            var paginator = new StaticPaginatorBuilder()
+            if(allowEveryone)
+            {
+                var paginator = new StaticPaginatorBuilder()
+                .WithPages(pages)
+                .WithFooter(PaginatorFooter.PageNumber)
+                .Build();
+                await _interactive.SendPaginatorAsync(paginator, Context.Interaction, TimeSpan.FromMinutes(5), InteractionResponseType.DeferredChannelMessageWithSource);
+                return;
+            }
+            else
+            {
+                var paginator = new StaticPaginatorBuilder()
                 .AddUser(Context.User)
                 .WithPages(pages)
                 .WithFooter(PaginatorFooter.PageNumber)
                 .Build();
-            await _interactive.SendPaginatorAsync(paginator, Context.Interaction, TimeSpan.FromMinutes(5), InteractionResponseType.DeferredChannelMessageWithSource);
-
+                await _interactive.SendPaginatorAsync(paginator, Context.Interaction, TimeSpan.FromMinutes(5), InteractionResponseType.DeferredChannelMessageWithSource);
+                return;
+            }
         }
 
         [RequireContext(ContextType.Guild)]

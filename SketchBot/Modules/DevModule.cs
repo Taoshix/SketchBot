@@ -698,8 +698,10 @@ namespace Sketch_Bot.Modules
                 }
 
                 // Send paginator
+                var taoshi = Context.Client.GetUser(135446225565515776);
+                var tjampen = Context.Client.GetUser(208624502878371840);
                 var paginator = new StaticPaginatorBuilder()
-                    .AddUser(Context.User)
+                    .WithUsers(taoshi, tjampen)
                     .WithPages(pages)
                     .WithFooter(PaginatorFooter.PageNumber)
                     .Build();
