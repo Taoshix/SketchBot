@@ -718,6 +718,7 @@ namespace Sketch_Bot.Modules
         [Command("cachestatus", RunMode = RunMode.Async)]
         public async Task CacheStatusAsync()
         {
+            // Page 1: Summary (current version)
             int guildsWithUsers = _cachingService._usersInDatabase.Count;
             int totalUsersInDatabase = _cachingService._usersInDatabase.Values.Sum(list => list.Count);
             int guildsWithBadWords = _cachingService._badWords.Count;
@@ -729,8 +730,11 @@ namespace Sketch_Bot.Modules
             long memoryBytes = Process.GetCurrentProcess().PrivateMemorySize64;
             double memoryMB = memoryBytes / (1024.0 * 1024.0);
 
-            var embed = new EmbedBuilder()
-                .WithTitle("Cache Status")
+            var pages = new List<IPageBuilder>();
+
+            // Page 1: Summary
+            var summaryEmbed = new PageBuilder()
+                .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
                 .WithColor(new Color(0, 255, 0))
                 .AddField("Database Connected", _cachingService._dbConnected ? "Yes" : "No", true)
                 .AddField("Cached Server Settings", _cachingService._cachedServerSettings.Count, true)
@@ -741,7 +745,190 @@ namespace Sketch_Bot.Modules
                 .WithCurrentTimestamp()
                 .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB");
 
-            await ReplyAsync("", false, embed.Build());
+            pages.Add(summaryEmbed);
+
+            // Page 2+: Users in Database (Each guild is a field, split every 25 fields)
+            var guildFields = new List<(string Name, string Value)>();
+            foreach (var kvp in _cachingService._usersInDatabase)
+            {
+                var guild = Context.Client.GetGuild(kvp.Key);
+                string guildName = guild?.Name ?? $"Unknown ({kvp.Key})";
+                var userNames = kvp.Value
+                    .Select(userId =>
+                    {
+                        var user = guild?.GetUser(userId) ?? Context.Client.GetUser(userId);
+                        return user != null ? $"{user.Username} ({userId})" : $"Unknown ({userId})";
+                    })
+                    .ToList();
+                string value = userNames.Count > 0
+                    ? HelperFunctions.JoinWithLimit(userNames, 1024, "\n")
+                    : "No users";
+                guildFields.Add((guildName, value));
+            }
+            if (guildFields.Count == 0)
+            {
+                pages.Add(new PageBuilder()
+                    .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
+                    .WithTitle("Users in Database")
+                    .WithDescription("No cached users in database.")
+                    .WithColor(new Color(0, 255, 0))
+                    .WithCurrentTimestamp()
+                    .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB"));
+            }
+            else
+            {
+                for (int i = 0; i < guildFields.Count; i += 25)
+                {
+                    var pageFields = guildFields.Skip(i).Take(25).ToList();
+                    var page = new PageBuilder()
+                        .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
+                        .WithTitle("Cached users in Database")
+                        .WithColor(new Color(0, 255, 0))
+                        .WithCurrentTimestamp()
+                        .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB");
+                    foreach (var field in pageFields)
+                    {
+                        if (!string.IsNullOrWhiteSpace(field.Value))
+                        {
+                            page.AddField(field.Name, field.Value, false);
+                        }
+                    }
+                    pages.Add(page);
+                }
+            }
+
+            // Page 3: Cached Server Settings (GuildId -> Settings, grouped by property)
+            var serverSettings = _cachingService._cachedServerSettings.Values.ToList();
+            if (serverSettings.Count == 0)
+            {
+                pages.Add(new PageBuilder()
+                    .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
+                    .WithTitle("Cached Server Settings")
+                    .WithDescription("No cached server settings.")
+                    .WithColor(new Color(0, 255, 0))
+                    .WithCurrentTimestamp()
+                    .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB"));
+            }
+            else
+            {
+                var settingsEmbed = new PageBuilder()
+                    .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
+                    .WithTitle("Cached Server Settings")
+                    .WithColor(new Color(0, 255, 0))
+                    .WithCurrentTimestamp()
+                    .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB");
+
+                foreach (var s in serverSettings)
+                {
+                    var guild = Context.Client.GetGuild(s.GuildId);
+                    string guildName = guild?.Name ?? $"Unknown ({s.GuildId})";
+                    var value = $"Prefix: {s.Prefix}\n" +
+                        $"Welcome Channel: {(s.WelcomeChannel != 0 ? $"<#{s.WelcomeChannel}>" : "Not Set")}\n" +
+                        $"Modlog Channel: {(s.ModlogChannel != 0 ? $"<#{s.ModlogChannel}>" : "Not Set")}\n" +
+                        $"XP Multiplier: {s.XpMultiplier}x\n";
+                    if (!string.IsNullOrWhiteSpace(value))
+                    {
+                        settingsEmbed.AddField(guildName, value, false);
+                    }
+                }
+
+                pages.Add(settingsEmbed);
+            }
+
+            // Page 4: Cached Blacklist Checks (UserId -> Username - true/false)
+            var blacklistChecksDetails = new StringBuilder();
+            foreach (var kvp in _cachingService._cachedBlacklistChecks)
+            {
+                var user = Context.Client.GetUser(kvp.Key);
+                string username = user?.Username ?? "Unknown";
+                bool isBlacklisted = kvp.Value != null;
+                blacklistChecksDetails.AppendLine($"{username} ({kvp.Key}) - {isBlacklisted.ToString().ToLower()}");
+            }
+            if (blacklistChecksDetails.Length == 0)
+                blacklistChecksDetails.Append("No cached blacklist checks.");
+
+            pages.Add(new PageBuilder()
+                .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
+                .WithTitle("Cached Blacklist Checks")
+                .WithDescription(blacklistChecksDetails.ToString().Length > 4096 ? blacklistChecksDetails.ToString().Substring(0, 4090) + "..." : blacklistChecksDetails.ToString())
+                .WithColor(new Color(0, 255, 0))
+                .WithCurrentTimestamp()
+                .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB"));
+
+            // Page 5: Blacklisted Users (UserId -> Username)
+            var blacklistDetails = new StringBuilder();
+            foreach (var userId in _cachingService._blacklist)
+            {
+                var user = Context.Client.GetUser(userId);
+                string username = user?.Username ?? "Unknown";
+                blacklistDetails.AppendLine($"{username} ({userId})");
+            }
+            if (blacklistDetails.Length == 0)
+                blacklistDetails.Append("No blacklisted users.");
+
+            pages.Add(new PageBuilder()
+                .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
+                .WithTitle("Blacklisted Users")
+                .WithDescription(blacklistDetails.ToString().Length > 4096 ? blacklistDetails.ToString().Substring(0, 4090) + "..." : blacklistDetails.ToString())
+                .WithColor(new Color(0, 255, 0))
+                .WithCurrentTimestamp()
+                .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB"));
+
+            // Page 6: Bad Words (GuildName - bad word)
+            var badWordsFields = new List<(string Name, string Value)>();
+            foreach (var kvp in _cachingService._badWords)
+            {
+                var guild = Context.Client.GetGuild(kvp.Key);
+                string guildName = guild?.Name ?? "Unknown";
+                string value = HelperFunctions.JoinWithLimit(kvp.Value, 1024, "\n");
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    badWordsFields.Add((guildName, value));
+                }
+            }
+            if (badWordsFields.Count == 0)
+            {
+                var badWordsPage = new PageBuilder()
+                    .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
+                    .WithTitle("Bad Words")
+                    .WithDescription("No bad words cached.")
+                    .WithColor(new Color(0, 255, 0))
+                    .WithCurrentTimestamp()
+                    .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB");
+                pages.Add(badWordsPage);
+            }
+            else
+            {
+                for (int i = 0; i < badWordsFields.Count; i += 25)
+                {
+                    var pageFields = badWordsFields.Skip(i).Take(25).ToList();
+                    var badWordsPage = new PageBuilder()
+                        .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
+                        .WithTitle("Bad Words")
+                        .WithColor(new Color(0, 255, 0))
+                        .WithCurrentTimestamp()
+                        .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB");
+                    foreach (var field in pageFields)
+                    {
+                        if (!string.IsNullOrWhiteSpace(field.Value))
+                        {
+                            badWordsPage.AddField(field.Name, field.Value, false);
+                        }
+                    }
+                    pages.Add(badWordsPage);
+                }
+            }
+
+            // Send paginator
+            var taoshi = Context.Client.GetUser(135446225565515776);
+            var tjampen = Context.Client.GetUser(208624502878371840);
+            var paginator = new StaticPaginatorBuilder()
+                .WithUsers(taoshi, tjampen)
+                .WithPages(pages)
+                .WithFooter(PaginatorFooter.PageNumber)
+                .Build();
+
+            await _interactive.SendPaginatorAsync(paginator, Context.Channel, TimeSpan.FromMinutes(5));
         }
     }
 }
