@@ -878,7 +878,8 @@ namespace SketchBot.InteractionBasedModules
                 embed.AddField("Prefix", string.IsNullOrEmpty(settings.Prefix) ? "?" : settings.Prefix)
                     .AddField("Welcome Channel", settings.WelcomeChannel != 0 ? $"<#{settings.WelcomeChannel}>" : "Not set", true)
                     .AddField("Modlog Channel", settings.ModlogChannel != 0 ? $"<#{settings.ModlogChannel}>" : "Not set", true)
-                    .AddField("Levelup Messages", settings.LevelupMessages ? "Enabled" : "Disabled", true);
+                    .AddField("Levelup Messages", settings.LevelupMessages ? "Enabled" : "Disabled", true)
+                    .AddField("XP Multiplier", settings.XpMultiplier);
             }
 
             await FollowupAsync("", null, false, false, null, null, null, embed.Build());

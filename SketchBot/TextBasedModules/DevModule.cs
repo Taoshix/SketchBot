@@ -812,13 +812,8 @@ namespace SketchBot.TextBasedModules
             }
             else
             {
-                var settingsEmbed = new PageBuilder()
-                    .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
-                    .WithTitle("Cached Server Settings")
-                    .WithColor(new Color(0, 255, 0))
-                    .WithCurrentTimestamp()
-                    .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB");
-
+                // Split server settings into pages of 25 fields each
+                var settingsFields = new List<(string Name, string Value)>();
                 foreach (var s in serverSettings)
                 {
                     var guild = Context.Client.GetGuild(s.GuildId);
@@ -826,14 +821,31 @@ namespace SketchBot.TextBasedModules
                     var value = $"Prefix: {s.Prefix}\n" +
                         $"Welcome Channel: {(s.WelcomeChannel != 0 ? $"<#{s.WelcomeChannel}>" : "Not Set")}\n" +
                         $"Modlog Channel: {(s.ModlogChannel != 0 ? $"<#{s.ModlogChannel}>" : "Not Set")}\n" +
-                        $"XP Multiplier: {s.XpMultiplier}x\n";
+                        $"XP Multiplier: {s.XpMultiplier}x\n" +
+                        $"Level Up Messages: {s.LevelupMessages}";
                     if (!string.IsNullOrWhiteSpace(value))
                     {
-                        settingsEmbed.AddField(guildName, value, false);
+                        settingsFields.Add((guildName, value));
                     }
                 }
-
-                pages.Add(settingsEmbed);
+                for (int i = 0; i < settingsFields.Count; i += 25)
+                {
+                    var pageFields = settingsFields.Skip(i).Take(25).ToList();
+                    var settingsEmbed = new PageBuilder()
+                        .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
+                        .WithTitle("Cached Server Settings")
+                        .WithColor(new Color(0, 255, 0))
+                        .WithCurrentTimestamp()
+                        .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB");
+                    foreach (var field in pageFields)
+                    {
+                        if (!string.IsNullOrWhiteSpace(field.Value))
+                        {
+                            settingsEmbed.AddField(field.Name, field.Value, false);
+                        }
+                    }
+                    pages.Add(settingsEmbed);
+                }
             }
 
             // Page 4: Cached Blacklist Checks (UserId -> Username - true/false)
