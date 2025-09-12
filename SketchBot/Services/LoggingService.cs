@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 
-namespace Sketch_Bot.Services
+namespace SketchBot.Services
 {
     public static class LoggingService
     {

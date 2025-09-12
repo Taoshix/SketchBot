@@ -9,9 +9,9 @@ using Discord;
 using Discord.WebSocket;
 using ImgFlip4NET;
 using Newtonsoft.Json;
-using Sketch_Bot.Models;
+using SketchBot.Models;
 
-namespace Sketch_Bot.Services
+namespace SketchBot.Services
 {
     public class MemeService
     {

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 
-namespace Sketch_Bot.Custom_Preconditions
+namespace SketchBot.Custom_Preconditions
 {
     /// <summary> Sets how often a user is allowed to use this command
     /// or any command in this module. </summary>

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Text.Json;
 
-namespace Sketch_Bot.Models
+namespace SketchBot.Models
 {
     public class Config
     {

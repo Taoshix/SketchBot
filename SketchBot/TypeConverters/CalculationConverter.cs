@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static Sketch_Bot.Models.HelperFunctions;
+using static SketchBot.Utils.HelperFunctions;
 
-namespace Sketch_Bot.TypeConverters
+namespace SketchBot.TypeConverters
 {
     public class CalculationConverter : TypeConverter<Calculation>
     {

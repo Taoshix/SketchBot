@@ -8,7 +8,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using System.Linq;
 
-namespace Sketch_Bot.Services
+namespace SketchBot.Services
 {
     public class XpService
     {

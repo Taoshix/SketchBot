@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using Victoria;
 using Victoria.Enums;
 
-namespace Sketch_Bot.Models
+namespace SketchBot.Utils
 {
     public static class HelperFunctions
     {
@@ -278,8 +278,8 @@ namespace Sketch_Bot.Models
             double sin = Math.Abs(Math.Sin(angleRadians));
 
             // Calculate the new bounding box dimensions
-            double newWidth = (width * cos) + (height * sin);
-            double newHeight = (width * sin) + (height * cos);
+            double newWidth = width * cos + height * sin;
+            double newHeight = width * sin + height * cos;
 
             // Return as integers (rounded up to cover full image)
             return (newWidth: (int)Math.Ceiling(newWidth), newHeight: (int)Math.Ceiling(newHeight));
@@ -287,9 +287,9 @@ namespace Sketch_Bot.Models
         public static string FormatFileSize(long bytes)
         {
             if (bytes < 1024 * 1024)
-                return $"{(bytes / 1024.0):0}KB";
+                return $"{bytes / 1024.0:0}KB";
             else
-                return $"{(bytes / 1024.0 / 1024.0):0.00}MB";
+                return $"{bytes / 1024.0 / 1024.0:0.00}MB";
         }
         public static string CapitalizeFirstLetter(string input)
         {

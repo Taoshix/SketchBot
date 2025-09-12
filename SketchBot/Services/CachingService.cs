@@ -1,7 +1,9 @@
 ﻿using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
-using Sketch_Bot.Models;
+using SketchBot.Database;
+using SketchBot.Models;
+using SketchBot.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +11,7 @@ using System.Text;
 using TagLib.Asf;
 using static Mysqlx.Notice.Warning.Types;
 
-namespace Sketch_Bot.Services
+namespace SketchBot.Services
 {
     public class CachingService
     {
@@ -28,7 +30,7 @@ namespace Sketch_Bot.Services
         }
         public void UpdateDBStatus()
         {
-            var db = new Database();
+            var db = new StatsDB();
             var status = db.IsDatabaseConnected();
             _dbConnected = status;
         }
@@ -51,7 +53,7 @@ namespace Sketch_Bot.Services
             if (settings == null)
             {
                 var guild = _client.GetGuild(guildId);
-                int levelup = guild == null ? 0 : (guild.MemberCount >= 100 ? 0 : 1);
+                int levelup = guild == null ? 0 : guild.MemberCount >= 100 ? 0 : 1;
                 settings = ServerSettingsDB.MakeSettings(guildId, levelup);
                 ServerSettingsDB.CreateTableRole(guildId);
                 ServerSettingsDB.CreateTableWords(guildId);
@@ -108,7 +110,7 @@ namespace Sketch_Bot.Services
 
             if (!IsInDatabase(guildId, user.Id) && !user.IsBot)
             {
-                Database.EnterUser(user);
+                StatsDB.EnterUser(user);
                 _usersInDatabase[guildId].Add(user.Id);
             }
         }
@@ -172,7 +174,7 @@ namespace Sketch_Bot.Services
             }
 
             // Check if the user exists in the database
-            var userExistsInDatabase = Database.CheckExistingUser(user);
+            var userExistsInDatabase = StatsDB.CheckExistingUser(user);
             if (!userExistsInDatabase)
             {
                 return false;
@@ -194,7 +196,7 @@ namespace Sketch_Bot.Services
                 var user = _client.Guilds.FirstOrDefault(x => x.Id == guildId).GetUser(userId);
                 if (user != null && !user.IsBot)
                 {
-                    Database.EnterUser(user);
+                    StatsDB.EnterUser(user);
                     if (!_usersInDatabase.ContainsKey(guildId))
                     {
                         _usersInDatabase[guildId] = new List<ulong>();
@@ -231,7 +233,7 @@ namespace Sketch_Bot.Services
 
             _blacklist.Clear();
 
-            var blacklistTable = Database.GetAllBlacklistedUsers();
+            var blacklistTable = StatsDB.GetAllBlacklistedUsers();
             foreach (var element in blacklistTable)
             {
                 if (!_blacklist.Contains(element.UserId))
@@ -252,7 +254,7 @@ namespace Sketch_Bot.Services
                 return;
             }
 
-            Database.BlacklistAdd(user, reason, blacklister);
+            StatsDB.BlacklistAdd(user, reason, blacklister);
             _cachedBlacklistChecks[user.Id] = new Blacklist
             {
                 UserId = user.Id,
@@ -273,7 +275,7 @@ namespace Sketch_Bot.Services
             {
                 return;
             }
-            Database.BlacklistDel(id);
+            StatsDB.BlacklistDel(id);
             _cachedBlacklistChecks[id] = null;
             _blacklist.Remove(id);
         }
@@ -287,7 +289,7 @@ namespace Sketch_Bot.Services
             {
                 return _cachedBlacklistChecks[Id];
             }
-            var blacklistCheck = Database.BlacklistCheck(Id);
+            var blacklistCheck = StatsDB.BlacklistCheck(Id);
             _cachedBlacklistChecks[Id] = blacklistCheck;
             return blacklistCheck;
 

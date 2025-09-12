@@ -13,20 +13,20 @@ using System.Threading.Tasks;
 using UrbanDictionnet;
 using System.Diagnostics;
 using Discord.Addons.Preconditions;
-using Sketch_Bot.Custom_Preconditions;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis;
 using System.Reflection;
-using Sketch_Bot.Models;
-using Sketch_Bot.Services;
 using DiscordBotsList;
 using DiscordBotsList.Api;
 using System.Threading;
 using System.IO;
+using SketchBot.Database;
+using SketchBot.Utils;
+using SketchBot.Services;
 
-namespace Sketch_Bot.Modules
+namespace SketchBot.TextBasedModules
 {
     public class CommandsOld : ModuleBase<SocketCommandContext>
     {
@@ -109,7 +109,7 @@ namespace Sketch_Bot.Modules
         public async Task gamble(long amount)
         {
             _rand = new Random();
-            var currentTokens = Database.GetUserStats(Context.User as IGuildUser).Tokens;
+            var currentTokens = StatsDB.GetUserStats(Context.User as IGuildUser).Tokens;
             if (amount > currentTokens) await ReplyAsync("You don't have enough tokens");
             else if (amount < 1) await ReplyAsync("The minimum amount of tokens is 1");
             else
@@ -117,8 +117,8 @@ namespace Sketch_Bot.Modules
                 var RNG = _rand.Next(0, 100);
                 if (RNG >= 53)
                 {
-                    Database.AddTokens(Context.User as IGuildUser, amount);
-                    currentTokens = Database.GetUserStats(Context.User as IGuildUser).Tokens;
+                    StatsDB.AddTokens(Context.User as IGuildUser, amount);
+                    currentTokens = StatsDB.GetUserStats(Context.User as IGuildUser).Tokens;
                     EmbedBuilder builder = new EmbedBuilder()
                     {
                         Title = "You won!",
@@ -136,8 +136,8 @@ namespace Sketch_Bot.Modules
                 }
                 else
                 {
-                    Database.RemoveTokens(Context.User as IGuildUser, amount);
-                    currentTokens = Database.GetUserStats(Context.User as IGuildUser).Tokens;
+                    StatsDB.RemoveTokens(Context.User as IGuildUser, amount);
+                    currentTokens = StatsDB.GetUserStats(Context.User as IGuildUser).Tokens;
                     EmbedBuilder builder = new EmbedBuilder()
                     {
                         Title = "You lost!",
@@ -159,17 +159,17 @@ namespace Sketch_Bot.Modules
         [Command("gamble all", RunMode = RunMode.Async)]
         public async Task gambleall()
         {
-            long amount = Database.GetUserStats(Context.User as IGuildUser).Tokens;
+            long amount = StatsDB.GetUserStats(Context.User as IGuildUser).Tokens;
             _rand = new Random();
-            var currentTokens = Database.GetUserStats(Context.User as IGuildUser).Tokens;
+            var currentTokens = StatsDB.GetUserStats(Context.User as IGuildUser).Tokens;
             if (amount < 1) await ReplyAsync("The minimum amount of tokens is 1");
             else
             {
                 var RNG = _rand.Next(0, 100);
                 if (RNG >= 53)
                 {
-                    Database.AddTokens(Context.User as IGuildUser, amount);
-                    currentTokens = Database.GetUserStats(Context.User as IGuildUser).Tokens;
+                    StatsDB.AddTokens(Context.User as IGuildUser, amount);
+                    currentTokens = StatsDB.GetUserStats(Context.User as IGuildUser).Tokens;
                     EmbedBuilder builder = new EmbedBuilder()
                     {
                         Title = "You won!",
@@ -187,8 +187,8 @@ namespace Sketch_Bot.Modules
                 }
                 else
                 {
-                    Database.RemoveTokens(Context.User as IGuildUser, amount);
-                    currentTokens = Database.GetUserStats(Context.User as IGuildUser).Tokens;
+                    StatsDB.RemoveTokens(Context.User as IGuildUser, amount);
+                    currentTokens = StatsDB.GetUserStats(Context.User as IGuildUser).Tokens;
                     EmbedBuilder builder = new EmbedBuilder()
                     {
                         Title = "You lost!",
@@ -278,8 +278,8 @@ namespace Sketch_Bot.Modules
             {
                 if (user.Id != 135446225565515776 || user.Id != 208624502878371840 || (Context.Client.CurrentUser as IGuildUser).GuildPermissions.KickMembers)
                 {
-                    var casenumberstring = System.IO.File.ReadAllText("casenumber.json");
-                    var casenumber = Int32.Parse(casenumberstring);
+                    var casenumberstring = File.ReadAllText("casenumber.json");
+                    var casenumber = int.Parse(casenumberstring);
                     var gld = Context.Guild as SocketGuild;
                     var embed = new EmbedBuilder(); ///starts embed///
                     embed.WithColor(new Color(0x4900ff)); ///hexacode colours ///
@@ -291,7 +291,7 @@ namespace Sketch_Bot.Modules
                     var builtEmbed = embed.Build();
                     Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     "
                         + Context.User.Username + " just ran ?kick with success! and kicked "
-                        + (user as IGuildUser).Username + " with the reason: " + (reason) + " (" + Context.Guild.Name + ")");
+                        + (user as IGuildUser).Username + " with the reason: " + reason + " (" + Context.Guild.Name + ")");
                     await (user as IGuildUser).KickAsync(reason);
                     await Context.Channel.SendMessageAsync("", false, builtEmbed);///sends embed///
                     if (_cachingService.GetServerSettings(Context.Guild.Id).ModlogChannel != 0)
@@ -343,13 +343,13 @@ namespace Sketch_Bot.Modules
                     var builtEmbed = embed.Build();
                     Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     "
                         + Context.User.Username + " just ran ?ban with success! and banned "
-                        + (user as IGuildUser).Username + " with the reason: " + (reason) + " (" + Context.Guild?.Name ?? "DM" + ")");
+                        + (user as IGuildUser).Username + " with the reason: " + reason + " (" + Context.Guild?.Name ?? "DM" + ")");
                     await Context.Guild.AddBanAsync(user, 7, reason);
                     await Context.Channel.SendMessageAsync("", false, builtEmbed);///sends embed///
 
                     if (_cachingService.GetServerSettings(Context.Guild.Id)?.ModlogChannel != 0)
                     {
-                        var moderationchannel = (Context.Guild.GetTextChannel(_cachingService.GetServerSettings(Context.Guild.Id).ModlogChannel));
+                        var moderationchannel = Context.Guild.GetTextChannel(_cachingService.GetServerSettings(Context.Guild.Id).ModlogChannel);
                         var embed2 = new EmbedBuilder();
                         embed2.WithColor(new Color(0xb72707));
                         embed2.WithAuthor(auther =>
@@ -380,8 +380,8 @@ namespace Sketch_Bot.Modules
         [Command("unban", RunMode = RunMode.Async)]
         public async Task unbanAsync(RestUser user, [Remainder] string reason = "No reason")
         {
-            var casenumberstring = System.IO.File.ReadAllText("casenumber.json");
-            var casenumber = Int32.Parse(casenumberstring);
+            var casenumberstring = File.ReadAllText("casenumber.json");
+            var casenumber = int.Parse(casenumberstring);
             await Context.Guild.RemoveBanAsync(user);
             await ReplyAsync(user.Username + " has been unbanned" +
                 "\n" +
@@ -400,7 +400,7 @@ namespace Sketch_Bot.Modules
                 var builtEmbed2 = embed2.Build();
                 await moderationchannel.SendMessageAsync("", false, builtEmbed2);
                 casenumber++;
-                System.IO.File.WriteAllText("casenumber.json", casenumber.ToString());
+                File.WriteAllText("casenumber.json", casenumber.ToString());
             }
 
         }
@@ -432,16 +432,16 @@ namespace Sketch_Bot.Modules
                     // Website is Online
                     response.Close();
                     var embed = new EmbedBuilder();
-                    embed.Title = ("Status");
-                    embed.Description = ($"{website} \n\nserver is **online**");
-                    embed.Timestamp = (DateTime.Now);
+                    embed.Title = "Status";
+                    embed.Description = $"{website} \n\nserver is **online**";
+                    embed.Timestamp = DateTime.Now;
                     embed.WithFooter(footer =>
                     {
                         footer
                         .WithText("Requested by " + Context.User.Username)
                             .WithIconUrl(Context.User.GetAvatarUrl());
                     });
-                    embed.ThumbnailUrl = (Context.Client.CurrentUser.GetAvatarUrl(ImageFormat.Auto, 1024));
+                    embed.ThumbnailUrl = Context.Client.CurrentUser.GetAvatarUrl(ImageFormat.Auto, 1024);
                     var builtEmbed = embed.Build();
                     await Context.Channel.SendMessageAsync("", false, builtEmbed);
                 }
@@ -450,16 +450,16 @@ namespace Sketch_Bot.Modules
                     // Website if Offline
                     response.Close();
                     var embed = new EmbedBuilder();
-                    embed.Title = ("Status");
-                    embed.Description = ($"{website} \n\nserver is **offline**");
-                    embed.Timestamp = (DateTime.Now);
+                    embed.Title = "Status";
+                    embed.Description = $"{website} \n\nserver is **offline**";
+                    embed.Timestamp = DateTime.Now;
                     embed.WithFooter(footer =>
                     {
                         footer
                         .WithText("Requested by " + Context.User.Username)
                             .WithIconUrl(Context.User.GetAvatarUrl());
                     });
-                    embed.ThumbnailUrl = (Context.Client.CurrentUser.GetAvatarUrl(ImageFormat.Auto, 1024));
+                    embed.ThumbnailUrl = Context.Client.CurrentUser.GetAvatarUrl(ImageFormat.Auto, 1024);
                     var builtEmbed = embed.Build();
                     await Context.Channel.SendMessageAsync("", false, builtEmbed);
                 }
@@ -469,16 +469,16 @@ namespace Sketch_Bot.Modules
             {
                 // Connection is not available
                 var embed = new EmbedBuilder();
-                embed.Title = ("Status");
-                embed.Description = ($"{website} \n\nconnection is **not available**");
-                embed.Timestamp = (DateTime.Now);
+                embed.Title = "Status";
+                embed.Description = $"{website} \n\nconnection is **not available**";
+                embed.Timestamp = DateTime.Now;
                 embed.WithFooter(footer =>
                 {
                     footer
                     .WithText("Requested by " + Context.User.Username)
                         .WithIconUrl(Context.User.GetAvatarUrl());
                 });
-                embed.ThumbnailUrl = (Context.Client.CurrentUser.GetAvatarUrl(ImageFormat.Auto, 1024));
+                embed.ThumbnailUrl = Context.Client.CurrentUser.GetAvatarUrl(ImageFormat.Auto, 1024);
                 var builtEmbed = embed.Build();
                 await Context.Channel.SendMessageAsync("", false, builtEmbed);
             }
@@ -522,7 +522,7 @@ namespace Sketch_Bot.Modules
                 Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?frede and failed! (NotFredeException)" + " (" + Context.Guild?.Name ?? "DM" + ")");
             }
         }
-        [Custom_Preconditions.Ratelimit(1,1, Custom_Preconditions.Measure.Minutes,Custom_Preconditions.RatelimitFlags.ApplyPerGuild)]
+        [Ratelimit(1,1, Measure.Minutes, RatelimitFlags.ApplyPerGuild)]
         [Command("count", RunMode = RunMode.Async)]
         public async Task countto(int countto)
         {
@@ -676,7 +676,7 @@ namespace Sketch_Bot.Modules
                 {
                     prod /= value;
                 }
-                if (Double.IsPositiveInfinity(prod) || Double.IsNegativeInfinity(prod))
+                if (double.IsPositiveInfinity(prod) || double.IsNegativeInfinity(prod))
                 {
                     throw new DivideByZeroException("Im sorry! I can't divide by 0!");
                 }
@@ -797,8 +797,8 @@ namespace Sketch_Bot.Modules
         {
             var bots = Context.Guild.Users.Count(x => x.IsBot);
             var members = Context.Guild.MemberCount;
-            double ratio = (double)bots / (double)members;
-            double percentage = Math.Round((double)bots / (double)members, 3) * 100;
+            double ratio = bots / (double)members;
+            double percentage = Math.Round(bots / (double)members, 3) * 100;
             EmbedBuilder builder = new EmbedBuilder()
             {
                 Title = $"Member count for {Context.Guild.Name}",
@@ -824,17 +824,17 @@ namespace Sketch_Bot.Modules
             {
                 user = Context.User as IGuildUser;
             }
-            Database.CreateTable(Context.Guild.Id);
-            var result = Database.CheckExistingUser(user);
+            StatsDB.CreateTable(Context.Guild.Id);
+            var result = StatsDB.CheckExistingUser(user);
 
             if (!result)
             {
-                Database.EnterUser(user);
+                StatsDB.EnterUser(user);
             }
 
-            var userTable = Database.GetUserStats(user);
+            var userTable = StatsDB.GetUserStats(user);
 
-            embed.Description = (user.Mention + " has " + userTable.Tokens + " tokens to spend!:small_blue_diamond:");
+            embed.Description = user.Mention + " has " + userTable.Tokens + " tokens to spend!:small_blue_diamond:";
             var builtEmbed = embed.Build();
             await Context.Channel.SendMessageAsync("", false, builtEmbed);
             Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?tokens with success! (" + userTable.Tokens + ") (" + Context.Guild.Name + ")");
@@ -857,7 +857,7 @@ namespace Sketch_Bot.Modules
                         {
                             Color = new Color(0, 0, 255)
                         };
-                        var list = Database.GetAllUserStats(user as IGuildUser);
+                        var list = StatsDB.GetAllUserStats(user as IGuildUser);
                         var foreachedlist = new List<string>();
                         foreach (var item in list.Skip(pagelimit).Take(10))
                         {
@@ -885,9 +885,9 @@ namespace Sketch_Bot.Modules
                         else
                         {
                             var arrayedlist = foreachedlist.ToArray();
-                            string longstring = String.Join("\n", arrayedlist);
+                            string longstring = string.Join("\n", arrayedlist);
                             embed.Title = "Token leaderboard for " + Context.Guild.Name;
-                            embed.Description = ("```css\n" + longstring + "\n```");
+                            embed.Description = "```css\n" + longstring + "\n```";
                             embed.WithFooter("Page " + index + "/" + celing);
                             var builtEmbed = embed.Build();
                             await ReplyAsync("", false, builtEmbed);
@@ -909,7 +909,7 @@ namespace Sketch_Bot.Modules
                         {
                             Color = new Color(0, 0, 255)
                         };
-                        var list = Database.GetAllUsersLeveling(user as IGuildUser);
+                        var list = StatsDB.GetAllUsersLeveling(user as IGuildUser);
                         var foreachedlist = new List<string>();
                         foreach (var item in list.Skip(pageLimit).Take(10))
                         {
@@ -938,9 +938,9 @@ namespace Sketch_Bot.Modules
                         else
                         {
                             var arrayedlist = foreachedlist.ToArray();
-                            string longstring = String.Join("\n", arrayedlist);
+                            string longstring = string.Join("\n", arrayedlist);
                             embed.Title = "Leveling leaderboard for " + Context.Guild.Name;
-                            embed.Description = ("```css\n" + longstring + "\n```");
+                            embed.Description = "```css\n" + longstring + "\n```";
                             embed.WithFooter("Page " + index + "/" + celing);
                             var builtEmbed = embed.Build();
                             await ReplyAsync("", false, builtEmbed);
@@ -1003,7 +1003,7 @@ namespace Sketch_Bot.Modules
                 var messages = await Context.Channel.GetMessagesAsync((int)amount + 1).FlattenAsync();
                 await (Context.Channel as ITextChannel)?.DeleteMessagesAsync(messages);
                 const int delay = 3000;
-                var m = await this.ReplyAsync($"Purge completed. _This message will be deleted in {delay / 1000} seconds._");
+                var m = await ReplyAsync($"Purge completed. _This message will be deleted in {delay / 1000} seconds._");
                 await Task.Delay(delay);
                 await m.DeleteAsync();
                 Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?purge with success! and deleted " + amount + " messages" + " (" + Context.Guild.Name + ")");
@@ -1021,25 +1021,25 @@ namespace Sketch_Bot.Modules
             var name = (user as IGuildUser).Nickname ?? user.Username;
             if (((IGuildUser)Context.User).GuildPermissions.ManageGuild == true || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
-                var result = Database.CheckExistingUser(user);
+                var result = StatsDB.CheckExistingUser(user);
                 if (result)
                 {
                     var embed = new EmbedBuilder()
                     {
                         Color = new Color(0, 0, 255)
                     };
-                    Database.AddTokens(user, tokens);
+                    StatsDB.AddTokens(user, tokens);
                     if (comment != null)
                     {
-                        embed.Title = (name + " was awarded " + tokens + " tokens!");
-                        embed.Description = (comment);
+                        embed.Title = name + " was awarded " + tokens + " tokens!";
+                        embed.Description = comment;
                         var builtEmbed = embed.Build();
                         await ReplyAsync("", false, builtEmbed);
                         Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + name + " just ran ?award with success!" + " (" + tokens + ") (" + comment + ") (" + Context.Guild.Name + ")");
                     }
                     else
                     {
-                        embed.Title = (name + " was awarded " + tokens + " tokens!");
+                        embed.Title = name + " was awarded " + tokens + " tokens!";
                         var builtEmbed = embed.Build();
                         await ReplyAsync("", false, builtEmbed);
                         Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + name + " just ran ?award with success!" + " (" + tokens + ")" + " (" + Context.Guild.Name + ")");
@@ -1058,16 +1058,16 @@ namespace Sketch_Bot.Modules
             var name = ((IGuildUser)user).Nickname ?? user.Username;
             if (((IGuildUser)Context.User).GuildPermissions.ManageGuild == true || Context.User.Id == 135446225565515776 || Context.User.Id == 208624502878371840)
             {
-                var result = Database.CheckExistingUser(user as IGuildUser);
+                var result = StatsDB.CheckExistingUser(user as IGuildUser);
                 if (result)
                 {
                     var embed = new EmbedBuilder()
                     {
                         Color = new Color(0, 0, 255)
                     };
-                    Database.AddXP(user as IGuildUser, xptogive);
-                    embed.Title = (name + " was awarded " + xptogive + " xp!");
-                    embed.Description = (reason);
+                    StatsDB.AddXP(user as IGuildUser, xptogive);
+                    embed.Title = name + " was awarded " + xptogive + " xp!";
+                    embed.Description = reason;
                     var builtEmbed = embed.Build();
                     await ReplyAsync("", false, builtEmbed);
                     Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + name + " just ran ?award with success!" + " (" + xptogive + ") (" + reason + ") (" + Context.Guild.Name + ")");
@@ -1085,10 +1085,10 @@ namespace Sketch_Bot.Modules
                 var users = Context.Guild.Users;
                 foreach (var user in users)
                 {
-                    var result = Database.CheckExistingUser(user);
+                    var result = StatsDB.CheckExistingUser(user);
                     if (result)
                     {
-                        Database.AddTokens(user, tokens);
+                        StatsDB.AddTokens(user, tokens);
                     }
                 }
                 var embed = new EmbedBuilder()
@@ -1097,15 +1097,15 @@ namespace Sketch_Bot.Modules
                 };
                 if (comment != "")
                 {
-                    embed.Title = ("All users were awarded " + tokens + " tokens!");
-                    embed.Description = (comment);
+                    embed.Title = "All users were awarded " + tokens + " tokens!";
+                    embed.Description = comment;
                     var builtEmbed = embed.Build();
                     await ReplyAsync("", false, builtEmbed);
                     Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?awardall with success!" + " (" + tokens + ") (" + comment + ") (" + Context.Guild.Name + ")");
                 }
                 else
                 {
-                    embed.Title = ("All users were awarded " + tokens + " tokens!");
+                    embed.Title = "All users were awarded " + tokens + " tokens!";
                     var builtEmbed = embed.Build();
                     await ReplyAsync("", false, builtEmbed);
                     Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?awardall with success!" + " (" + tokens + ") (" + Context.Guild.Name + ")");
@@ -1132,17 +1132,17 @@ namespace Sketch_Bot.Modules
                 user = Context.User as IGuildUser;
             }
             // These lines checks if the user exits, if not we add him into the database
-            var result = Database.CheckExistingUser(user);
+            var result = StatsDB.CheckExistingUser(user);
             if (!result)
             {
-                Database.EnterUser(user);
+                StatsDB.EnterUser(user);
             }
-            var tableName = Database.GetUserStats(Context.User as IGuildUser); // We get the user status
+            var tableName = StatsDB.GetUserStats(Context.User as IGuildUser); // We get the user status
 
             DateTime now = DateTime.Now; // We get the actual time
             DateTime daily = tableName.Daily;
             int difference = DateTime.Compare(daily, now);
-            if ((tableName?.Daily.ToString() == "0001-01-01 00:00:00") || (daily.DayOfYear < now.DayOfYear && difference < 0 || difference >= 0 || daily.Year < now.Year))
+            if (tableName?.Daily.ToString() == "0001-01-01 00:00:00" || daily.DayOfYear < now.DayOfYear && difference < 0 || difference >= 0 || daily.Year < now.Year)
             {
                 int amount = 50; // The amount of credits the user is gonna receive, in uint of you followed BossDarkReaper advises or in int
                 if (await _service.DblApi(Context.Client.CurrentUser.Id).HasVoted(Context.User.Id))
@@ -1154,17 +1154,17 @@ namespace Sketch_Bot.Modules
                 {
                     await ReplyAsync($"You would have gotten 4x more tokens if you have voted today. See {_cachingService.GetServerSettings(Context.Guild.Id)?.Prefix}upvote");
                 }
-                Database.UpdateDailyTimestamp(Context.User as IGuildUser);
+                StatsDB.UpdateDailyTimestamp(Context.User as IGuildUser);
                 if (user != Context.User as IGuildUser)
                 {
                     _rand = new Random();
                     amount += _rand.Next(amount * 2);
                     await ReplyAsync($"You have given {user.Nickname ?? user.Username} {amount} daily tokens!");
-                    Database.AddTokens(user, amount);
+                    StatsDB.AddTokens(user, amount);
                 }
                 else
                 {
-                    Database.AddTokens(user, amount); // We add the tokens to the user
+                    StatsDB.AddTokens(user, amount); // We add the tokens to the user
                     await ReplyAsync($"You received your {amount} tokens!");
                 }
                 Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?daily with success!" + " (" + Context.Guild.Name + ")");
@@ -1185,8 +1185,8 @@ namespace Sketch_Bot.Modules
         public async Task pay(IGuildUser usertopay, int amount, [Remainder] string comment = null)
         {
             var user = Context.User as SocketGuildUser;
-            var result = Database.CheckExistingUser(user);
-            var result2 = Database.CheckExistingUser(usertopay);
+            var result = StatsDB.CheckExistingUser(user);
+            var result2 = StatsDB.CheckExistingUser(usertopay);
             var result3 = _cachingService.GetBlackList();
             if (!result3.Contains(user.Id))
             {
@@ -1194,22 +1194,22 @@ namespace Sketch_Bot.Modules
                 {
                     if (result2)
                     {
-                        var userTable = Database.GetUserStats(user);
-                        var userToPay = Database.GetUserStats(usertopay);
+                        var userTable = StatsDB.GetUserStats(user);
+                        var userToPay = StatsDB.GetUserStats(usertopay);
                         if (amount > 0)
                         {
                             if (userTable.Tokens >= amount)
                             {
-                                Database.RemoveTokens(user, amount);
-                                Database.AddTokens(usertopay, amount);
+                                StatsDB.RemoveTokens(user, amount);
+                                StatsDB.AddTokens(usertopay, amount);
                                 if (comment != null)
                                 {
                                     var embed = new EmbedBuilder()
                                     {
                                         Color = new Color(0, 0, 255)
                                     };
-                                    embed.Description = (user.Mention + " has paid " + usertopay.Mention + " " + amount + " tokens!" +
-                                        "\n" + comment);
+                                    embed.Description = user.Mention + " has paid " + usertopay.Mention + " " + amount + " tokens!" +
+                                        "\n" + comment;
                                     var builtEmbed = embed.Build();
                                     await Context.Channel.SendMessageAsync("", false, builtEmbed);
                                 }
@@ -1219,7 +1219,7 @@ namespace Sketch_Bot.Modules
                                     {
                                         Color = new Color(0, 0, 255)
                                     };
-                                    embed.Description = (user.Mention + " has paid " + usertopay.Mention + " " + amount + " tokens!");
+                                    embed.Description = user.Mention + " has paid " + usertopay.Mention + " " + amount + " tokens!";
                                     var builtEmbed = embed.Build();
                                     await Context.Channel.SendMessageAsync("", false, builtEmbed);
                                     Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?pay with success!" + " (" + Context.Guild.Name + ")");
@@ -1235,14 +1235,14 @@ namespace Sketch_Bot.Modules
                     else
                     {
                         await ReplyAsync("Target user not in the database! adding user...");
-                        Database.EnterUser(usertopay);
+                        StatsDB.EnterUser(usertopay);
                         await ReplyAsync("User added! try running the command again");
                     }
                 }
                 else
                 {
                     await ReplyAsync("User not in the database! adding user...");
-                    Database.EnterUser(user);
+                    StatsDB.EnterUser(user);
                     await ReplyAsync("User added! try running the command again");
                 }
             }

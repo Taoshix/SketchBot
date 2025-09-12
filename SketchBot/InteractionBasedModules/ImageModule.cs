@@ -18,9 +18,9 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using Discord.Interactions;
 using System.Net.Http;
 using SixLabors.ImageSharp.Formats.Png;
-using Sketch_Bot.Models;
+using SketchBot.Utils;
 
-namespace Sketch_Bot.Modules
+namespace SketchBot.InteractionBasedModules
 {
     public class ImageModule : InteractionModuleBase<SocketInteractionContext>
     {

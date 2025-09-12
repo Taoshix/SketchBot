@@ -2,7 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using MySqlX.XDevAPI;
-using Sketch_Bot.Models;
+using SketchBot.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Sketch_Bot.Services
+namespace SketchBot.Services
 {
 
 

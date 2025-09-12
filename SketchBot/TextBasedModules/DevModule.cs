@@ -8,9 +8,10 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using MoreLinq.Extensions;
-using Sketch_Bot.Custom_Preconditions;
-using Sketch_Bot.Models;
-using Sketch_Bot.Services;
+using SketchBot.Custom_Preconditions;
+using SketchBot.Database;
+using SketchBot.Services;
+using SketchBot.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -26,7 +27,7 @@ using System.Xml.Linq;
 using TagLib.Asf;
 using Victoria;
 
-namespace Sketch_Bot.Modules
+namespace SketchBot.TextBasedModules
 {
     public class DevModule : ModuleBase<SocketCommandContext>
     {
@@ -97,7 +98,7 @@ namespace Sketch_Bot.Modules
         [Command("bash", RunMode = RunMode.Async)]
         public async Task BashAsync([Remainder] string cmd)
         {
-            var result = HelperFunctions.Bash(cmd);
+            var result = cmd.Bash();
             await ReplyAsync(result);
         }
         [RequireDevelopers]
@@ -187,7 +188,7 @@ namespace Sketch_Bot.Modules
                     await ReplyAsync("Unable to download/verify the URL");
                     return;
                 }
-                await Context.Client.CurrentUser.ModifyAsync(x => x.Avatar = new Discord.Image(stream));
+                await Context.Client.CurrentUser.ModifyAsync(x => x.Avatar = new Image(stream));
             }
             catch
             {
@@ -400,7 +401,7 @@ namespace Sketch_Bot.Modules
 
             if (blacklist.Contains(user.Id))
             {
-                Database.BlacklistDel(id);
+                StatsDB.BlacklistDel(id);
                 embedBuilder.Description = $"{user?.Mention ?? id.ToString()} has been removed from the blacklist!";
                 _cachingService.RemoveFromBlacklist(id);
             }
@@ -536,7 +537,7 @@ namespace Sketch_Bot.Modules
                 // Remove forum threads from text channels field
                 var textChannelsAndThreadsEnumerable = textChannels
                     .Concat(textThreads)
-                    .Where(x => !(guild.ThreadChannels.Any(t => t.Id == x.Id && t.ParentChannel is SocketForumChannel)))
+                    .Where(x => !guild.ThreadChannels.Any(t => t.Id == x.Id && t.ParentChannel is SocketForumChannel))
                     .GroupBy(x => x.Id)
                     .Select(g => g.First().Name);
 
@@ -770,7 +771,7 @@ namespace Sketch_Bot.Modules
                 pages.Add(new PageBuilder()
                     .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
                     .WithTitle("Users in Database")
-                    .WithDescription("No cached users in database.")
+                    .WithDescription("No cached users in StatsDB.")
                     .WithColor(new Color(0, 255, 0))
                     .WithCurrentTimestamp()
                     .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB"));

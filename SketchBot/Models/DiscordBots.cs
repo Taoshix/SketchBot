@@ -8,7 +8,7 @@ using System.IO;
 using Newtonsoft.Json;
 using System.Net.Http;
 
-namespace Sketch_Bot.Models
+namespace SketchBot.Models
 {
     public static class DiscordBots
     {

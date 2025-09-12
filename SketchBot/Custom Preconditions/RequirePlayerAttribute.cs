@@ -4,7 +4,7 @@ using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Victoria;
 
-namespace Sketch_Bot.Custom_Preconditions;
+namespace SketchBot.Custom_Preconditions;
 
 public class RequirePlayerAttribute : PreconditionAttribute
 {

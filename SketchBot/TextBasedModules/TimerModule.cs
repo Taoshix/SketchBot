@@ -5,10 +5,10 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using System.Threading.Tasks;
-using Sketch_Bot.Custom_Preconditions;
-using Sketch_Bot.Services;
+using SketchBot.Custom_Preconditions;
+using SketchBot.Services;
 
-namespace Sketch_Bot.Modules
+namespace SketchBot.TextBasedModules
 {
     [RequireDevelopers]
     public class TimerModule : ModuleBase<SocketCommandContext>

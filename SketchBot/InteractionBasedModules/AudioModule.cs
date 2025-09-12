@@ -2,10 +2,9 @@ using Discord;
 using Discord.Audio;
 using Discord.Commands;
 using Discord.WebSocket;
-using Sketch_Bot;
-using Sketch_Bot.Custom_Preconditions;
-using Sketch_Bot.Models;
-using Sketch_Bot.Services;
+using SketchBot.Custom_Preconditions;
+using SketchBot.Services;
+using SketchBot.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -22,7 +21,7 @@ using Victoria.Rest;
 using Victoria.Rest.Search;
 using YouTubeSearch;
 
-namespace Sketch_Bot.Modules
+namespace SketchBot.InteractionBasedModules
 {
     [RequireContext(ContextType.Guild)]
     public class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaNode, AudioService audioService) : ModuleBase<SocketCommandContext>
@@ -112,7 +111,7 @@ namespace Sketch_Bot.Modules
                 }
             }
             // Auto disconnect does not properly destroy the player and making it null so we need to use the existing player to reconnect
-            if (!player.State.IsConnected && (Context.User as IVoiceState) != null)
+            if (!player.State.IsConnected && Context.User as IVoiceState != null)
             {
                 player = await lavaNode.JoinAsync((Context.User as IVoiceState).VoiceChannel);
             }
@@ -478,7 +477,7 @@ namespace Sketch_Bot.Modules
             }
             var embed = new EmbedBuilder()
                 .WithTitle($"Active Lavalink Players ({players.Count})")
-                .WithDescription(HelperFunctions.JoinWithLimit(players.Select(x => $"**{Context.Client.GetGuild(x.GuildId).Name}** - `{x.GuildId}` - {(x.State.IsConnected ? (x.Track != null ? $"Playing: [{x.Track.Title}]({x.Track.Url})" : "Connected, not playing") : "Not connected")}"), 4096, "\n"))
+                .WithDescription(HelperFunctions.JoinWithLimit(players.Select(x => $"**{Context.Client.GetGuild(x.GuildId).Name}** - `{x.GuildId}` - {(x.State.IsConnected ? x.Track != null ? $"Playing: [{x.Track.Title}]({x.Track.Url})" : "Connected, not playing" : "Not connected")}"), 4096, "\n"))
                 .WithColor(Color.Red)
                 .WithCurrentTimestamp()
                 .Build();

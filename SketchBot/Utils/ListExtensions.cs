@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Sketch_Bot.Models
+namespace SketchBot.Utils
 {
     /// <summary>
     /// Helper methods for the lists.
@@ -22,7 +22,7 @@ namespace Sketch_Bot.Models
         {
             return list
                 .Select((t, i) => new { t, i })
-                .GroupBy(x => (int)(x.i / groupSize), x => x.t);
+                .GroupBy(x => x.i / groupSize, x => x.t);
         }
         public static TimeSpan TotalTime(this IEnumerable<TimeSpan> TheCollection)
         {
@@ -33,7 +33,7 @@ namespace Sketch_Bot.Models
 
             for (i = 0; i < ArrayDuration.Length; i++)
             {
-                TotalSeconds = (int)(ArrayDuration[i].TotalSeconds) + TotalSeconds;
+                TotalSeconds = (int)ArrayDuration[i].TotalSeconds + TotalSeconds;
             }
 
             return TimeSpan.FromSeconds(TotalSeconds);

@@ -7,12 +7,12 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using System.Linq;
-using Sketch_Bot.Models;
 using DiscordBotsList;
 using DiscordBotsList.Api;
 using Newtonsoft.Json;
+using SketchBot.Models;
 
-namespace Sketch_Bot.Services
+namespace SketchBot.Services
 {
     public class DiscordBotsListService
     {

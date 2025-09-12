@@ -13,15 +13,15 @@ using System.Threading.Tasks;
 using UrbanDictionnet;
 using System.Diagnostics;
 using Fergun.Interactive;
-using Sketch_Bot.Models;
 using Urban.NET;
 using JikanDotNet;
-using Sketch_Bot.Custom_Preconditions;
+using SketchBot.Custom_Preconditions;
 using System.Reflection;
-using Sketch_Bot.Services;
 using Fergun.Interactive.Pagination;
+using SketchBot.Utils;
+using SketchBot.Services;
 
-namespace Sketch_Bot.Modules
+namespace SketchBot.TextBasedModules
 {
     public class InteractiveModuleOld : ModuleBase<SocketCommandContext>
     {
@@ -213,7 +213,7 @@ namespace Sketch_Bot.Modules
         public async Task paginator([Remainder] string str = "")
         {
             string[] words = str.Split(",");
-            if (!words.Any() || (words.Length == 1 && string.IsNullOrWhiteSpace(words[0])))
+            if (!words.Any() || words.Length == 1 && string.IsNullOrWhiteSpace(words[0]))
             {
                 await ReplyAsync(Context.User.Mention + " You gotta give me something to paginate");
             }
@@ -347,7 +347,7 @@ namespace Sketch_Bot.Modules
                     int NSFW = 0;
                     foreach (var result in results)
                     {
-                        if ((result.Rating == "Rx" && !(Context.Channel as ITextChannel).IsNsfw) || result == null)
+                        if (result.Rating == "Rx" && !(Context.Channel as ITextChannel).IsNsfw || result == null)
                         {
                             NSFW++;
                             continue;
@@ -546,7 +546,7 @@ namespace Sketch_Bot.Modules
                         .AddField("Dropped", SafeField(stats?.Data?.MangaStatistics?.Dropped), true)
                         .AddField("Reread", SafeField(stats?.Data?.MangaStatistics?.Reread), true),
                     // Only add WithImageUrl if imageUrl is not null or empty
-                    (string.IsNullOrEmpty(imageUrl)
+                    string.IsNullOrEmpty(imageUrl)
                         ? new PageBuilder()
                             .WithTitle("Favorites")
                             .AddField($"Favorite Anime ({favorites?.Data?.Anime.Count ?? 0})", SafeField(HelperFunctions.JoinWithLimit(favorites?.Data?.Anime.Select(x => $"[{x.Title}]({x.Url})") ?? ["No favorite anime"], 1024, "\n")))
@@ -560,7 +560,7 @@ namespace Sketch_Bot.Modules
                             .AddField($"Favorite Manga ({favorites?.Data?.Manga.Count ?? 0})", SafeField(HelperFunctions.JoinWithLimit(favorites?.Data?.Manga.Select(x => $"[{x.Title}]({x.Url})") ?? ["No favorite manga"], 1024, "\n")))
                             .AddField($"Favorite Character(s) ({favorites?.Data?.Characters.Count ?? 0})", SafeField(HelperFunctions.JoinWithLimit(favorites?.Data?.Characters.Select(x => $"[{x.Title}]({x.Url})") ?? ["No favorite characters"], 1024, "\n")), true)
                             .AddField($"Favorite People ({favorites?.Data?.People.Count ?? 0})", SafeField(HelperFunctions.JoinWithLimit(favorites?.Data?.People.Select(x => $"[{x.Title}]({x.Url})") ?? ["No favorite people"], 1024, "\n")), true)
-                    ),
+                    ,
                     new PageBuilder()
                         .WithTitle("User History")
                         .AddField("Name", SafeField(HelperFunctions.JoinWithLimit(history?.Data?.Select(x => $"[{x.Metadata.Name}]({x.Metadata.Url})") ?? ["N/A"], 1024, "\n")), true)

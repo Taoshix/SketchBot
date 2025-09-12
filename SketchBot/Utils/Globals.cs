@@ -5,10 +5,10 @@ using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
 using DiscordBotsList.Api;
-using Sketch_Bot.Services;
+using SketchBot.Services;
 using Victoria;
 
-namespace Sketch_Bot.Models
+namespace SketchBot.Utils
 {
     public class Globals
     {

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sketch_Bot.TypeConverters
+namespace SketchBot.TypeConverters
 {
     internal sealed class UlongConverter : TypeConverter<ulong>
     {

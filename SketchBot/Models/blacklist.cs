@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Sketch_Bot.Models
+namespace SketchBot.Models
 {
     public class Blacklist
     {

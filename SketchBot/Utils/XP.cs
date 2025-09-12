@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 
-namespace Sketch_Bot
+namespace SketchBot.Utils
 {
     public class XP
     {

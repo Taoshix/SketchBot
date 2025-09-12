@@ -20,10 +20,13 @@ using MySqlX.XDevAPI;
 using Newtonsoft.Json;
 using OsuSharp;
 using OsuSharp.Extensions;
-using Sketch_Bot.Models;
-using Sketch_Bot.Modules;
-using Sketch_Bot.Services;
-using Sketch_Bot.TypeConverters;
+using SketchBot.InteractionBasedModules;
+using SketchBot.TextBasedModules;
+using SketchBot.TypeConverters;
+using SketchBot.Database;
+using SketchBot.Models;
+using SketchBot.Services;
+using SketchBot.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -38,9 +41,9 @@ using System.Threading.Tasks;
 using System.Timers;
 using TagLib.Asf;
 using Victoria;
-using static Sketch_Bot.Models.HelperFunctions;
+using static SketchBot.Utils.HelperFunctions;
 
-namespace Sketch_Bot
+namespace SketchBot
 {
     public class Program
     {
@@ -141,7 +144,7 @@ namespace Sketch_Bot
             _client.SelectMenuExecuted += MyMenuHandler;
             //_commands.CommandExecuted += OnCommandExecutedAsync;
 
-            _ = new Database(true);
+            _ = new StatsDB(true);
             _ = new ServerSettingsDB(true);
         }
 
@@ -255,7 +258,7 @@ namespace Sketch_Bot
 
             await _interactionService.ExecuteCommandAsync(context, _provider);
         }
-        async Task SlashCommandExecuted(SlashCommandInfo arg1, Discord.IInteractionContext arg2, Discord.Interactions.IResult arg3)
+        async Task SlashCommandExecuted(SlashCommandInfo arg1, IInteractionContext arg2, Discord.Interactions.IResult arg3)
         {
             Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture)} {arg2.User.Username} ran /{arg1.Name}");
             if (!arg3.IsSuccess)
@@ -350,9 +353,9 @@ namespace Sketch_Bot
             await _provider.UseLavaNodeAsync();
             if (_provider.GetRequiredService<CachingService>()._dbConnected)
             {
-                Database.CreateSettingsTable();
-                Database.CreateBlacklistTable();
-                Database.CreateStatsTable();
+                StatsDB.CreateSettingsTable();
+                StatsDB.CreateBlacklistTable();
+                StatsDB.CreateStatsTable();
                 cachingservice.SetupBlackList();
             }
             await _interactionService.RegisterCommandsGloballyAsync();
@@ -408,7 +411,7 @@ namespace Sketch_Bot
 
                 ServerSettingsDB.CreateTableWords(guildId);
                 ServerSettingsDB.CreateTableRole(guildId);
-                Database.CreateTable(guildId);
+                StatsDB.CreateTable(guildId);
 
                 foreach (var channel in socketGuild.TextChannels)
                 {
@@ -475,14 +478,14 @@ namespace Sketch_Bot
                     rand = new Random();
                     int xp = rand.Next(5, 15);
                     int tokens = rand.Next(1, 4);
-                    var userData = Database.GetUserStats(guildUser);
+                    var userData = StatsDB.GetUserStats(guildUser);
                     if (userData == null)
                     {
                         Console.WriteLine($"UserData for {guildUser.Id} is null!");
                         return;
                     }
 
-                    Database.AddTokens(guildUser, tokens);
+                    StatsDB.AddTokens(guildUser, tokens);
                     xpService.AddUser(guildUser);
 
                     var xpToLevelUp = XP.caclulateNextLevel(userData.Level);
@@ -492,7 +495,7 @@ namespace Sketch_Bot
                         while (userData.XP >= XP.caclulateNextLevel(userData.Level + addLevels))
                             addLevels++;
 
-                        Database.LevelUp(guildUser, xp, addLevels);
+                        StatsDB.LevelUp(guildUser, xp, addLevels);
 
                         var newLevel = userData.Level + addLevels;
                         var rolesToAward = ServerSettingsDB.GetRoles(socketGuild.Id);
@@ -525,12 +528,12 @@ namespace Sketch_Bot
                     }
                     else if (!user.IsBot)
                     {
-                        Database.AddXP(guildUser, xp);
+                        StatsDB.AddXP(guildUser, xp);
                     }
                 }
                 catch (Exception)
                 {
-                    Database.CreateTable((msg.Author as SocketGuildUser).Guild.Id);
+                    StatsDB.CreateTable((msg.Author as SocketGuildUser).Guild.Id);
                 }
             });
             return Task.CompletedTask;
@@ -544,8 +547,8 @@ namespace Sketch_Bot
                     return;
 
                 // Ensure user is in database
-                if (!Database.CheckExistingUser(user))
-                    Database.EnterUser(user);
+                if (!StatsDB.CheckExistingUser(user))
+                    StatsDB.EnterUser(user);
 
                 // Get welcome channel
                 var settingsTable = _provider.GetRequiredService<CachingService>().GetServerSettings(user.Guild.Id);
@@ -621,7 +624,7 @@ namespace Sketch_Bot
                     var tao = _client.GetUser(135446225565515776).GetAvatarUrl();
                     var tjamp = _client.GetUser(208624502878371840).GetAvatarUrl();
 
-                    Database.UpdateProfilePicture(tao, tjamp);
+                    StatsDB.UpdateProfilePicture(tao, tjamp);
                     TempDB.UpdateProfilePicture(tao, tjamp);
                 }
             });

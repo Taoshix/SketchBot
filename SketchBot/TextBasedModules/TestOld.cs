@@ -13,7 +13,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Timers;
 using System.IO;
-using Sketch_Bot.Custom_Preconditions;
+using SketchBot.Custom_Preconditions;
 using YouTubeSearch;
 using System.Diagnostics;
 using OsuSharp.Interfaces;
@@ -22,11 +22,13 @@ using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using Sketch_Bot.Models;
-using Sketch_Bot.Services;
+using SketchBot.Models;
 using ImgFlip4NET;
+using SketchBot.Utils;
+using SketchBot.Database;
+using SketchBot.Services;
 
-namespace Sketch_Bot.Modules
+namespace SketchBot.TextBasedModules
 {
     public class TestOld : ModuleBase<ICommandContext>
     {
@@ -122,7 +124,7 @@ namespace Sketch_Bot.Modules
         public async Task roleinfo([Remainder] SocketRole role)
         {
             var rolelist = role.Permissions.ToList();
-            string roleliststring = String.Join("\n", rolelist);
+            string roleliststring = string.Join("\n", rolelist);
             var embed = new EmbedBuilder()
             {
                 Color = role.Color
@@ -158,15 +160,15 @@ namespace Sketch_Bot.Modules
                 user = Context.User as IGuildUser;
             }
             var name = user.Nickname ?? user.Username;
-            Database.CreateTable(Context.Guild.Id);
-            var result = Database.CheckExistingUser(user);
+            StatsDB.CreateTable(Context.Guild.Id);
+            var result = StatsDB.CheckExistingUser(user);
 
             if (!result)
             {
-                Database.EnterUser(user);
+                StatsDB.EnterUser(user);
             }
 
-            var userStats = Database.GetUserStats(user);
+            var userStats = StatsDB.GetUserStats(user);
             embed.Title = "Stats for " + name;
             embed.Description = userStats.Tokens + " tokens:small_blue_diamond:" +
                 "\nLevel " + userStats.Level +

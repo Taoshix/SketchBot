@@ -18,7 +18,7 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Png;
 using System.Net.Http;
 
-namespace Sketch_Bot.Modules
+namespace SketchBot.TextBasedModules
 {
     public class ImageModuleOld : ModuleBase<SocketCommandContext>
     {

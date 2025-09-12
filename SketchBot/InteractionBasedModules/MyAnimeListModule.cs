@@ -3,16 +3,16 @@ using Discord.Interactions;
 using Fergun.Interactive;
 using Fergun.Interactive.Pagination;
 using JikanDotNet;
-using Sketch_Bot.Custom_Preconditions;
-using Sketch_Bot.Models;
-using Sketch_Bot.Services;
+using SketchBot.Custom_Preconditions;
+using SketchBot.Services;
+using SketchBot.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SketchBot.Modules
+namespace SketchBot.InteractionBasedModules
 {
     public class MyAnimeListModule : InteractionModuleBase<SocketInteractionContext>
     {
@@ -49,7 +49,7 @@ namespace SketchBot.Modules
                 int NSFW = 0;
                 foreach (var result in results)
                 {
-                    if ((result.Rating == "Rx" && !(Context.Channel as ITextChannel).IsNsfw) || result == null)
+                    if (result.Rating == "Rx" && !(Context.Channel as ITextChannel).IsNsfw || result == null)
                     {
                         NSFW++;
                         continue;
@@ -215,7 +215,7 @@ namespace SketchBot.Modules
                         .AddField("Dropped", HelperFunctions.SafeField(stats?.Data?.MangaStatistics?.Dropped), true)
                         .AddField("Reread", HelperFunctions.SafeField(stats?.Data?.MangaStatistics?.Reread), true),
                     // Only add WithImageUrl if imageUrl is not null or empty
-                    (string.IsNullOrEmpty(imageUrl)
+                    string.IsNullOrEmpty(imageUrl)
                         ? new PageBuilder()
                             .WithTitle("Favorites")
                             .AddField($"Favorite Anime ({favorites?.Data?.Anime.Count ?? 0})", HelperFunctions.SafeField(HelperFunctions.JoinWithLimit(favorites?.Data?.Anime.Select(x => $"[{x.Title}]({x.Url})") ?? ["No favorite anime"], 1024, "\n")))
@@ -229,7 +229,7 @@ namespace SketchBot.Modules
                             .AddField($"Favorite Manga ({favorites?.Data?.Manga.Count ?? 0})", HelperFunctions.SafeField(HelperFunctions.JoinWithLimit(favorites?.Data?.Manga.Select(x => $"[{x.Title}]({x.Url})") ?? ["No favorite manga"], 1024, "\n")))
                             .AddField($"Favorite Character(s) ({favorites?.Data?.Characters.Count ?? 0})", HelperFunctions.SafeField(HelperFunctions.JoinWithLimit(favorites?.Data?.Characters.Select(x => $"[{x.Title}]({x.Url})") ?? ["No favorite characters"], 1024, "\n")), true)
                             .AddField($"Favorite People ({favorites?.Data?.People.Count ?? 0})", HelperFunctions.SafeField(HelperFunctions.JoinWithLimit(favorites?.Data?.People.Select(x => $"[{x.Title}]({x.Url})") ?? ["No favorite people"], 1024, "\n")), true)
-                    ),
+                    ,
                     new PageBuilder()
                         .WithTitle("User History")
                         .AddField("Name", HelperFunctions.SafeField(HelperFunctions.JoinWithLimit(history?.Data?.Select(x => $"[{x.Metadata.Name}]({x.Metadata.Url})") ?? ["N/A"], 1024, "\n")), true)

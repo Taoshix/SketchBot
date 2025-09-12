@@ -2,15 +2,14 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-using Sketch_Bot.Models;
+using SketchBot.Models;
 using OsuSharp;
 using OsuSharp.Interfaces;
 using OsuSharp.Models;
 using System.Threading.Tasks;
 using OsuSharp.Domain;
-using Services;
 
-namespace Sketch_Bot.Services
+namespace SketchBot.Services
 {
     public class OsuService : IOsuService
     {

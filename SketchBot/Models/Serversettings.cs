@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Sketch_Bot.Models
+namespace SketchBot.Models
 {
     public class Serversettings()
     {

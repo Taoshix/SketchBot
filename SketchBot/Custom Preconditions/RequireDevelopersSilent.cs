@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 
-namespace Sketch_Bot.Custom_Preconditions
+namespace SketchBot.Custom_Preconditions
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
     public class RequireDevelopersSilentAttribute : PreconditionAttribute

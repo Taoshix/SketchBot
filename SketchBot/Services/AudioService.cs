@@ -2,7 +2,7 @@ using Discord;
 using Discord.Audio;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
-using Sketch_Bot.Models;
+using SketchBot.Models;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -19,7 +19,7 @@ using Victoria;
 using Victoria.Enums;
 using Victoria.WebSocket.EventArgs;
 
-namespace Sketch_Bot.Services
+namespace SketchBot.Services
 {
     public class AudioService
     {

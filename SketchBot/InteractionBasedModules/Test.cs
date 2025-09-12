@@ -13,7 +13,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Timers;
 using System.IO;
-using Sketch_Bot.Custom_Preconditions;
+using SketchBot.Custom_Preconditions;
 using YouTubeSearch;
 using OsuSharp;
 using System.Diagnostics;
@@ -23,12 +23,13 @@ using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using Sketch_Bot.Models;
-using Sketch_Bot.Services;
+using SketchBot.Models;
 using ImgFlip4NET;
 using Discord.Interactions;
+using SketchBot.Database;
+using SketchBot.Services;
 
-namespace Sketch_Bot.Modules
+namespace SketchBot.InteractionBasedModules
 {
     public class Test : InteractionModuleBase<SocketInteractionContext>
     {

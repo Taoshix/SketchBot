@@ -6,12 +6,12 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Sketch_Bot.Models;
 using Discord.Rest;
 using Newtonsoft.Json;
 using System.IO;
+using SketchBot.Models;
 
-namespace Sketch_Bot
+namespace SketchBot.Database
 {
     public class TempDB
     {

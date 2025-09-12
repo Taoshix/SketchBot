@@ -7,10 +7,11 @@ using Fergun.Interactive.Pagination;
 using JikanDotNet;
 using Newtonsoft.Json.Linq;
 using Org.BouncyCastle.Asn1.X509;
-using Sketch_Bot.Custom_Preconditions;
-using Sketch_Bot.Models;
-using Sketch_Bot.Services;
+using SketchBot.Custom_Preconditions;
+using SketchBot.Database;
 using SketchBot.Handlers;
+using SketchBot.Services;
+using SketchBot.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,7 +25,7 @@ using Urban.NET;
 using UrbanDictionnet;
 using static Org.BouncyCastle.Asn1.Cmp.Challenge;
 
-namespace Sketch_Bot.Modules
+namespace SketchBot.InteractionBasedModules
 {
     public class InteractiveModule : InteractionModuleBase<SocketInteractionContext>
     {
@@ -200,8 +201,8 @@ namespace Sketch_Bot.Modules
 
             if (result.IsSuccess)
             {
-                Database.DeleteUser(user);
-                Database.EnterUser(user);
+                StatsDB.DeleteUser(user);
+                StatsDB.EnterUser(user);
                 await result.Value.UpdateAsync(x =>
                 {
                     x.Content = $"{user.Mention}'s stats have been reset by {Context.User.Mention}.";
@@ -241,15 +242,15 @@ namespace Sketch_Bot.Modules
             {
                 _cache.SetupUserInDatabase(Context.Guild.Id, user as SocketGuildUser);
             }
-            var userStats = Database.GetUserStats(user);
+            var userStats = StatsDB.GetUserStats(user);
             DateTime now = DateTime.Now;
             DateTime daily = userStats.Daily;
             int difference = DateTime.Compare(daily, now);
 
-            bool canClaim = (userStats?.Daily.ToString() == "0001-01-01 00:00:00") ||
-                            (daily.DayOfYear < now.DayOfYear && difference < 0) ||
-                            (difference >= 0) ||
-                            (daily.Year < now.Year);
+            bool canClaim = userStats?.Daily.ToString() == "0001-01-01 00:00:00" ||
+                            daily.DayOfYear < now.DayOfYear && difference < 0 ||
+                            difference >= 0 ||
+                            daily.Year < now.Year;
 
             if (!canClaim)
             {
@@ -265,7 +266,7 @@ namespace Sketch_Bot.Modules
             if (hasVoted)
             {
                 amount *= 4;
-                Database.UpdateDailyTimestamp(user);
+                StatsDB.UpdateDailyTimestamp(user);
                 if (user.Id != Context.User.Id)
                 {
                     var _rand = new Random();
@@ -277,7 +278,7 @@ namespace Sketch_Bot.Modules
                 {
                     await FollowupAsync($"You received your {amount} tokens! (4x vote bonus)");
                 }
-                Database.AddTokens(user, amount);
+                StatsDB.AddTokens(user, amount);
             }
             else
             {
@@ -295,8 +296,8 @@ namespace Sketch_Bot.Modules
 
                 if (result.IsSuccess)
                 {
-                    Database.UpdateDailyTimestamp(user);
-                    Database.AddTokens(user, amount);
+                    StatsDB.UpdateDailyTimestamp(user);
+                    StatsDB.AddTokens(user, amount);
                     await result.Value.UpdateAsync(x =>
                     {
                         x.Content = user.Id != Context.User.Id
@@ -332,7 +333,7 @@ namespace Sketch_Bot.Modules
             type = type.ToLower();
             string[] types = ["tokens", "leveling"];
             index = index > 0 ? index : 1;
-            var userStatsList = Database.GetAllUserStats(Context.User as IGuildUser);
+            var userStatsList = StatsDB.GetAllUserStats(Context.User as IGuildUser);
             int totalUsers = userStatsList.Count;
             int pageSize = 10;
             int totalPages = (int)Math.Ceiling(totalUsers / (double)pageSize);
@@ -373,7 +374,7 @@ namespace Sketch_Bot.Modules
                     string leftside = padded.PadRight(4) + userName;
                     string levelProgress = item.Level.ToString() + " " + item.XP.ToString() + "/" + XP.caclulateNextLevel(item.Level);
                     leaderboardEntries.Add(type == "tokens"
-                        ? (leftside.PadRight(25 + 19 - item.Tokens.ToString().Length) + item.Tokens.ToString())
+                        ? leftside.PadRight(25 + 19 - item.Tokens.ToString().Length) + item.Tokens.ToString()
                         : leftside.PadRight(25 + 10 - item.Level.ToString().Length) + " " + levelProgress);
                 }
                 string longstring = string.Join("\n", leaderboardEntries);

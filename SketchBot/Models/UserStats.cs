@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sketch_Bot.Models
+namespace SketchBot.Models
 {
     public class UserStats
     {

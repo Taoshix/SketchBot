@@ -8,9 +8,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using Sketch_Bot.Models;
+using SketchBot.Database;
+using SketchBot.Models;
 
-namespace Sketch_Bot.Services
+namespace SketchBot.Services
 {
     public class StatService
     {
@@ -31,7 +32,7 @@ namespace Sketch_Bot.Services
                 {
                     if (_cache._dbConnected)
                     {
-                        Database.UpdateStats(buildBotStats());
+                        StatsDB.UpdateStats(buildBotStats());
                         TempDB.UpdateStats(buildBotStats());
                     }
                 }
