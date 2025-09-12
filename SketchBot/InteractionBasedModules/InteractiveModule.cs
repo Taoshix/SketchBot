@@ -321,7 +321,7 @@ namespace SketchBot.InteractionBasedModules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("leaderboard", "Server leaderboard of Tokens or Leveling")]
-        public async Task LeaderboardAsync([Summary("Type"), Autocomplete(typeof(LeaderboardAutocompleteHandler))] string type, int index = 1)
+        public async Task LeaderboardAsync([Summary("Type"), Autocomplete(typeof(LeaderboardAutocompleteHandler))] string type)
         {
             await DeferAsync();
             await Context.Guild.DownloadUsersAsync();
@@ -332,7 +332,6 @@ namespace SketchBot.InteractionBasedModules
             }
             type = type.ToLower();
             string[] types = ["tokens", "leveling"];
-            index = index > 0 ? index : 1;
             var userStatsList = StatsDB.GetAllUserStats(Context.User as IGuildUser);
             int totalUsers = userStatsList.Count;
             int pageSize = 10;
@@ -342,11 +341,6 @@ namespace SketchBot.InteractionBasedModules
                 await FollowupAsync("Usage: /leaderboard <type> <page>" +
                     "\nAvailable types:" +
                     "\nTokens, Leveling");
-                return;
-            }
-            if (index > totalPages || totalUsers == 0)
-            {
-                await FollowupAsync("This page is empty");
                 return;
             }
 
