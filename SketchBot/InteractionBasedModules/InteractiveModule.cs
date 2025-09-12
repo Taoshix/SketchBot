@@ -296,6 +296,12 @@ namespace SketchBot.InteractionBasedModules
 
                 if (result.IsSuccess)
                 {
+                    if (user.Id != Context.User.Id)
+                    {
+                        var _rand = new Random();
+                        int giveBonus = _rand.Next(amount * 2);
+                        amount += giveBonus;
+                    }
                     StatsDB.UpdateDailyTimestamp(user);
                     StatsDB.AddTokens(user, amount);
                     await result.Value.UpdateAsync(x =>
