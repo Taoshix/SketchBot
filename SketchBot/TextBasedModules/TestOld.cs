@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using Discord.Rest;
+using Discord.Addons.Preconditions;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -13,7 +14,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Timers;
 using System.IO;
-using SketchBot.Custom_Preconditions;
 using YouTubeSearch;
 using System.Diagnostics;
 using OsuSharp.Interfaces;
@@ -437,8 +437,6 @@ namespace SketchBot.TextBasedModules
                 await Context.Channel.SendMessageAsync("Interval must be less than or equal to 6 hours.");
             }
         }
-
-        [Ratelimit(1, 2, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers)]
         [Command("meme", RunMode = RunMode.Async)]
         public async Task MemeAsync([Remainder] string text)
         {

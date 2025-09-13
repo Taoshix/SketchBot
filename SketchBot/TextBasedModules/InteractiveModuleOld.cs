@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using Discord.Rest;
+using Discord.Addons.Preconditions;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,6 @@ using System.Diagnostics;
 using Fergun.Interactive;
 using Urban.NET;
 using JikanDotNet;
-using SketchBot.Custom_Preconditions;
 using System.Reflection;
 using Fergun.Interactive.Pagination;
 using SketchBot.Utils;
@@ -327,7 +327,7 @@ namespace SketchBot.TextBasedModules
                 }
             }
         }
-        [Ratelimit(1, 5, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers)]
+        [Ratelimit(1, 1, Measure.Minutes)]
         [Command("anime", RunMode = RunMode.Async)]
         public async Task anime([Remainder] string name)
         {
@@ -396,7 +396,7 @@ namespace SketchBot.TextBasedModules
                 await ReplyAsync(ex.ToString());
             }
         }
-        [Ratelimit(1, 5, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers)]
+        [Ratelimit(1, 1, Measure.Minutes)]
         [Command("manga", RunMode = RunMode.Async)]
         public async Task manga([Remainder] string name)
         {
@@ -478,6 +478,7 @@ namespace SketchBot.TextBasedModules
             }
             [Alias("profile")]
             [Priority(1)]
+            [Ratelimit(1, 1, Measure.Minutes)]
             [Command("user", RunMode = RunMode.Async)]
             [Summary("Searches for a user on MyAnimeList.net")]
             public async Task MALUserAsync([Remainder] string username)
