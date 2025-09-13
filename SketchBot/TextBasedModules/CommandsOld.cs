@@ -12,7 +12,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using UrbanDictionnet;
 using System.Diagnostics;
-using Discord.Addons.Preconditions;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis.Scripting;
@@ -22,6 +21,7 @@ using DiscordBotsList;
 using DiscordBotsList.Api;
 using System.Threading;
 using System.IO;
+using SketchBot.Custom_Preconditions;
 using SketchBot.Database;
 using SketchBot.Utils;
 using SketchBot.Services;
@@ -522,7 +522,7 @@ namespace SketchBot.TextBasedModules
                 Console.WriteLine(DateTime.Now.ToString("HH:mm:ss", ci) + " Command     " + Context.User.Username + " just ran ?frede and failed! (NotFredeException)" + " (" + Context.Guild?.Name ?? "DM" + ")");
             }
         }
-        [Ratelimit(1,1, Measure.Minutes, RatelimitFlags.ApplyPerGuild)]
+        [Ratelimit(1, 2, Measure.Minutes, RatelimitFlags.ApplyPerGuild | RatelimitFlags.NoLimitForDevelopers)]
         [Command("count", RunMode = RunMode.Async)]
         public async Task countto(int countto)
         {
@@ -1074,7 +1074,7 @@ namespace SketchBot.TextBasedModules
                 }
             }
         }
-        [Custom_Preconditions.Ratelimit(1,5,Custom_Preconditions.Measure.Minutes,Custom_Preconditions.RatelimitFlags.ApplyPerGuild)]
+        [Ratelimit(1, 5, Measure.Minutes, RatelimitFlags.ApplyPerGuild | RatelimitFlags.NoLimitForDevelopers)]
         [RequireContext(ContextType.Guild)]
         [Command("awardall", RunMode = RunMode.Async)]
         public async Task awardall(int tokens, [Remainder] string comment = "")

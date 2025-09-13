@@ -327,7 +327,7 @@ namespace SketchBot.TextBasedModules
                 }
             }
         }
-        [Ratelimit(1, 5, Measure.Seconds)]
+        [Ratelimit(1, 5, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers)]
         [Command("anime", RunMode = RunMode.Async)]
         public async Task anime([Remainder] string name)
         {
@@ -396,7 +396,7 @@ namespace SketchBot.TextBasedModules
                 await ReplyAsync(ex.ToString());
             }
         }
-        [Ratelimit(1, 5, Measure.Seconds)]
+        [Ratelimit(1, 5, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers)]
         [Command("manga", RunMode = RunMode.Async)]
         public async Task manga([Remainder] string name)
         {

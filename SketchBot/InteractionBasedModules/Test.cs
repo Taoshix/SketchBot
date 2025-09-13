@@ -142,7 +142,7 @@ namespace SketchBot.InteractionBasedModules
                 await Context.Channel.SendMessageAsync("Interval must be less than or equal to 6 hours.");
             }
         }
-        [Ratelimit(1, 2, Measure.Seconds, RatelimitFlags.None)]
+        [Ratelimit(1, 2, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers)]
         [SlashCommand("memegen", "Generates a meme")]
         public async Task GenerateMemeAsync(string templateName, string topText, string bottomText)
         {

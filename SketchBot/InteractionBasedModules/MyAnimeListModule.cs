@@ -26,7 +26,7 @@ namespace SketchBot.InteractionBasedModules
             _interactive = interactive;
         }
 
-        [Ratelimit(1, 5, Measure.Seconds)]
+        [Ratelimit(1, 5, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers)]
         [SlashCommand("anime", "Shows information about an Anime")]
         public async Task AnimeAsync(string name)
         {
@@ -94,7 +94,7 @@ namespace SketchBot.InteractionBasedModules
                 await FollowupAsync(ex.ToString());
             }
         }
-        [Ratelimit(1, 5, Measure.Seconds)]
+        [Ratelimit(1, 5, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers)]
         [SlashCommand("manga", "Shows information about a Manga")]
         public async Task MangaAsync(string name)
         {
@@ -154,7 +154,7 @@ namespace SketchBot.InteractionBasedModules
                 await FollowupAsync(ex.ToString());
             }
         }
-        [Ratelimit(1, 5, Measure.Seconds)]
+        [Ratelimit(1, 5, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers)]
         [SlashCommand("maluser", "Searches for a user on MyAnimeList.net")]
         public async Task MALUserAsync(string username)
         {

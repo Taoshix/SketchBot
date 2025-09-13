@@ -438,7 +438,7 @@ namespace SketchBot.TextBasedModules
             }
         }
 
-        [Ratelimit(1, 2, Measure.Seconds, RatelimitFlags.None)]
+        [Ratelimit(1, 2, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers)]
         [Command("meme", RunMode = RunMode.Async)]
         public async Task MemeAsync([Remainder] string text)
         {

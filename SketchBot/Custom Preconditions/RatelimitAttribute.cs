@@ -105,7 +105,22 @@ namespace SketchBot.Custom_Preconditions
             }
             else
             {
-                return Task.FromResult(PreconditionResult.FromError($"You are currently in Timeout {_invokeLimit - timeout.TimesInvoked}"));
+                var remaining = _invokeLimitPeriod - (now - timeout.FirstInvoke);
+                if (remaining < TimeSpan.Zero) remaining = TimeSpan.Zero;
+
+                string timesText = _invokeLimit == 1 ? "once" : $"{_invokeLimit} times";
+                string periodText;
+                if (_invokeLimitPeriod.TotalDays >= 1 && _invokeLimitPeriod.TotalHours % 24 == 0)
+                    periodText = $"{_invokeLimitPeriod.TotalDays} Days";
+                else if (_invokeLimitPeriod.TotalHours >= 1 && _invokeLimitPeriod.TotalMinutes % 60 == 0)
+                    periodText = $"{_invokeLimitPeriod.TotalHours} Hours";
+                else if (_invokeLimitPeriod.TotalMinutes >= 1 && _invokeLimitPeriod.TotalSeconds % 60 == 0)
+                    periodText = $"{_invokeLimitPeriod.TotalMinutes} Minutes";
+                else
+                    periodText = $"{_invokeLimitPeriod.TotalSeconds} Seconds";
+
+                string message = $"This command can only be used {timesText} every {periodText}. You can use this command again in {remaining:hh\\:mm\\:ss}.";
+                return Task.FromResult(PreconditionResult.FromError(message));
             }
         }
 
@@ -151,6 +166,6 @@ namespace SketchBot.Custom_Preconditions
         /// <summary> Set whether or not to apply a limit per guild. </summary>
         ApplyPerGuild = 1 << 2,
         
-        NoLimitForDevelopers = 2 << 3
+        NoLimitForDevelopers = 1 << 3
     }
 }
