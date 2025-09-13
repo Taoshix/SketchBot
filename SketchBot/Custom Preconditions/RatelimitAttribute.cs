@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 
 namespace SketchBot.Custom_Preconditions
 {
@@ -75,9 +75,9 @@ namespace SketchBot.Custom_Preconditions
         }
 
         /// <inheritdoc />
-        public override Task<PreconditionResult> CheckPermissionsAsync(
-            ICommandContext context,
-            CommandInfo command,
+        public override Task<PreconditionResult> CheckRequirementsAsync(
+            IInteractionContext context,
+            ICommandInfo command,
             IServiceProvider services)
         {
             if (_noLimitInDMs && context.Channel is IPrivateChannel)
@@ -119,7 +119,7 @@ namespace SketchBot.Custom_Preconditions
                 else
                     periodText = $"{_invokeLimitPeriod.TotalSeconds} Seconds";
 
-                string message = $"This command can only be used {timesText} every {periodText}. You can use this command again in {remaining:hh\\:mm\\:ss}.";
+                string message = $"\nThis command can only be used {timesText} every {periodText}.\nYou can use this command again in {remaining:hh\\:mm\\:ss}.";
                 return Task.FromResult(PreconditionResult.FromError(message));
             }
         }
