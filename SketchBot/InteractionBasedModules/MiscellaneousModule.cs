@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.Rest;
-//using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBotsList;
 using DiscordBotsList.Api;
@@ -34,29 +33,29 @@ using UrbanDictionnet;
 
 namespace SketchBot.InteractionBasedModules
 {
-    public class Commands : InteractionModuleBase<SocketInteractionContext>
+    public class MiscellaneousModule : InteractionModuleBase<SocketInteractionContext>
     {
-
-        // Remember to add an instance of the AudioService
-        // to your IServiceCollection when you initialize your bot
-        public static
-        CultureInfo ci = CultureInfo.InvariantCulture;
-        Random _rand;
-        Stopwatch _stopwatch;
-
-        private DiscordBotsListService _discordBotListService;
-        private TimerService _timerService;
-        private StatService _statService;
-        private CachingService _cachingService;
-        private InteractionService _interactionService;
+        private readonly DiscordBotsListService _discordBotListService;
+        private readonly TimerService _timerService;
+        private readonly StatService _statService;
+        private readonly CachingService _cachingService;
+        private readonly InteractionService _interactionService;
         private readonly InteractiveService _interactive;
-        public Commands(DiscordBotsListService service, TimerService service2, StatService service3, CachingService service4, InteractionService service5, InteractiveService interactive)
+        private Random _rand;
+
+        public MiscellaneousModule(
+            DiscordBotsListService discordBotListService,
+            TimerService timerService,
+            StatService statService,
+            CachingService cachingService,
+            InteractionService interactionService,
+            InteractiveService interactive)
         {
-            _discordBotListService = service;
-            _timerService = service2;
-            _statService = service3;
-            _cachingService = service4;
-            _interactionService = service5;
+            _discordBotListService = discordBotListService;
+            _timerService = timerService;
+            _statService = statService;
+            _cachingService = cachingService;
+            _interactionService = interactionService;
             _interactive = interactive;
         }
 
@@ -65,43 +64,39 @@ namespace SketchBot.InteractionBasedModules
         {
             await DeferAsync();
             await FollowupAsync($"{Context.User.Mention} < {input}");
-            
         }
+
         [RequireUserPermission(GuildPermission.SendTTSMessages)]
         [SlashCommand("repeattts", "Echo a message")]
         public async Task RepeatTTSAsync(string input)
         {
             await DeferAsync();
             await FollowupAsync($"{Context.User.Mention} < {input}", null, true);
-            
         }
+
         [SlashCommand("rate", "Rates something out of 100")]
         public async Task Rate(string input)
         {
             await DeferAsync();
             var ci = CultureInfo.InvariantCulture;
-
             var specialRatings = new Dictionary<string, (double rating, string comment)>(StringComparer.OrdinalIgnoreCase)
-    {
-        { "hhx", (-1, "hhx") },
-        { "mee6", (-1, "mee6") },
-        { "stx", (-1, "stx") },
-        { "the meaning of life", (42, "the meaning of life (out of 42)") },
-        { "bush", (9, "bush (out of 11)") },
-        { "htx", (101, "htx (out of 100)") },
-        { "riskage", (100, "riskage (out of 100)") },
-        { "riskage bot", (100, "riskage bot (out of 100)") },
-        { "@Tjampen", (9999999, "Tjampen") },
-        { "Tjampen", (9999999, "Tjampen") },
-        { "<@208624502878371840>", (9999999, "Tjampen") },
-        { "Taoshi", (2147483647, "Taoshi") },
-        { "Taoshi#3480", (2147483647, "Taoshi") },
-        { "@Taoshi", (2147483647, "Taoshi") },
-        { "<@135446225565515776>", (2147483647, "Taoshi") }
-    };
-
-            string username = Context.User.Username;
-            string timestamp = DateTime.Now.ToString("HH:mm:ss", ci);
+            {
+                { "hhx", (-1, "hhx") },
+                { "mee6", (-1, "mee6") },
+                { "stx", (-1, "stx") },
+                { "the meaning of life", (42, "the meaning of life (out of 42)") },
+                { "bush", (9, "bush (out of 11)") },
+                { "htx", (101, "htx (out of 100)") },
+                { "riskage", (100, "riskage (out of 100)") },
+                { "riskage bot", (100, "riskage bot (out of 100)") },
+                { "@Tjampen", (9999999, "Tjampen") },
+                { "Tjampen", (9999999, "Tjampen") },
+                { "<@208624502878371840>", (9999999, "Tjampen") },
+                { "Taoshi", (2147483647, "Taoshi") },
+                { "Taoshi#3480", (2147483647, "Taoshi") },
+                { "@Taoshi", (2147483647, "Taoshi") },
+                { "<@135446225565515776>", (2147483647, "Taoshi") }
+            };
 
             if (specialRatings.TryGetValue(input, out var special))
             {
@@ -110,8 +105,7 @@ namespace SketchBot.InteractionBasedModules
             else
             {
                 var rand = new Random();
-                int randomScore = rand.Next(1001); // 0–1000
-                double rating = randomScore / 10.0;
+                double rating = rand.Next(1001) / 10.0;
                 await FollowupAsync($"I rate {input} **{rating}** out of 100");
             }
         }
@@ -121,26 +115,18 @@ namespace SketchBot.InteractionBasedModules
         {
             await DeferAsync();
             _rand = new Random();
-            try
+            if (min > max)
             {
-                if (min > max)
-                {
-                    await FollowupAsync("The minimum value must not be over the maximum value!");
-                    
-                }
-                else
-                {
-                    var rng = _rand.Next(min, max);
-                    await FollowupAsync($"{Context.User.Username} rolled {rng} ({min}-{max})");
-                    
-                }
+                await FollowupAsync("The minimum value must not be over the maximum value!");
             }
-            catch (IndexOutOfRangeException)
+            else
             {
-                await FollowupAsync("The number has to be between 0 and 2147483647!");
+                var rng = _rand.Next(min, max);
+                await FollowupAsync($"{Context.User.Username} rolled {rng} ({min}-{max})");
             }
         }
-        [SlashCommand("choose", "Makes the choice for you between a bunch of listed things seperated by , (comma)")]
+
+        [SlashCommand("choose", "Makes the choice for you between a bunch of listed things separated by , (comma)")]
         public async Task ChooseAsync([Summary("Choices")] string choices)
         {
             await DeferAsync();
@@ -156,10 +142,10 @@ namespace SketchBot.InteractionBasedModules
                 return;
             }
             _rand = new Random();
-            int randomIndex = _rand.Next(splitChoices.Length);
-            string chosen = splitChoices[randomIndex];
+            string chosen = splitChoices[_rand.Next(splitChoices.Length)];
             await FollowupAsync($"I choose: **{chosen}**");
         }
+
         [SlashCommand("hello", "Hello")]
         public async Task HelloAsync()
         {
@@ -172,21 +158,22 @@ namespace SketchBot.InteractionBasedModules
             {
                 await FollowupAsync("Hi! " + Context.User.Username);
             }
-            
         }
+
         [SlashCommand("donate", "Sends a link for donations")]
         public async Task DonateAsync()
         {
             await DeferAsync();
             await FollowupAsync("https://www.patreon.com/Sketch_Bot");
         }
+
         [SlashCommand("upvote", "Sends a link for upvoting the bot")]
         public async Task UpvoteAsync()
         {
             await DeferAsync();
             await ReplyAsync($"You can upvote the bot here https://discordbots.org/bot/{Context.Client.CurrentUser.Id}");
-            var Api = _discordBotListService.DblApi(Context.Client.CurrentUser.Id);
-            if (await Api.HasVoted(Context.User.Id))
+            var api = _discordBotListService.DblApi(Context.Client.CurrentUser.Id);
+            if (await api.HasVoted(Context.User.Id))
             {
                 await FollowupAsync("Thanks for voting today!");
             }
@@ -195,32 +182,33 @@ namespace SketchBot.InteractionBasedModules
                 await FollowupAsync("You have not voted today");
             }
         }
+
         [SlashCommand("ping", "Pong")]
         public async Task PingAsync()
         {
             await DeferAsync();
             await FollowupAsync("Pong!");
         }
+
         [UserCommand("avatar")]
         public async Task UserAvatarAsync(IUser user)
         {
             await DeferAsync();
             await FollowupAsync(user.GetAvatarUrl(ImageFormat.Auto, 256));
         }
+
         [SlashCommand("avatar", "Get the avatar of a user")]
         public async Task AvatarAsync(IUser user = null)
         {
             await DeferAsync();
-            if (user == null)
-            {
-                user = Context.User;
-            }
+            user ??= Context.User;
             var embed = new EmbedBuilder()
                 .WithColor(new Color(0x4900ff))
                 .WithTitle($"{user.Username}'s Avatar")
                 .WithImageUrl(user.GetAvatarUrl(ImageFormat.Auto, 256));
-            await FollowupAsync("", null, false, false, null, null, null, embed.Build());
+            await FollowupAsync(embed: embed.Build());
         }
+
         [SlashCommand("eightball", "Ask the 8ball a question")]
         public async Task EightballAsync(string input)
         {
@@ -237,18 +225,15 @@ namespace SketchBot.InteractionBasedModules
                 "Just give me your money!"
             ];
             _rand = new Random();
-            int randomIndex = _rand.Next(predictionsTexts.Length);
-            string text = predictionsTexts[randomIndex];
-            await FollowupAsync(":8ball: **Question: **" + input + "\n**Answer: **" + text);
-            
+            string text = predictionsTexts[_rand.Next(predictionsTexts.Length)];
+            await FollowupAsync($":8ball: **Question: **{input}\n**Answer: **{text}");
         }
+
         [SlashCommand("status", "Checks to see if a website is up")]
         public async Task StatusAsync(string websiteUrl = "http://sketchbot.xyz")
         {
             await DeferAsync();
-
             string description;
-
             try
             {
                 if (!websiteUrl.StartsWith("https://") && !websiteUrl.StartsWith("http://"))
@@ -257,14 +242,7 @@ namespace SketchBot.InteractionBasedModules
                 }
                 using var httpClient = new HttpClient();
                 HttpResponseMessage response = await httpClient.GetAsync(websiteUrl);
-                if (response.IsSuccessStatusCode)
-                {
-                    description = "server is **online**";
-                }
-                else
-                {
-                    description = "server is **offline**";
-                }
+                description = response.IsSuccessStatusCode ? "server is **online**" : "server is **offline**";
             }
             catch (WebException)
             {
@@ -284,9 +262,9 @@ namespace SketchBot.InteractionBasedModules
                     .WithText("Requested by " + Context.User.Username)
                     .WithIconUrl(Context.User.GetAvatarUrl());
             });
-            await FollowupAsync("", null, false, false, null, null, null, embed.Build());
+            await FollowupAsync(embed: embed.Build());
         }
-        
+
         [SlashCommand("calculate", "Calculates a math problem")]
         public async Task CalculateAsync(HelperFunctions.Calculation expression)
         {
@@ -306,48 +284,48 @@ namespace SketchBot.InteractionBasedModules
         public async Task MemberCountAsync()
         {
             await DeferAsync();
-
             var bots = Context.Guild.Users.Count(x => x.IsBot);
             var members = Context.Guild.MemberCount;
             double ratio = bots / (double)members;
-            double percentage = Math.Round(bots / (double)members, 3) * 100;
-            EmbedBuilder embedBuilder = new EmbedBuilder()
+            double percentage = Math.Round(ratio, 3) * 100;
+            var embedBuilder = new EmbedBuilder()
             {
                 Title = $"Member count for {Context.Guild.Name}",
-                Description = $"{Context.Guild.MemberCount} Total members ({percentage}% bots)\n" +
-                $"{Context.Guild.Users.Count(x => x.IsBot)} Bots\n" +
-                $"{members - Context.Guild.Users.Count(x => x.IsBot)} Users\n" +
-                $"{ratio} Bot to user ratio",
+                Description = $"{members} Total members ({percentage}% bots)\n" +
+                              $"{bots} Bots\n" +
+                              $"{members - bots} Users\n" +
+                              $"{ratio} Bot to user ratio",
                 Color = new Color(0, 0, 255)
             };
-            await FollowupAsync("", null, false, false, null, null, null, embedBuilder.Build());
-            
+            await FollowupAsync(embed: embedBuilder.Build());
         }
+
         [SlashCommand("invite", "Invite me to your server")]
         public async Task InviteAsync()
         {
             await DeferAsync();
-            await FollowupAsync("**" + Context.User.Username + "**, use this URL to invite me" +
+            await FollowupAsync($"**{Context.User.Username}**, use this URL to invite me" +
                 $"\nhttps://discord.com/api/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=1617578818631&scope=bot%20applications.commands");
         }
+
         [RequireBotPermission(GuildPermission.ManageMessages)]
         [RequireContext(ContextType.Guild)]
         [SlashCommand("purge", "Purges messages from the channel")]
         public async Task PurgeAsync(uint amount)
         {
             await DeferAsync();
-            if ((Context.User as IGuildUser).GuildPermissions.ManageMessages == true)
+            if ((Context.User as IGuildUser).GuildPermissions.ManageMessages)
             {
                 var messages = await Context.Channel.GetMessagesAsync((int)amount + 1).FlattenAsync();
-                await FollowupAsync($"Purge completed.", ephemeral:true);
+                await FollowupAsync("Purge completed.", ephemeral: true);
                 await (Context.Channel as ITextChannel)?.DeleteMessagesAsync(messages);
             }
             else
             {
-                await FollowupAsync("You do not have guild permission ManageMessages", ephemeral:true);
-                
+                await FollowupAsync("You do not have guild permission ManageMessages", ephemeral: true);
             }
         }
+
         [RequireContext(ContextType.Guild)]
         [SlashCommand("serversettings", "View the server settings")]
         public async Task ViewSettingsAsync()
@@ -358,20 +336,17 @@ namespace SketchBot.InteractionBasedModules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            Serversettings? settings = _cachingService.GetServerSettings(Context.Guild.Id);
-
+            var settings = _cachingService.GetServerSettings(Context.Guild.Id);
             var embed = new EmbedBuilder()
             {
                 Color = new Color(0, 0, 255),
                 Title = "Server Settings"
             };
-
             embed.WithAuthor(author =>
             {
                 author.Name = Context.Guild.Name;
                 author.IconUrl = Context.Guild.IconUrl;
             });
-
             embed.WithFooter(footer =>
             {
                 footer.Text = $"Guild ID: {Context.Guild.Id}";
@@ -391,45 +366,53 @@ namespace SketchBot.InteractionBasedModules
                     .AddField("Levelup Messages", settings.LevelupMessages ? "Enabled" : "Disabled", true)
                     .AddField("XP Multiplier", settings.XpMultiplier);
             }
-
-            await FollowupAsync("", null, false, false, null, null, null, embed.Build());
+            await FollowupAsync(embed: embed.Build());
         }
-        [SlashCommand("info", "Displays info about the bot")]
+
+        [SlashCommand("botinfo", "Displays info about the bot")]
         public async Task BotInfoAsync()
         {
             await DeferAsync();
             var uptime = DateTime.Now.Subtract(Process.GetCurrentProcess().StartTime);
             int totalMembers = Context.Client.Guilds.Sum(g => g.MemberCount);
             _rand = new Random();
+            string formattedUptime = $"{uptime.Days:D2}:{uptime.Hours:D2}:{uptime.Minutes:D2}:{uptime.Seconds:D2}";
+            double avgMsgPerMin = _statService.uptime.TotalMinutes > 0
+                ? Math.Round(_statService.msgCounter / _statService.uptime.TotalMinutes, 2)
+                : 0.00;
+
             var builder = new EmbedBuilder()
-                    .WithTitle("Info about " + Context.Client.CurrentUser.Username + ":")
-                    .WithDescription("\nBeep boop... I am " + Context.Client.CurrentUser.Username +
-                "\nI have some commands that you can find with slash commands" +
-                "\nI am a bit sketchy so watch out and be careful" +
-                "\nMy date of manufactor is 19/10/2017")
-                    .WithColor(new Color((uint)_rand.Next(0x0, 0xFFFFFF)))
-                    .WithTimestamp(DateTime.Now)
-                    .WithFooter(footer =>
-                    {
-                        footer
+                .WithTitle("Info about " + Context.Client.CurrentUser.Username + ":")
+                .WithDescription("\nBeep boop... I am " + Context.Client.CurrentUser.Username +
+                    "\nI have some commands that you can find with slash commands" +
+                    "\nI am a bit sketchy so watch out and be careful" +
+                    "\nMy date of manufactor is 19/10/2017")
+                .WithColor(new Color((uint)_rand.Next(0x0, 0xFFFFFF)))
+                .WithTimestamp(DateTime.Now)
+                .WithFooter(footer =>
+                {
+                    footer
                         .WithText("Requested by " + Context.User.Username)
-                            .WithIconUrl(Context.User.GetAvatarUrl());
-                    })
-            .WithThumbnailUrl(Context.Client.CurrentUser.GetAvatarUrl())
-            .WithAuthor(author =>
-            {
-                author
-                .WithName("Info:")
-                .WithUrl($"https://discord.com/api/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=1617578818631&scope=bot%20applications.commands");
-            }).AddField("Developers:", $"Bot developer: {await Context.Client.GetUserAsync(135446225565515776)}" +
-                                    $"\nWeb developer: {await Context.Client.GetUserAsync(208624502878371840)}", true)
-            .AddField("Other info:", "I am in " + Context.Client.Guilds.Count + " servers!" +
-            "\n" + totalMembers + " members across all servers!" +
-            "\nUptime: " + uptime.Days + " Days " + uptime.Hours + " Hours " + uptime.Minutes + " Minutes " + uptime.Seconds + " Seconds" +
-            "\nAverage messages per min since startup: " + _statService.msgCounter/_statService.uptime.TotalMinutes, true)
-            .AddField("My server:", "https://discord.gg/UPG8Vqb", true).AddField("Website:", "https://www.sketchbot.xyz", true);
-            await FollowupAsync("", null, false, false, null, null, null, builder.Build());
+                        .WithIconUrl(Context.User.GetAvatarUrl());
+                })
+                .WithThumbnailUrl(Context.Client.CurrentUser.GetAvatarUrl())
+                .WithAuthor(author =>
+                {
+                    author
+                        .WithName("Info:")
+                        .WithUrl($"https://discord.com/api/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&permissions=1617578818631&scope=bot%20applications.commands");
+                })
+                .AddField("Developers:", $"Bot developer: {await Context.Client.GetUserAsync(135446225565515776)}" +
+                                         $"\nWeb developer: {await Context.Client.GetUserAsync(208624502878371840)}", true)
+                .AddField("Other info:", $"I am currently in **{Context.Client.Guilds.Count}** servers!\n" +
+                    $"**{totalMembers}** members across all servers!\n" +
+                    $"Uptime: {formattedUptime} (DD:HH:mm:ss)\n" +
+                    $"Average messages per min since startup: **{avgMsgPerMin}**", true)
+                .AddField("Website:", "https://www.sketchbot.xyz")
+                .AddField("My server:", "https://discord.gg/UPG8Vqb", true);
+            await FollowupAsync(embed: builder.Build());
         }
+
         [RequireContext(ContextType.Guild)]
         [SlashCommand("serverinfo", "Displays info about the server")]
         public async Task GuildInfoAsync()
@@ -439,37 +422,27 @@ namespace SketchBot.InteractionBasedModules
             try
             {
                 await guild.DownloadUsersAsync();
-
                 var textChannels = guild.TextChannels
                     .Select(x => (x.Id, x.Mention))
                     .Where(x => !guild.VoiceChannels.Select(y => y.Id).Contains(x.Id));
-
                 var voiceChannels = guild.VoiceChannels
                     .Where(x => x is not SocketStageChannel)
                     .Select(x => (x.Id, x.Mention));
-
                 var stageChannels = guild.VoiceChannels
                     .Where(x => x is SocketStageChannel)
                     .Select(x => (x.Id, x.Mention));
-
                 var forumChannels = guild.Channels
                     .Where(x => x is SocketForumChannel)
                     .Select(x => (x.Id, x.Name));
-
                 var mediaChannels = guild.Channels
                     .Where(x => x is SocketMediaChannel)
                     .Select(x => (x.Id, x.Name));
-
-                // Separate forum threads from text channels
                 var forumThreads = guild.ThreadChannels
                     .Where(x => x.ParentChannel is SocketForumChannel)
                     .Select(x => (x.Id, x.Mention));
-
                 var textThreads = guild.ThreadChannels
                     .Where(x => x.ParentChannel is SocketTextChannel)
                     .Select(x => (x.Id, x.Mention));
-
-                // Remove forum threads from text channels field
                 var textChannelsAndThreadsEnumerable = textChannels
                     .Concat(textThreads)
                     .Where(x => !guild.ThreadChannels.Any(t => t.Id == x.Id && t.ParentChannel is SocketForumChannel))
@@ -534,17 +507,13 @@ namespace SketchBot.InteractionBasedModules
                 foreach (var prop in featureProps)
                 {
                     var value = (bool)prop.GetValue(guild.Features);
-                    var displayName = prop.Name.StartsWith("Has") ? prop.Name.Substring(3) : prop.Name;
+                    var displayName = prop.Name.StartsWith("Has") ? prop.Name[3..] : prop.Name;
                     featuresPage.AddField(displayName, value ? "True" : "False", true);
                 }
-                if (guild.Features.Experimental != null)
+                if (guild.Features.Experimental != null && guild.Features.Experimental.Count > 0)
                 {
-                    var experimentalProps = guild.Features.Experimental;
-                    if (experimentalProps.Count > 0)
-                    {
-                        string expList = string.Join("\n", experimentalProps);
-                        featuresPage.AddField("Experimental Features", expList, false);
-                    }
+                    string expList = string.Join("\n", guild.Features.Experimental);
+                    featuresPage.AddField("Experimental Features", expList, false);
                 }
                 pages.Add(featuresPage);
 
@@ -648,12 +617,13 @@ namespace SketchBot.InteractionBasedModules
                 await FollowupAsync($"{ex.GetType()}: {ex.Message}");
             }
         }
+
         [RequireContext(ContextType.Guild)]
         [UserCommand("userinfo")]
         public async Task UserInfoAsync(IUser user)
         {
             await DeferAsync();
-            EmbedBuilder builder = new EmbedBuilder()
+            var builder = new EmbedBuilder()
             {
                 ThumbnailUrl = user.GetAvatarUrl(),
                 Color = new Color(0, 0, 255),
@@ -671,23 +641,21 @@ namespace SketchBot.InteractionBasedModules
             var users = Context.Guild.Users;
             var userslist = users.OrderBy(o => o.JoinedAt).ToList();
             var joinedpos = userslist.FindIndex(x => x.Id == user.Id);
-            var roles = "";
-            foreach(var role in ((IGuildUser)user).RoleIds)
-            {
-                roles += $"<@&{role}>\n";
-            }
+            var roles = string.Join('\n', ((IGuildUser)user).RoleIds.Select(role => $"<@&{role}>"));
 
-            builder.AddField("Joined", ((IGuildUser)user).JoinedAt, true).AddField("Join Position", joinedpos, true)
+            builder.AddField("Joined", ((IGuildUser)user).JoinedAt, true)
+                .AddField("Join Position", joinedpos, true)
                 .AddField("Registered", user.CreatedAt)
                 .AddField($"Roles [{((IGuildUser)user).RoleIds.Count}]", roles);
-            await FollowupAsync("", null, false, false, null, null, null, builder.Build());
+            await FollowupAsync(embed: builder.Build());
         }
+
         [RequireContext(ContextType.Guild)]
         [SlashCommand("userinfo", "Displays information about the user")]
         public async Task SlashUserInfoAsync(IGuildUser user)
         {
             await DeferAsync();
-            EmbedBuilder builder = new EmbedBuilder()
+            var builder = new EmbedBuilder()
             {
                 ThumbnailUrl = user.GetAvatarUrl(),
                 Color = new Color(0, 0, 255),
@@ -705,216 +673,56 @@ namespace SketchBot.InteractionBasedModules
             var users = Context.Guild.Users;
             var userslist = users.OrderBy(o => o.JoinedAt).ToList();
             var joinedpos = userslist.FindIndex(x => x.Id == user.Id);
-            var roles = "";
-            foreach (var role in user.RoleIds)
-            {
-                roles += $"<@&{role}>\n";
-            }
+            var roles = string.Join('\n', user.RoleIds.Select(role => $"<@&{role}>"));
 
-            builder.AddField("Joined", user.JoinedAt, true).AddField("Join Position", joinedpos, true)
+            builder.AddField("Joined", user.JoinedAt, true)
+                .AddField("Join Position", joinedpos, true)
                 .AddField("Registered", user.CreatedAt)
                 .AddField($"Roles [{user.RoleIds.Count}]", roles);
-            await FollowupAsync("", null, false, false, null, null, null, builder.Build());
+            await FollowupAsync(embed: builder.Build());
         }
+
         [SlashCommand("random", "Sends a random message")]
         public async Task Random()
         {
             await DeferAsync();
             _rand = new Random();
-
-            var RandomMessages = new string[]
-{
-            "æøå",
-            "Ecks dee",
-            "123456789",
-            "This is a list",
-            "Random Message",
-            "RNG",
-            "HTX > HHX > STX",
-            "STX = Trash",
-            "Mee6 kan ikke commands med flere ord",
-            "?help",
-            "Ingress",
-            "Pokemon GO",
-            "C#",
-            "Maple",
-            "Mimouniboi",
-            "9gag",
-            "ArrayList",
-            "Mikerosoft Certified Technician",
-            "Emo",
-            "Anime",
-            "133769420",
-            "MLG",
-            "K-WHY-S",
-            "Chrunchyroll",
-            "Agoraen",
-            "Desperat skole hjælp",
-            "Discord",
-            "Lidl",
-            "Kantinen er overpriced",
-            "<:sandwich:355316315780677632>",
-            "xD",
-            ":icecube:",
-            "DAB",
-            "Programmering",
-            "Gajs",
-            "Gajs, der er time",
-            "Produktudvikling",
-            "Naturvidenskabeligtgrundforløb",
-            "boi",
-            "fuccboi",
-            "Hatsune Miku",
-            "Itslearning",
-            "Riskage",
-            "How much Ris can a Rischuck chuck if the Rischuck could chuck Rishi",
-            "Newtonmeter",
-            "Alle realtal",
-            "Den tomme mængde",
-            "Dramaalert",
-            "Scarce",
-            "Hey what's up guys it's Scarce here",
-            "Naturvidenskabelig metode",
-            "Ulduar",
-            "niceme.me",
-            "Rishi",
-            "Nibba",
-            "Plagierkontroler",
-            "Mee6 er lårt",
-            "World of Warcraft",
-            "Blizzard",
-            "Elevplan",
-            "Nielsen",
-            "yaaaarrr boi",
-            "Waps",
-            "Riskage spil",
-            "AWS",
-            "Amazon",
-            "Ebay",
-            "Aliexpress",
-            "Nordisk film",
-            "Bone's",
-            "EC2",
-            "GIF",
-            "Instances",
-            "Storage",
-            "S3",
-            "NVM",
-            "Database",
-            "dEcLaN.eXe",
-            "Mojo",
-            "SQL",
-            "Hello World",
-            "HTML",
-            "CSS",
-            "PHP",
-            "JS",
-            "T H I C C",
-            "Samfundsfag = sovetime",
-            "Vuk",
-            "Vektorfunktioner",
-            "Vukterfunktioner",
-            "In memory of Vuk",
-            "Sweet Silence",
-            "Gucci gang",
-            "Osu!",
-            "What is up AutismAlert nation",
-            "LinusTechTips",
-            "Scrapyard wars",
-            "Tunnelbear",
-            "One-energy cola",
-            "Water",
-            "Such message very random",
-            "4:3 Stretched",
-            "Black bars",
-            "Java",
-            "Javascript",
-            "Eclipse",
-            "This list is getting looooooooooooooong",
-            "Craigslist",
-            "SLI",
-            "Intel & nVidia > AMD",
-            "Razer",
-            "Razer blackwidow chroma",
-            "Stationspizza",
-            "Linus",
-            "Windows",
-            "Macbook",
-            "Linux",
-            "Raspberry Pi",
-            "Arduino",
-            "LCD",
-            "Jonte-bro",
-            "Password",
-            "O2Auth",
-            "discordapp.com",
-            "discord.gg",
-            "Sodapoppin",
-            "2147483647",
-            "4294967295",
-            "Battlefield Heroes",
-            "Fortnite",
-            "Rema 1000",
-            "Fakta",
-            "PUBG",
-            "Playerunknown's Battlegrounds",
-            "Far Cry 5",
-            "Far Cry 4",
-            "Far Cry 3",
-            "PewDiePie",
-            "Nick Crompton",
-            "England er min by",
-            "England is my city",
-            "?riskage spil",
-            "777",
-            "Jackpot",
-            "Luke",
-            "Thomas Jefferson Chance Morris",
-            "420",
-            "1337",
-            "69",
-            "Gaming-linjen",
-            "IT-Videnskab",
-            "Hearthstone",
-            "Its everyday bro",
-            "Snapchat",
-            "Telegram",
-            "Minecraft commandblocks",
-            "Ninja",
-            "#weebconfirmed",
-            "Kommunikationsmodeller",
-            "What's 9 + 10? 21!",
-            "Divine spirit",
-            "Innerfire",
-            "Legendary",
-            "Legiondary",
-            "Legend",
-            "Cities: Skyline",
-            "Test",
-            "Execute",
-            "Leeeeeeerrroooooyyyyyy Jeeeeeeeeeeeeeenkinsssss",
-            "C'Thun",
-            "Standard > Wild",
-            "Duplicates",
-            "Wallpaper Engine",
-            "Deez nuts",
-            "Insert meme here",
-            "Ultrasaur",
-            "Ban",
-            "Kick",
-            "Help! My creator forces me to respond to commands",
-            "Jonaser",
-            "The ting goes skrrraa",
-            "Random message number 200",
-            "Gulag",
-            "Tyskland",
-            "Morten",
-};
-            int randomMessageIndex = _rand.Next(RandomMessages.Length);
-            int selectedMessageNumber = randomMessageIndex + 1;
-            string messageToSend = RandomMessages[randomMessageIndex];
+            var randomMessages = new[]
+            {
+                "æøå", "Ecks dee", "123456789", "This is a list", "Random Message", "RNG", "HTX > HHX > STX",
+                "STX = Trash", "Mee6 kan ikke commands med flere ord", "?help", "Ingress", "Pokemon GO", "C#",
+                "Maple", "Mimouniboi", "9gag", "ArrayList", "Mikerosoft Certified Technician", "Emo", "Anime",
+                "133769420", "MLG", "K-WHY-S", "Chrunchyroll", "Agoraen", "Desperat skole hjælp", "Discord",
+                "Lidl", "Kantinen er overpriced", "<:sandwich:355316315780677632>", "xD", ":icecube:", "DAB",
+                "Programmering", "Gajs", "Gajs, der er time", "Produktudvikling", "Naturvidenskabeligtgrundforløb",
+                "boi", "fuccboi", "Hatsune Miku", "Itslearning", "Riskage",
+                "How much Ris can a Rischuck chuck if the Rischuck could chuck Rishi", "Newtonmeter",
+                "Alle realtal", "Den tomme mængde", "Dramaalert", "Scarce", "Hey what's up guys it's Scarce here",
+                "Naturvidenskabelig metode", "Ulduar", "niceme.me", "Rishi", "Nibba", "Plagierkontroler",
+                "Mee6 er lårt", "World of Warcraft", "Blizzard", "Elevplan", "Nielsen", "yaaaarrr boi", "Waps",
+                "Riskage spil", "AWS", "Amazon", "Ebay", "Aliexpress", "Nordisk film", "Bone's", "EC2", "GIF",
+                "Instances", "Storage", "S3", "NVM", "Database", "dEcLaN.eXe", "Mojo", "SQL", "Hello World",
+                "HTML", "CSS", "PHP", "JS", "T H I C C", "Samfundsfag = sovetime", "Vuk", "Vektorfunktioner",
+                "Vukterfunktioner", "In memory of Vuk", "Sweet Silence", "Gucci gang", "Osu!",
+                "What is up AutismAlert nation", "LinusTechTips", "Scrapyard wars", "Tunnelbear",
+                "One-energy cola", "Water", "Such message very random", "4:3 Stretched", "Black bars", "Java",
+                "Javascript", "Eclipse", "This list is getting looooooooooooooong", "Craigslist", "SLI",
+                "Intel & nVidia > AMD", "Razer", "Razer blackwidow chroma", "Stationspizza", "Linus", "Windows",
+                "Macbook", "Linux", "Raspberry Pi", "Arduino", "LCD", "Jonte-bro", "Password", "O2Auth",
+                "discordapp.com", "discord.gg", "Sodapoppin", "2147483647", "4294967295", "Battlefield Heroes",
+                "Fortnite", "Rema 1000", "Fakta", "PUBG", "Playerunknown's Battlegrounds", "Far Cry 5",
+                "Far Cry 4", "Far Cry 3", "PewDiePie", "Nick Crompton", "England er min by", "England is my city",
+                "?riskage spil", "777", "Jackpot", "Luke", "Thomas Jefferson Chance Morris", "420", "1337", "69",
+                "Gaming-linjen", "IT-Videnskab", "Hearthstone", "Its everyday bro", "Snapchat", "Telegram",
+                "Minecraft commandblocks", "Ninja", "#weebconfirmed", "Kommunikationsmodeller",
+                "What's 9 + 10? 21!", "Divine spirit", "Innerfire", "Legendary", "Legiondary", "Legend",
+                "Cities: Skyline", "Test", "Execute", "Leeeeeeerrroooooyyyyyy Jeeeeeeeeeeeeeenkinsssss", "C'Thun",
+                "Standard > Wild", "Duplicates", "Wallpaper Engine", "Deez nuts", "Insert meme here", "Ultrasaur",
+                "Ban", "Kick", "Help! My creator forces me to respond to commands", "Jonaser", "The ting goes skrrraa",
+                "Random message number 200", "Gulag", "Tyskland", "Morten",
+            };
+            string messageToSend = randomMessages[_rand.Next(randomMessages.Length)];
             await FollowupAsync(messageToSend);
-            
         }
     }
 }
