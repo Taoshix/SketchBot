@@ -738,7 +738,7 @@ namespace SketchBot.InteractionBasedModules
             await FollowupAsync("", embed: embed);
         }
 
-        [Ratelimit(1, 2, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers)]
+        [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers | RatelimitFlags.ApplyPerGuild)]
         [SlashCommand("memegen", "Generates a meme")]
         public async Task GenerateMemeAsync([Summary("Template", "The name of the meme template you wish to use"), Autocomplete(typeof(MemeAutoCompleteHandler))] string templateName, string topText, string bottomText)
         {
