@@ -131,7 +131,7 @@ namespace SketchBot.InteractionBasedModules
         }
 
         [SlashCommand("choose", "Makes the choice for you between a bunch of listed things")]
-        public async Task ChooseAsync([Summary("Each choice is separated by , (comma)")] string choices)
+        public async Task ChooseAsync([Summary("Choices", "Each choice is separated by , (comma)")] string choices)
         {
             await DeferAsync();
             if (string.IsNullOrWhiteSpace(choices))

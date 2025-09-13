@@ -42,7 +42,7 @@ namespace SketchBot.InteractionBasedModules
             _discordBotsListService = discordBotsListService;
         }
         [SlashCommand("paginator", "Makes a paginator using your input")]
-        public async Task PaginateAsync([Summary("Each page is serpated by a comma ,")] string input, bool allowEveryone = false)
+        public async Task PaginateAsync([Summary("Text", "Each page is serpated by a comma ,")] string input, bool allowEveryone = false)
         {
             await DeferAsync();
             string[] words = input.Split(",");
@@ -326,7 +326,7 @@ namespace SketchBot.InteractionBasedModules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("leaderboard", "Server leaderboard of Tokens or Leveling")]
-        public async Task LeaderboardAsync([Summary("Type"), Autocomplete(typeof(LeaderboardAutocompleteHandler))] string type)
+        public async Task LeaderboardAsync([Summary("Type", "Leaderboard type"), Autocomplete(typeof(LeaderboardAutocompleteHandler))] string type)
         {
             await DeferAsync();
             await Context.Guild.DownloadUsersAsync();
