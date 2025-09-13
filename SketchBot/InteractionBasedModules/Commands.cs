@@ -346,68 +346,6 @@ namespace SketchBot.InteractionBasedModules
             await FollowupAsync(":8ball: **Question: **" + input + "\n**Answer: **" + text);
             
         }
-        [RequireBotPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
-        [SlashCommand("kick", "Kicks someone from the server")]
-        public async Task KickAsync(IGuildUser user, string reason = "No reason")
-        {
-            await DeferAsync();
-            var currentUser = Context.User as IGuildUser;
-            if (!currentUser.GuildPermissions.KickMembers)
-            {
-                await FollowupAsync("You do not have Guild permission KickMembers");
-                return;
-            }
-            if (!(Context.Client.CurrentUser as IGuildUser).GuildPermissions.KickMembers)
-            {
-                await FollowupAsync("I don't have the permission to do so!");
-                return;
-            }
-            var embed = new EmbedBuilder()
-                .WithColor(new Color(0x4900ff))
-                .WithTitle($"{user.Username} has been kicked from {user.Guild.Name}")
-                .WithDescription($"**Username: **{user.Username}\n**Guild Name: **{user.Guild.Name}\n**Kicked by: **{Context.User.Mention}!\n**Reason: **{reason}");
-            await user.KickAsync(reason);
-            await FollowupAsync("", null, false, false, null, null, null, embed.Build());
-        }
-        [RequireBotPermission(GuildPermission.BanMembers)]
-        [RequireContext(ContextType.Guild)]
-        [SlashCommand("ban", "Bans someone from the server")]
-        public async Task BanAsync(IGuildUser user, string reason = "No reason")
-        {
-            await DeferAsync();
-            var currentUser = Context.User as IGuildUser;
-            if (!currentUser.GuildPermissions.BanMembers)
-            {
-                await FollowupAsync("You do not have Guild permission BanMembers");
-                return;
-            }
-            if (!(Context.Client.CurrentUser as IGuildUser).GuildPermissions.BanMembers)
-            {
-                await FollowupAsync("I don't have the permission to do so!");
-                return;
-            }
-            var embed = new EmbedBuilder()
-                .WithColor(new Color(0x4900ff))
-                .WithTitle($"{user.Username} has been banned from {user.Guild.Name}")
-                .WithDescription($"**Username: **{user.Username}\n**Guild Name: **{user.Guild.Name}\n**Banned by: **{Context.User.Mention}!\n**Reason: **{reason}");
-            await Context.Guild.AddBanAsync(user, 7, reason);
-            await FollowupAsync("", null, false, false, null, null, null, embed.Build());
-        }
-        [RequireBotPermission(GuildPermission.BanMembers)]
-        [RequireContext(ContextType.Guild)]
-        [SlashCommand("unban", "Unbans someone from the server")]
-        public async Task UnbanAsync(RestUser user, string reason = "No reason")
-        {
-            await DeferAsync();
-            if ((Context.Client.CurrentUser as IGuildUser).GuildPermissions.BanMembers)
-            {
-                await Context.Guild.RemoveBanAsync(user);
-                await FollowupAsync(user.Username + " has been unbanned" +
-                    "\n" +
-                    "\n" + reason);
-            }
-        }
         [SlashCommand("status", "Checks to see if a website is up")]
         public async Task StatusAsync(string websiteUrl = "http://sketchbot.xyz")
         {
@@ -451,54 +389,6 @@ namespace SketchBot.InteractionBasedModules
                     .WithIconUrl(Context.User.GetAvatarUrl());
             });
             await FollowupAsync("", null, false, false, null, null, null, embed.Build());
-        }
-        [RequireContext(ContextType.Guild)]
-        [SlashCommand("nickname", "Changes your nickname")]
-        public async Task NicknameAsync(IGuildUser targetUser, string newNickname)
-        {
-            await DeferAsync();
-
-            var guild = Context.Guild;
-            var botUser = guild.GetUser(Context.Client.CurrentUser.Id);
-            var commandUser = Context.User as IGuildUser;
-
-            if (!botUser.GuildPermissions.ManageNicknames)
-            {
-                await FollowupAsync("I do not have permission to manage nicknames.");
-                return;
-            }
-
-            // If no target specified, default to self
-            if (targetUser == null)
-                targetUser = commandUser;
-
-            if (!commandUser.GuildPermissions.ManageNicknames)
-            {
-                await FollowupAsync("You do not have permission to manage nicknames.");
-                return;
-            }
-
-            // Check role hierarchy
-            if (botUser.Hierarchy <= targetUser.Hierarchy)
-            {
-                await FollowupAsync("I cannot change the nickname of someone with a higher or equal role than me.");
-                return;
-            }
-            if (commandUser.Hierarchy <= targetUser.Hierarchy && targetUser != commandUser)
-            {
-                await FollowupAsync("You cannot change the nickname of someone with a higher or equal role than you.");
-                return;
-            }
-
-            try
-            {
-                await targetUser.ModifyAsync(x => x.Nickname = newNickname);
-                await FollowupAsync($"Nickname for {targetUser.Mention} changed to **{newNickname}**!");
-            }
-            catch
-            {
-                await FollowupAsync("Failed to change nickname. This may be due to role hierarchy or permissions.");
-            }
         }
         [SlashCommand("cat", "Sends a random cat image")]
         public async Task CatAsync()
