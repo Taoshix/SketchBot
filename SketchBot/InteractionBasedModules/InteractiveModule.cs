@@ -23,7 +23,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Urban.NET;
 using UrbanDictionnet;
-using static Org.BouncyCastle.Asn1.Cmp.Challenge;
 
 namespace SketchBot.InteractionBasedModules
 {
@@ -42,8 +41,8 @@ namespace SketchBot.InteractionBasedModules
             _interactive = interactive;
             _discordBotsListService = discordBotsListService;
         }
-        [SlashCommand("paginator", "Makes a paginator using your input seperated by comma")]
-        public async Task PaginateAsync(string input, bool allowEveryone = false)
+        [SlashCommand("paginator", "Makes a paginator using your input")]
+        public async Task PaginateAsync([Summary("Each page is serpated by a comma ,")] string input, bool allowEveryone = false)
         {
             await DeferAsync();
             string[] words = input.Split(",");
@@ -133,13 +132,13 @@ namespace SketchBot.InteractionBasedModules
 
         }
         [SlashCommand("urban", "Search UrbanDictionary for the input term")]
-        public async Task UrbanAsync(string word)
+        public async Task UrbanAsync(string SearchTerm)
         {
             await DeferAsync();
             try
             {
                 UrbanService client = new UrbanService();
-                var data = await client.Data(word);
+                var data = await client.Data(SearchTerm);
                 var pageBuilders = new List<IPageBuilder>();
                 foreach (var item in data.List)
                 {
@@ -156,7 +155,7 @@ namespace SketchBot.InteractionBasedModules
                 }
                 if (pageBuilders.Count == 0)
                 {
-                    await FollowupAsync($"No results found for `{word}`");
+                    await FollowupAsync($"No results found for `{SearchTerm}`");
                     return;
                 }
                 var paginator = new StaticPaginatorBuilder()
