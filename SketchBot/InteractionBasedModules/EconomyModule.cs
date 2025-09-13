@@ -286,5 +286,68 @@ namespace SketchBot.InteractionBasedModules
                 await FollowupAsync("You do not have permission!");
             }
         }
+        [RequireContext(ContextType.Guild)]
+        [SlashCommand("pay", "Pay someone else some of your tokens")]
+        public async Task PayTokensAsync(IGuildUser usertopay, int amount, string comment = "No comment")
+        {
+            await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
+
+            var user = Context.User as SocketGuildUser;
+            var userToPay = usertopay as SocketGuildUser;
+            if (user == null || userToPay == null)
+            {
+                await Context.Guild.DownloadUsersAsync();
+                user = Context.User as SocketGuildUser;
+                userToPay = usertopay as SocketGuildUser;
+            }
+
+            if (_cachingService.GetBlackList().Contains(usertopay.Id))
+            {
+                await FollowupAsync("You can't pay blacklisted users!");
+                return;
+            }
+
+            bool userInDb = _cachingService.IsInDatabase(Context.Guild.Id, user.Id);
+            bool userToPayInDb = _cachingService.IsInDatabase(Context.Guild.Id, userToPay.Id);
+
+            if (!userInDb)
+            {
+                _cachingService.SetupUserInDatabase(Context.Guild.Id, user);
+            }
+
+            if (!userToPayInDb)
+            {
+                _cachingService.SetupUserInDatabase(Context.Guild.Id, userToPay);
+            }
+
+            var userStats = StatsDB.GetUserStats(user);
+            if (amount <= 0)
+            {
+                await FollowupAsync("Don't attempt to steal tokens from people!");
+                return;
+            }
+
+            if (userStats.Tokens < amount)
+            {
+                await FollowupAsync("You don't have enough tokens to pay.");
+                return;
+            }
+
+            StatsDB.RemoveTokens(user, amount);
+            StatsDB.AddTokens(userToPay, amount);
+
+            var embed = new EmbedBuilder()
+            {
+                Color = new Color(0, 0, 255),
+                Description = $"{user.Mention} has paid {usertopay.Mention} {amount} tokens!\n{comment}"
+            }.Build();
+
+            await FollowupAsync("", null, false, false, null, null, null, embed);
+        }
     }
 }
