@@ -740,11 +740,11 @@ namespace SketchBot.InteractionBasedModules
 
         [Ratelimit(1, 2, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers)]
         [SlashCommand("memegen", "Generates a meme")]
-        public async Task GenerateMemeAsync(string templateName, string topText, string bottomText)
+        public async Task GenerateMemeAsync([Summary("Template", "The name of the meme template you wish to use"), Autocomplete(typeof(MemeAutoCompleteHandler))] string templateName, string topText, string bottomText)
         {
             await DeferAsync();
             var service = _memeService.GetMemeService();
-            var template = await service.GetMemeTemplateAsync(templateName); // TODO: Make a list and auto complete this
+            var template = await service.GetMemeTemplateAsync(templateName);
             if (template == null)
             {
                 await FollowupAsync("Template not found.\nhttps://api.imgflip.com/popular_meme_ids");
