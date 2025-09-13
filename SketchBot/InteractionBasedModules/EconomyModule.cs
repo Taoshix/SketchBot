@@ -349,5 +349,35 @@ namespace SketchBot.InteractionBasedModules
 
             await FollowupAsync("", null, false, false, null, null, null, embed);
         }
+        [RequireUserPermission(GuildPermission.ManageRoles)]
+        [RequireContext(ContextType.Guild)]
+        [SlashCommand("addrole", "Add a role for leveling")]
+        public async Task AddRoleAsync(IRole role, int level)
+        {
+            await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
+            ServerSettingsDB.CreateTableRole(Context.Guild.Id);
+            ServerSettingsDB.AddRole(Context.Guild.Id, role.Id, level);
+            await FollowupAsync(role.Name + " has been added! If anyone reaches level " + level + " they will recieve the role!");
+        }
+        [RequireUserPermission(GuildPermission.ManageRoles)]
+        [RequireContext(ContextType.Guild)]
+        [SlashCommand("removerole", "Remove a role for leveing")]
+        public async Task RemoveRoleAsync(IRole role)
+        {
+            await DeferAsync();
+            if (!_cachingService._dbConnected)
+            {
+                await FollowupAsync("Database is down, please try again later");
+                return;
+            }
+            ServerSettingsDB.CreateTableRole(Context.Guild.Id);
+            ServerSettingsDB.RemoveRole(Context.Guild.Id, role.Id);
+            await FollowupAsync(role.Name + " has been removed from levelup rewards");
+        }
     }
 }

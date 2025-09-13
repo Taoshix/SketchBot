@@ -30,6 +30,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using UrbanDictionnet;
+using YouTubeSearch;
 
 namespace SketchBot.InteractionBasedModules
 {
@@ -41,6 +42,7 @@ namespace SketchBot.InteractionBasedModules
         private readonly CachingService _cachingService;
         private readonly InteractionService _interactionService;
         private readonly InteractiveService _interactive;
+        private readonly MemeService _memeService;
         private Random _rand;
 
         public MiscellaneousModule(
@@ -49,7 +51,8 @@ namespace SketchBot.InteractionBasedModules
             StatService statService,
             CachingService cachingService,
             InteractionService interactionService,
-            InteractiveService interactive)
+            InteractiveService interactive,
+            MemeService memeService)
         {
             _discordBotListService = discordBotListService;
             _timerService = timerService;
@@ -57,6 +60,7 @@ namespace SketchBot.InteractionBasedModules
             _cachingService = cachingService;
             _interactionService = interactionService;
             _interactive = interactive;
+            _memeService = memeService;
         }
 
         [SlashCommand("repeat", "Echo a message")]
@@ -680,6 +684,76 @@ namespace SketchBot.InteractionBasedModules
                 .AddField("Registered", user.CreatedAt)
                 .AddField($"Roles [{user.RoleIds.Count}]", roles);
             await FollowupAsync(embed: builder.Build());
+        }
+        [SlashCommand("youtube", "Searches YouTube and returns the first result")]
+        public async Task YouTubeSearchAsync(string searchquery)
+        {
+            await DeferAsync();
+            var items = new VideoSearch();
+            var item = items.GetVideos(searchquery, 1);
+            string url = item.Result.First().getUrl();
+            await FollowupAsync(url);
+        }
+        [RequireContext(ContextType.Guild)]
+        [SlashCommand("roleinfo", "Displays info about a role")]
+        public async Task RoleInfoAsync(IRole role)
+        {
+            await DeferAsync();
+            var rolePermissionsList = role.Permissions.ToList();
+            string permissionsListString = string.Join("\n", rolePermissionsList);
+            var embed = new EmbedBuilder()
+            {
+                Title = $"Role info for {role.Name}",
+                Color = role.Color
+            };
+            embed.AddField("Id", role.Id);
+            embed.AddField("Position", role.Position, true);
+            embed.AddField("Members", ((SocketRole)role).Members.Count(), true);
+            embed.AddField("Mentionable?", role.IsMentionable);
+            embed.AddField("Hoisted?", role.IsHoisted, true);
+            embed.AddField("Permissions", permissionsListString);
+            embed.AddField("Color", role.Color, true);
+            embed.AddField("Role creation date", role.CreatedAt.DateTime.ToString("dd/MM/yy HH:mm:ss"), true);
+            await FollowupAsync("", embed: embed.Build());
+        }
+        [SlashCommand("activity", "Launch a discord activity in a voice channel!")]
+        public async Task CreateDiscordActivityAsync(IVoiceChannel chan, DefaultApplications app)
+        {
+            await DeferAsync();
+            var invite = await chan.CreateInviteToApplicationAsync(app);
+            await Context.Interaction.FollowupAsync(invite.Url);
+        }
+        [SlashCommand("emote", "Enlargens an emote")]
+        public async Task ShowEmoteAsync(string emote)
+        {
+            await DeferAsync();
+            var emo = Emote.Parse(emote);
+            EmbedBuilder builder = new EmbedBuilder()
+            {
+                Title = emo.Name,
+                ImageUrl = emo.Url,
+                Url = emo.Url
+            };
+            var embed = builder.Build();
+            await FollowupAsync("", embed: embed);
+        }
+
+        [Ratelimit(1, 2, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers)]
+        [SlashCommand("memegen", "Generates a meme")]
+        public async Task GenerateMemeAsync(string templateName, string topText, string bottomText)
+        {
+            await DeferAsync();
+            var service = _memeService.GetMemeService();
+            var template = await service.GetMemeTemplateAsync(templateName); // TODO: Make a list and auto complete this
+            if (template == null)
+            {
+                await FollowupAsync("Template not found.\nhttps://api.imgflip.com/popular_meme_ids");
+            }
+            else
+            {
+                var meme = await service.CreateMemeAsync(template.Id, topText, bottomText);
+                await FollowupAsync(meme.ImageUrl);
+            }
         }
 
         [SlashCommand("random", "Sends a random message")]

@@ -175,5 +175,21 @@ namespace SketchBot.InteractionBasedModules
                 await FollowupAsync("Failed to change nickname. This may be due to role hierarchy or permissions.");
             }
         }
+        [RequireBotPermission(GuildPermission.ManageChannels)]
+        [RequireUserPermission(ChannelPermission.ManageChannels)]
+        [RequireContext(ContextType.Guild)]
+        [SlashCommand("slowmode", "Sets the slowmode of a channel to the specified seconds")]
+        public async Task SetSlowmodeAsync(int seconds)
+        {
+            if (seconds < 21600)
+            {
+                await ((ITextChannel)Context.Channel).ModifyAsync(x => x.SlowModeInterval = seconds);
+                await Context.Channel.SendMessageAsync($"Slowmode is now set to {seconds} seconds");
+            }
+            else
+            {
+                await Context.Channel.SendMessageAsync("Interval must be less than or equal to 6 hours.");
+            }
+        }
     }
 }

@@ -15,22 +15,30 @@ namespace SketchBot.Services
 {
     public class MemeService
     {
-        DiscordSocketClient _client;
-        Config _config;
-        ImgFlipOptions options = new ImgFlipOptions();
+        private readonly DiscordSocketClient _client;
+        private Config _config;
+        private ImgFlipOptions _options;
+        private ImgFlipService _service;
 
-        ImgFlipService service;
         public MemeService(DiscordSocketClient client)
         {
             _client = client;
         }
+
         public ImgFlipService GetMemeService()
         {
+            if (_service != null)
+                return _service;
+
             _config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText("config.json"));
-            options.Username = "Taoshi";
-            options.Password = _config.IMGFlip;
-            service = new ImgFlipService(options);
-            return service;
+            _options = new ImgFlipOptions
+            {
+                Username = "Taoshi",
+                Password = _config.IMGFlip
+            };
+            _service = new ImgFlipService(_options);
+            return _service;
+
         }
     }
 }
