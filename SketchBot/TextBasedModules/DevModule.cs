@@ -748,7 +748,7 @@ namespace SketchBot.TextBasedModules
 
             pages.Add(summaryEmbed);
 
-            // Page 2+: Users in Database (Each guild is a field, split every 25 fields)
+            // Page 2+: Users in Database (Each guild is a field, split every 25 fields and by 6000 char limit)
             var guildFields = new List<(string Name, string Value)>();
             foreach (var kvp in _cachingService._usersInDatabase)
             {
@@ -781,20 +781,14 @@ namespace SketchBot.TextBasedModules
                 for (int i = 0; i < guildFields.Count; i += 25)
                 {
                     var pageFields = guildFields.Skip(i).Take(25).ToList();
-                    var page = new PageBuilder()
-                        .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
-                        .WithTitle("Cached users in Database")
-                        .WithColor(new Color(0, 255, 0))
-                        .WithCurrentTimestamp()
-                        .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB");
-                    foreach (var field in pageFields)
-                    {
-                        if (!string.IsNullOrWhiteSpace(field.Value))
-                        {
-                            page.AddField(field.Name, field.Value, false);
-                        }
-                    }
-                    pages.Add(page);
+                    var splitPages = HelperFunctions.SplitFieldsToPages(
+                        "Cached users in Database",
+                        $"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB",
+                        pageFields,
+                        new Color(0, 255, 0),
+                        $"Total Bot Memory Usage: {memoryMB:F2} MB"
+                    );
+                    pages.AddRange(splitPages);
                 }
             }
 
@@ -812,7 +806,6 @@ namespace SketchBot.TextBasedModules
             }
             else
             {
-                // Split server settings into pages of 25 fields each
                 var settingsFields = new List<(string Name, string Value)>();
                 foreach (var s in serverSettings)
                 {
@@ -831,20 +824,14 @@ namespace SketchBot.TextBasedModules
                 for (int i = 0; i < settingsFields.Count; i += 25)
                 {
                     var pageFields = settingsFields.Skip(i).Take(25).ToList();
-                    var settingsEmbed = new PageBuilder()
-                        .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
-                        .WithTitle("Cached Server Settings")
-                        .WithColor(new Color(0, 255, 0))
-                        .WithCurrentTimestamp()
-                        .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB");
-                    foreach (var field in pageFields)
-                    {
-                        if (!string.IsNullOrWhiteSpace(field.Value))
-                        {
-                            settingsEmbed.AddField(field.Name, field.Value, false);
-                        }
-                    }
-                    pages.Add(settingsEmbed);
+                    var splitPages = HelperFunctions.SplitFieldsToPages(
+                        "Cached Server Settings",
+                        $"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB",
+                        pageFields,
+                        new Color(0, 255, 0),
+                        $"Total Bot Memory Usage: {memoryMB:F2} MB"
+                    );
+                    pages.AddRange(splitPages);
                 }
             }
 
@@ -857,16 +844,22 @@ namespace SketchBot.TextBasedModules
                 bool isBlacklisted = kvp.Value != null;
                 blacklistChecksDetails.AppendLine($"{username} ({kvp.Key}) - {isBlacklisted.ToString().ToLower()}");
             }
-            if (blacklistChecksDetails.Length == 0)
-                blacklistChecksDetails.Append("No cached blacklist checks.");
+            string blacklistChecksStr = blacklistChecksDetails.Length == 0
+                ? "No cached blacklist checks."
+                : blacklistChecksDetails.ToString();
 
-            pages.Add(new PageBuilder()
-                .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
-                .WithTitle("Cached Blacklist Checks")
-                .WithDescription(blacklistChecksDetails.ToString().Length > 4096 ? blacklistChecksDetails.ToString().Substring(0, 4090) + "..." : blacklistChecksDetails.ToString())
-                .WithColor(new Color(0, 255, 0))
-                .WithCurrentTimestamp()
-                .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB"));
+            // Split by 6000 chars
+            for (int i = 0; i < blacklistChecksStr.Length; i += 6000)
+            {
+                var desc = blacklistChecksStr.Substring(i, Math.Min(6000, blacklistChecksStr.Length - i));
+                pages.Add(new PageBuilder()
+                    .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
+                    .WithTitle("Cached Blacklist Checks")
+                    .WithDescription(desc)
+                    .WithColor(new Color(0, 255, 0))
+                    .WithCurrentTimestamp()
+                    .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB"));
+            }
 
             // Page 5: Blacklisted Users (UserId -> Username)
             var blacklistDetails = new StringBuilder();
@@ -876,16 +869,21 @@ namespace SketchBot.TextBasedModules
                 string username = user?.Username ?? "Unknown";
                 blacklistDetails.AppendLine($"{username} ({userId})");
             }
-            if (blacklistDetails.Length == 0)
-                blacklistDetails.Append("No blacklisted users.");
+            string blacklistStr = blacklistDetails.Length == 0
+                ? "No blacklisted users."
+                : blacklistDetails.ToString();
 
-            pages.Add(new PageBuilder()
-                .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
-                .WithTitle("Blacklisted Users")
-                .WithDescription(blacklistDetails.ToString().Length > 4096 ? blacklistDetails.ToString().Substring(0, 4090) + "..." : blacklistDetails.ToString())
-                .WithColor(new Color(0, 255, 0))
-                .WithCurrentTimestamp()
-                .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB"));
+            for (int i = 0; i < blacklistStr.Length; i += 6000)
+            {
+                var desc = blacklistStr.Substring(i, Math.Min(6000, blacklistStr.Length - i));
+                pages.Add(new PageBuilder()
+                    .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
+                    .WithTitle("Blacklisted Users")
+                    .WithDescription(desc)
+                    .WithColor(new Color(0, 255, 0))
+                    .WithCurrentTimestamp()
+                    .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB"));
+            }
 
             // Page 6: Bad Words (GuildName - bad word)
             var badWordsFields = new List<(string Name, string Value)>();
@@ -915,20 +913,14 @@ namespace SketchBot.TextBasedModules
                 for (int i = 0; i < badWordsFields.Count; i += 25)
                 {
                     var pageFields = badWordsFields.Skip(i).Take(25).ToList();
-                    var badWordsPage = new PageBuilder()
-                        .WithAuthor($"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB")
-                        .WithTitle("Bad Words")
-                        .WithColor(new Color(0, 255, 0))
-                        .WithCurrentTimestamp()
-                        .WithFooter($"Total Bot Memory Usage: {memoryMB:F2} MB");
-                    foreach (var field in pageFields)
-                    {
-                        if (!string.IsNullOrWhiteSpace(field.Value))
-                        {
-                            badWordsPage.AddField(field.Name, field.Value, false);
-                        }
-                    }
-                    pages.Add(badWordsPage);
+                    var splitPages = HelperFunctions.SplitFieldsToPages(
+                        "Bad Words",
+                        $"Cache Status - Total Bot Memory Usage: {memoryMB:F2} MB",
+                        pageFields,
+                        new Color(0, 255, 0),
+                        $"Total Bot Memory Usage: {memoryMB:F2} MB"
+                    );
+                    pages.AddRange(splitPages);
                 }
             }
 

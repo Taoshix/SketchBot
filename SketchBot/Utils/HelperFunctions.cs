@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Fergun.Interactive;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -362,6 +363,45 @@ namespace SketchBot.Utils
             if (current.Length > 0)
                 pages.Add(current.ToString());
             return pages;
+        }
+        public static List<IPageBuilder> SplitFieldsToPages(string title, string author, List<(string Name, string Value)> fields, Color color, string footer, string description = null)
+        {
+            var result = new List<IPageBuilder>();
+            var currentPage = new PageBuilder()
+                .WithAuthor(author)
+                .WithTitle(title)
+                .WithColor(color)
+                .WithCurrentTimestamp()
+                .WithFooter(footer);
+
+            if (!string.IsNullOrEmpty(description))
+                currentPage.WithDescription(description);
+
+            int baseLength = currentPage.Length;
+            foreach (var field in fields)
+            {
+                currentPage.AddField(field.Name, field.Value, false);
+                if (currentPage.Length > 6000)
+                {
+                    // Remove last field and start a new page
+                    currentPage.Fields.RemoveAt(currentPage.Fields.Count - 1);
+                    result.Add(currentPage);
+
+                    currentPage = new PageBuilder()
+                        .WithAuthor(author)
+                        .WithTitle(title)
+                        .WithColor(color)
+                        .WithCurrentTimestamp()
+                        .WithFooter(footer);
+
+                    if (!string.IsNullOrEmpty(description))
+                        currentPage.WithDescription(description);
+
+                    currentPage.AddField(field.Name, field.Value, false);
+                }
+            }
+            result.Add(currentPage);
+            return result;
         }
     }
 }
