@@ -32,7 +32,7 @@ namespace SketchBot.Services
                 {
                     if (_cache._dbConnected)
                     {
-                        StatsDB.UpdateStats(buildBotStats());
+                        UserStatsDB.UpdateStats(buildBotStats());
                         TempDB.UpdateStats(buildBotStats());
                     }
                 }

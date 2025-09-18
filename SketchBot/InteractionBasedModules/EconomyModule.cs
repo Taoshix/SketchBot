@@ -49,7 +49,7 @@ namespace SketchBot.InteractionBasedModules
                 Color = new Color(0, 0, 255)
             };
             var displayName = user.Nickname ?? user.DisplayName;
-            StatsDB.CreateTable(Context.Guild.Id);
+            UserStatsDB.CreateTable(Context.Guild.Id);
             var userCheckResult = _cachingService.IsInDatabase(Context.Guild.Id, user.Id);
 
             if (!userCheckResult)
@@ -57,7 +57,7 @@ namespace SketchBot.InteractionBasedModules
                 _cachingService.SetupUserInDatabase(user.Guild.Id, user as SocketGuildUser);
             }
 
-            var userStats = StatsDB.GetUserStats(user);
+            var userStats = UserStatsDB.GetUserStats(user);
             embed.Title = "Stats for " + displayName;
             embed.Description = userStats.Tokens + " tokens:small_blue_diamond:" +
                 "\nLevel " + userStats.Level +
@@ -91,7 +91,7 @@ namespace SketchBot.InteractionBasedModules
                 Color = new Color(0, 0, 255)
             };
             var displayName = user.Nickname ?? user.DisplayName;
-            StatsDB.CreateTable(Context.Guild.Id);
+            UserStatsDB.CreateTable(Context.Guild.Id);
             var userCheckResult = _cachingService.IsInDatabase(Context.Guild.Id, user.Id);
 
             if (!userCheckResult)
@@ -99,7 +99,7 @@ namespace SketchBot.InteractionBasedModules
                 _cachingService.SetupUserInDatabase(Context.Guild.Id, user as SocketGuildUser);
             }
 
-            var userStats = StatsDB.GetUserStats(user);
+            var userStats = UserStatsDB.GetUserStats(user);
             embed.Title = "Stats for " + displayName;
             embed.Description = userStats.Tokens + " tokens:small_blue_diamond:" +
                 "\nLevel " + userStats.Level +
@@ -119,7 +119,7 @@ namespace SketchBot.InteractionBasedModules
             }
 
             var user = Context.User as IGuildUser;
-            var userStats = StatsDB.GetUserStats(user);
+            var userStats = UserStatsDB.GetUserStats(user);
             long currentTokens = userStats?.Tokens ?? 0;
 
             if (amount > currentTokens)
@@ -139,12 +139,12 @@ namespace SketchBot.InteractionBasedModules
 
             if (won)
             {
-                StatsDB.AddTokens(user, amount);
+                UserStatsDB.AddTokens(user, amount);
                 currentTokens += amount;
             }
             else
             {
-                StatsDB.RemoveTokens(user, amount);
+                UserStatsDB.RemoveTokens(user, amount);
                 currentTokens -= amount;
             }
 
@@ -173,7 +173,7 @@ namespace SketchBot.InteractionBasedModules
             }
 
             var user = Context.User as IGuildUser;
-            var userStats = StatsDB.GetUserStats(user);
+            var userStats = UserStatsDB.GetUserStats(user);
             long amount = userStats?.Tokens ?? 0;
             var currentTokens = amount;
 
@@ -189,12 +189,12 @@ namespace SketchBot.InteractionBasedModules
 
             if (won)
             {
-                StatsDB.AddTokens(user, amount);
+                UserStatsDB.AddTokens(user, amount);
                 currentTokens += amount;
             }
             else
             {
-                StatsDB.RemoveTokens(user, amount);
+                UserStatsDB.RemoveTokens(user, amount);
                 currentTokens -= amount;
             }
 
@@ -235,7 +235,7 @@ namespace SketchBot.InteractionBasedModules
                     {
                         Color = new Color(0, 0, 255)
                     };
-                    StatsDB.AddTokens(guildUser, tokens);
+                    UserStatsDB.AddTokens(guildUser, tokens);
                     embed.Title = name + " was awarded " + tokens + " tokens!";
                     embed.Description = comment;
                     var builtEmbed = embed.Build();
@@ -276,7 +276,7 @@ namespace SketchBot.InteractionBasedModules
                     {
                         _cachingService.SetupUserInDatabase(Context.Guild.Id, user);
                     }
-                    StatsDB.AddTokens(user, tokens);
+                    UserStatsDB.AddTokens(user, tokens);
                 }
                 var embed = new EmbedBuilder()
                 {
@@ -336,7 +336,7 @@ namespace SketchBot.InteractionBasedModules
                 _cachingService.SetupUserInDatabase(Context.Guild.Id, userToPay);
             }
 
-            var userStats = StatsDB.GetUserStats(user);
+            var userStats = UserStatsDB.GetUserStats(user);
             if (amount <= 0)
             {
                 await FollowupAsync("Don't attempt to steal tokens from people!");
@@ -349,8 +349,8 @@ namespace SketchBot.InteractionBasedModules
                 return;
             }
 
-            StatsDB.RemoveTokens(user, amount);
-            StatsDB.AddTokens(userToPay, amount);
+            UserStatsDB.RemoveTokens(user, amount);
+            UserStatsDB.AddTokens(userToPay, amount);
 
             var embed = new EmbedBuilder()
             {

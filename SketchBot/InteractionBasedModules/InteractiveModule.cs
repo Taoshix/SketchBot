@@ -202,8 +202,8 @@ namespace SketchBot.InteractionBasedModules
 
             if (result.IsSuccess)
             {
-                StatsDB.DeleteUser(user);
-                StatsDB.EnterUser(user);
+                UserStatsDB.DeleteUser(user);
+                UserStatsDB.EnterUser(user);
                 await result.Value.UpdateAsync(x =>
                 {
                     x.Content = $"{user.Mention}'s stats have been reset by {Context.User.Mention}.";
@@ -244,7 +244,7 @@ namespace SketchBot.InteractionBasedModules
             {
                 _cache.SetupUserInDatabase(Context.Guild.Id, user as SocketGuildUser);
             }
-            var userStats = StatsDB.GetUserStats(user);
+            var userStats = UserStatsDB.GetUserStats(user);
             DateTime now = DateTime.Now;
             DateTime daily = userStats.Daily;
             int difference = DateTime.Compare(daily, now);
@@ -268,7 +268,7 @@ namespace SketchBot.InteractionBasedModules
             if (hasVoted)
             {
                 amount *= 4;
-                StatsDB.UpdateDailyTimestamp(user);
+                UserStatsDB.UpdateDailyTimestamp(user);
                 if (user.Id != Context.User.Id)
                 {
                     var _rand = new Random();
@@ -280,7 +280,7 @@ namespace SketchBot.InteractionBasedModules
                 {
                     await FollowupAsync($"You received your {amount} tokens! (4x vote bonus)");
                 }
-                StatsDB.AddTokens(user, amount);
+                UserStatsDB.AddTokens(user, amount);
             }
             else
             {
@@ -304,8 +304,8 @@ namespace SketchBot.InteractionBasedModules
                         int giveBonus = _rand.Next(amount * 2);
                         amount += giveBonus;
                     }
-                    StatsDB.UpdateDailyTimestamp(user);
-                    StatsDB.AddTokens(user, amount);
+                    UserStatsDB.UpdateDailyTimestamp(user);
+                    UserStatsDB.AddTokens(user, amount);
                     await result.Value.UpdateAsync(x =>
                     {
                         x.Content = user.Id != Context.User.Id
@@ -347,7 +347,7 @@ namespace SketchBot.InteractionBasedModules
                     $"\n{string.Join(", ", types.Select(HelperFunctions.CapitalizeFirstLetter))}");
                 return;
             }
-            var userStatsList = type == "leveling" ? StatsDB.GetAllUserStats(Context.Guild.Id, true) : StatsDB.GetAllUserStats(Context.Guild.Id);
+            var userStatsList = type == "leveling" ? UserStatsDB.GetAllUserStats(Context.Guild.Id, true) : UserStatsDB.GetAllUserStats(Context.Guild.Id);
             int totalUsers = userStatsList.Count;
             int pageSize = 10;
             int totalPages = (int)Math.Ceiling(totalUsers / (double)pageSize);

@@ -144,7 +144,7 @@ namespace SketchBot
             _client.SelectMenuExecuted += MyMenuHandler;
             //_commands.CommandExecuted += OnCommandExecutedAsync;
 
-            _ = new StatsDB(true);
+            _ = new UserStatsDB(true);
             _ = new ServerSettingsDB(true);
         }
 
@@ -353,9 +353,9 @@ namespace SketchBot
             await _provider.UseLavaNodeAsync();
             if (_provider.GetRequiredService<CachingService>()._dbConnected)
             {
-                StatsDB.CreateSettingsTable();
-                StatsDB.CreateBlacklistTable();
-                StatsDB.CreateStatsTable();
+                UserStatsDB.CreateSettingsTable();
+                UserStatsDB.CreateBlacklistTable();
+                UserStatsDB.CreateStatsTable();
                 cachingservice.SetupBlackList();
             }
             await _interactionService.RegisterCommandsGloballyAsync();
@@ -411,7 +411,7 @@ namespace SketchBot
 
                 ServerSettingsDB.CreateTableWords(guildId);
                 ServerSettingsDB.CreateTableRole(guildId);
-                StatsDB.CreateTable(guildId);
+                UserStatsDB.CreateTable(guildId);
 
                 foreach (var channel in socketGuild.TextChannels)
                 {
@@ -478,14 +478,14 @@ namespace SketchBot
                     rand = new Random();
                     int xp = rand.Next(5, 15);
                     int tokens = rand.Next(1, 4);
-                    var userData = StatsDB.GetUserStats(guildUser);
+                    var userData = UserStatsDB.GetUserStats(guildUser);
                     if (userData == null)
                     {
                         Console.WriteLine($"UserData for {guildUser.Id} is null!");
                         return;
                     }
 
-                    StatsDB.AddTokens(guildUser, tokens);
+                    UserStatsDB.AddTokens(guildUser, tokens);
                     xpService.AddUser(guildUser);
 
                     var xpToLevelUp = XP.caclulateNextLevel(userData.Level);
@@ -495,7 +495,7 @@ namespace SketchBot
                         while (userData.XP >= XP.caclulateNextLevel(userData.Level + addLevels))
                             addLevels++;
 
-                        StatsDB.LevelUp(guildUser, xp, addLevels);
+                        UserStatsDB.LevelUp(guildUser, xp, addLevels);
 
                         var newLevel = userData.Level + addLevels;
                         var rolesToAward = ServerSettingsDB.GetRoles(socketGuild.Id);
@@ -528,12 +528,12 @@ namespace SketchBot
                     }
                     else if (!user.IsBot)
                     {
-                        StatsDB.AddXP(guildUser, xp);
+                        UserStatsDB.AddXP(guildUser, xp);
                     }
                 }
                 catch (Exception)
                 {
-                    StatsDB.CreateTable((msg.Author as SocketGuildUser).Guild.Id);
+                    UserStatsDB.CreateTable((msg.Author as SocketGuildUser).Guild.Id);
                 }
             });
             return Task.CompletedTask;
@@ -547,8 +547,8 @@ namespace SketchBot
                     return;
 
                 // Ensure user is in database
-                if (!StatsDB.CheckExistingUser(user))
-                    StatsDB.EnterUser(user);
+                if (!UserStatsDB.CheckExistingUser(user))
+                    UserStatsDB.EnterUser(user);
 
                 // Get welcome channel
                 var settingsTable = _provider.GetRequiredService<CachingService>().GetServerSettings(user.Guild.Id);
@@ -624,7 +624,7 @@ namespace SketchBot
                     var tao = _client.GetUser(135446225565515776).GetAvatarUrl();
                     var tjamp = _client.GetUser(208624502878371840).GetAvatarUrl();
 
-                    StatsDB.UpdateProfilePicture(tao, tjamp);
+                    UserStatsDB.UpdateProfilePicture(tao, tjamp);
                     TempDB.UpdateProfilePicture(tao, tjamp);
                 }
             });

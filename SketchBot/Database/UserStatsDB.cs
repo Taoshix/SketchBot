@@ -14,12 +14,12 @@ using SketchBot.Models;
 
 namespace SketchBot.Database
 {
-    public class StatsDB
+    public class UserStatsDB
     {
         public MySqlConnection? dbConnection;
         private Config config;
 
-        public StatsDB(bool shouldRunSetup = false)
+        public UserStatsDB(bool shouldRunSetup = false)
         {
             config = Config.Load();
             var stringBuilder = new MySqlConnectionStringBuilder
@@ -104,7 +104,7 @@ namespace SketchBot.Database
         public static bool CheckExistingUser(IGuildUser user)
         {
             var result = new List<string>();
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var guildId = user.Guild.Id;
             var query = $"SELECT * FROM `{guildId}` WHERE user_id = @UserId";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
@@ -122,7 +122,7 @@ namespace SketchBot.Database
         }
         public static void CreateSettingsTable()
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var str = @"
                 CREATE TABLE IF NOT EXISTS `server_settings` (
                     id varchar(50) PRIMARY KEY,
@@ -137,7 +137,7 @@ namespace SketchBot.Database
         }
         public static void CreateBlacklistTable()
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var str = @"
                 CREATE TABLE IF NOT EXISTS `blacklist` (
                     user_id varchar(50) PRIMARY KEY,
@@ -150,7 +150,7 @@ namespace SketchBot.Database
         }
         public static void CreateStatsTable()
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var str = @"
                 CREATE TABLE IF NOT EXISTS `stats` (
                     `servers` INT(10) NOT NULL DEFAULT '0',
@@ -168,7 +168,7 @@ namespace SketchBot.Database
         }
         public static void UpdateStats(BotStats stats)
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             try
             {
                 var query = "UPDATE `stats` SET servers = @Servers, users = @Users, msg_since_startup = @MsgSinceStartup, msg_per_min = @MsgPerMin, startup_time = @StartUpTime, cmd_since_startup = @CmdsSinceStartup, cmd_per_min = @CmdsPerMin";
@@ -194,7 +194,7 @@ namespace SketchBot.Database
         }
         public static void UpdateProfilePicture(string url1, string url2)
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             try
             {
                 var query = "UPDATE `stats` SET tao_avatar = @Url1, tjamp_avatar = @Url2";
@@ -214,7 +214,7 @@ namespace SketchBot.Database
         }
         public static void EnterUser(IGuildUser user)
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var guildId = user.Guild.Id;
             var query = $@"INSERT INTO `{guildId}` (user_id, tokens, daily, level, xp) VALUES (@UserId, @Tokens, @Daily, @Level, @XP)";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
@@ -230,7 +230,7 @@ namespace SketchBot.Database
         }
         public static void CreateTable(ulong guildid)
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var str = $@"
                 CREATE TABLE IF NOT EXISTS `{guildid}` (
                     user_id varchar(50),
@@ -246,7 +246,7 @@ namespace SketchBot.Database
         public static UserStats? GetUserStats(IGuildUser user)
         {
             var result = new List<UserStats>();
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var guildId = user.Guild.Id;
             var query = $"SELECT * FROM `{guildId}` WHERE user_id = @UserId";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
@@ -277,7 +277,7 @@ namespace SketchBot.Database
         public static List<UserStats> GetAllUserStats(ulong guildId, bool orderByLevel = false)
         {
             var result = new List<UserStats>();
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             string query;
             if (orderByLevel)
             {
@@ -314,7 +314,7 @@ namespace SketchBot.Database
         public static List<Blacklist> GetAllBlacklistedUsers()
         {
             var result = new List<Blacklist>();
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var query = "SELECT * FROM blacklist ORDER BY user_id DESC LIMIT 10000";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
@@ -339,7 +339,7 @@ namespace SketchBot.Database
         public static void AddXP(IGuildUser user, long xp)
         {
             var guildId = user.Guild.Id;
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             try
             {
                 var query = $"UPDATE `{guildId}` SET xp = xp + @XP WHERE user_id = @UserId";
@@ -362,7 +362,7 @@ namespace SketchBot.Database
         public static void LevelUp(IGuildUser user, long xp, long level)
         {
             var guildId = user.Guild.Id;
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             try
             {
                 var query = $"UPDATE `{guildId}` SET level = level + @Level, xp = xp + @XP WHERE user_id = @UserId";
@@ -385,7 +385,7 @@ namespace SketchBot.Database
         }
         public static void AddTokens(IGuildUser user, long tokens)
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var guildId = user.Guild.Id;
             try
             {
@@ -408,7 +408,7 @@ namespace SketchBot.Database
         }
         public static void RemoveTokens(IGuildUser user, long tokens)
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var guildId = user.Guild.Id;
             try
             {
@@ -431,7 +431,7 @@ namespace SketchBot.Database
         }
         public static void BlacklistAdd(RestUser user, string reason, IUser blacklister)
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var query = "INSERT INTO blacklist (user_id, username, reason, blacklister) VALUES (@UserId, @Username, @Reason, @Blacklister)";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
@@ -445,7 +445,7 @@ namespace SketchBot.Database
         }
         public static void BlacklistDel(ulong Id)
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var query = "DELETE FROM blacklist WHERE user_id = @UserId";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
@@ -457,7 +457,7 @@ namespace SketchBot.Database
         public static Blacklist? BlacklistCheck(ulong Id)
         {
             var result = new List<Blacklist>();
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var query = "SELECT * FROM blacklist WHERE user_id = @UserId";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
@@ -484,7 +484,7 @@ namespace SketchBot.Database
         }
         public static void UpdateDailyTimestamp(IGuildUser user)
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var guildId = user.Guild.Id;
             try
             {
@@ -504,7 +504,7 @@ namespace SketchBot.Database
         public static void DeleteUser(IGuildUser user)
         {
             var guildid = user.Guild.Id;
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var query = $"DELETE FROM `{guildid}` WHERE user_id = @UserId";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {

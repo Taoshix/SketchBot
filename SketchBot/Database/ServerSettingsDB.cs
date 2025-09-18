@@ -111,7 +111,7 @@ namespace SketchBot.Database
         }
         public static Serversettings MakeSettings(ulong guildid, int levelup)
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var query = "INSERT INTO `server_settings` (id, prefix, welcomechannel, modlogchannel, xpmultiplier, LevelupMessages) VALUES (@Id, '?', 0, 0, 1, @Levelup)";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
@@ -140,7 +140,7 @@ namespace SketchBot.Database
         }
         public static void UpdateXprate(ulong guildid, int rate)
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var query = "UPDATE `server_settings` SET xpmultiplier = @Rate WHERE id = @Id";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
@@ -198,7 +198,7 @@ namespace SketchBot.Database
         }
         public static void UpdatePrefix(ulong guildid, string newprefix)
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var query = "UPDATE `server_settings` SET prefix = @Prefix WHERE id = @Id";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
@@ -212,7 +212,7 @@ namespace SketchBot.Database
         public static Serversettings? GetSettings(ulong guildid)
         {
             var result = new List<Serversettings>();
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var query = "SELECT * FROM `server_settings` WHERE id = @Id";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
@@ -242,7 +242,7 @@ namespace SketchBot.Database
         }
         public static void UpdateLevelupMessagesBool(ulong guildid, int boool)
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var query = "UPDATE `server_settings` SET LevelupMessages = @Bool WHERE id = @Id";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
@@ -255,7 +255,7 @@ namespace SketchBot.Database
         }
         public static void SetWelcomeChannel(ulong guildid, ulong channelId)
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var query = "UPDATE `server_settings` SET welcomechannel = @WelcomeChannel WHERE id = @Id";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
@@ -267,7 +267,7 @@ namespace SketchBot.Database
         }
         public static void SetModlogChannel(ulong guildid, ulong channelId)
         {
-            var database = new StatsDB();
+            var database = new UserStatsDB();
             var query = "UPDATE `server_settings` SET modlogchannel = @ModlogChannel WHERE id = @Id";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {

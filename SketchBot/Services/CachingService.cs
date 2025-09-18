@@ -8,8 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TagLib.Asf;
-using static Mysqlx.Notice.Warning.Types;
 
 namespace SketchBot.Services
 {
@@ -30,7 +28,7 @@ namespace SketchBot.Services
         }
         public void UpdateDBStatus()
         {
-            var db = new StatsDB();
+            var db = new UserStatsDB();
             var status = db.IsDatabaseConnected();
             _dbConnected = status;
         }
@@ -110,7 +108,7 @@ namespace SketchBot.Services
 
             if (!IsInDatabase(guildId, user.Id) && !user.IsBot)
             {
-                StatsDB.EnterUser(user);
+                UserStatsDB.EnterUser(user);
                 _usersInDatabase[guildId].Add(user.Id);
             }
         }
@@ -174,7 +172,7 @@ namespace SketchBot.Services
             }
 
             // Check if the user exists in the database
-            var userExistsInDatabase = StatsDB.CheckExistingUser(user);
+            var userExistsInDatabase = UserStatsDB.CheckExistingUser(user);
             if (!userExistsInDatabase)
             {
                 return false;
@@ -196,7 +194,7 @@ namespace SketchBot.Services
                 var user = _client.Guilds.FirstOrDefault(x => x.Id == guildId).GetUser(userId);
                 if (user != null && !user.IsBot)
                 {
-                    StatsDB.EnterUser(user);
+                    UserStatsDB.EnterUser(user);
                     if (!_usersInDatabase.ContainsKey(guildId))
                     {
                         _usersInDatabase[guildId] = new List<ulong>();
@@ -233,7 +231,7 @@ namespace SketchBot.Services
 
             _blacklist.Clear();
 
-            var blacklistTable = StatsDB.GetAllBlacklistedUsers();
+            var blacklistTable = UserStatsDB.GetAllBlacklistedUsers();
             foreach (var element in blacklistTable)
             {
                 if (!_blacklist.Contains(element.UserId))
@@ -254,7 +252,7 @@ namespace SketchBot.Services
                 return;
             }
 
-            StatsDB.BlacklistAdd(user, reason, blacklister);
+            UserStatsDB.BlacklistAdd(user, reason, blacklister);
             _cachedBlacklistChecks[user.Id] = new Blacklist
             {
                 UserId = user.Id,
@@ -275,7 +273,7 @@ namespace SketchBot.Services
             {
                 return;
             }
-            StatsDB.BlacklistDel(id);
+            UserStatsDB.BlacklistDel(id);
             _cachedBlacklistChecks[id] = null;
             _blacklist.Remove(id);
         }
@@ -289,7 +287,7 @@ namespace SketchBot.Services
             {
                 return _cachedBlacklistChecks[Id];
             }
-            var blacklistCheck = StatsDB.BlacklistCheck(Id);
+            var blacklistCheck = UserStatsDB.BlacklistCheck(Id);
             _cachedBlacklistChecks[Id] = blacklistCheck;
             return blacklistCheck;
 

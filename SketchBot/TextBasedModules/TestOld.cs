@@ -160,15 +160,15 @@ namespace SketchBot.TextBasedModules
                 user = Context.User as IGuildUser;
             }
             var name = user.Nickname ?? user.Username;
-            StatsDB.CreateTable(Context.Guild.Id);
-            var result = StatsDB.CheckExistingUser(user);
+            UserStatsDB.CreateTable(Context.Guild.Id);
+            var result = UserStatsDB.CheckExistingUser(user);
 
             if (!result)
             {
-                StatsDB.EnterUser(user);
+                UserStatsDB.EnterUser(user);
             }
 
-            var userStats = StatsDB.GetUserStats(user);
+            var userStats = UserStatsDB.GetUserStats(user);
             embed.Title = "Stats for " + name;
             embed.Description = userStats.Tokens + " tokens:small_blue_diamond:" +
                 "\nLevel " + userStats.Level +

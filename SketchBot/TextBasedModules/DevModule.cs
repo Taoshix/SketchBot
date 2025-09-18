@@ -401,7 +401,7 @@ namespace SketchBot.TextBasedModules
 
             if (blacklist.Contains(user.Id))
             {
-                StatsDB.BlacklistDel(id);
+                UserStatsDB.BlacklistDel(id);
                 embedBuilder.Description = $"{user?.Mention ?? id.ToString()} has been removed from the blacklist!";
                 _cachingService.RemoveFromBlacklist(id);
             }
