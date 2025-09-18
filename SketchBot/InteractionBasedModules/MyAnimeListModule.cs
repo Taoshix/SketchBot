@@ -28,7 +28,7 @@ namespace SketchBot.InteractionBasedModules
 
         [Ratelimit(1, 5, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers)]
         [SlashCommand("anime", "Shows information about an Anime")]
-        public async Task AnimeAsync(string name)
+        public async Task AnimeAsync([Summary("Name", "The name of the anime to search for")] string name)
         {
             await DeferAsync();
             try
@@ -96,7 +96,7 @@ namespace SketchBot.InteractionBasedModules
         }
         [Ratelimit(1, 5, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers)]
         [SlashCommand("manga", "Shows information about a Manga")]
-        public async Task MangaAsync(string name)
+        public async Task MangaAsync([Summary("Name", "The name of the manga to search for")] string name)
         {
             await DeferAsync();
             try
@@ -156,7 +156,7 @@ namespace SketchBot.InteractionBasedModules
         }
         [Ratelimit(1, 5, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers)]
         [SlashCommand("maluser", "Searches for a user on MyAnimeList.net")]
-        public async Task MALUserAsync(string username)
+        public async Task MALUserAsync([Summary("Username", "The MyAnimeList username to search for")] string username)
         {
             await DeferAsync();
             var user = await _jikan.GetUserProfileAsync(username);

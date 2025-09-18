@@ -42,10 +42,12 @@ namespace SketchBot.InteractionBasedModules
             _discordBotsListService = discordBotsListService;
         }
         [SlashCommand("paginator", "Makes a paginator using your input")]
-        public async Task PaginateAsync([Summary("Text", "Each page is serpated by a comma ,")] string input, bool allowEveryone = false)
+        public async Task PaginateAsync(
+            [Summary("Text", "Each page is separated by a comma ,")] string text,
+            [Summary("AllowEveryone", "If true, anyone can use the paginator")] bool allowEveryone = false)
         {
             await DeferAsync();
-            string[] words = input.Split(",");
+            string[] words = text.Split(",");
             if (words.Length == 0 || string.IsNullOrWhiteSpace(words[0]))
             {
                 await FollowupAsync(Context.User.Mention + " You gotta give me something to paginate");
@@ -83,7 +85,7 @@ namespace SketchBot.InteractionBasedModules
 
         [RequireContext(ContextType.Guild)]
         [SlashCommand("rolemembers", "Displays the members of a role")]
-        public async Task RoleMembersAsync(SocketRole role)
+        public async Task RoleMembersAsync([Summary("Role", "The role to list members for")] SocketRole role)
         {
             await DeferAsync();
             await role.Guild.DownloadUsersAsync();
@@ -132,13 +134,13 @@ namespace SketchBot.InteractionBasedModules
 
         }
         [SlashCommand("urban", "Search UrbanDictionary for the input term")]
-        public async Task UrbanAsync(string SearchTerm)
+        public async Task UrbanAsync([Summary("Term", "The term to search on UrbanDictionary")] string term)
         {
             await DeferAsync();
             try
             {
                 UrbanService client = new UrbanService();
-                var data = await client.Data(SearchTerm);
+                var data = await client.Data(term);
                 var pageBuilders = new List<IPageBuilder>();
                 foreach (var item in data.List)
                 {
@@ -155,7 +157,7 @@ namespace SketchBot.InteractionBasedModules
                 }
                 if (pageBuilders.Count == 0)
                 {
-                    await FollowupAsync($"No results found for `{SearchTerm}`");
+                    await FollowupAsync($"No results found for `{term}`");
                     return;
                 }
                 var paginator = new StaticPaginatorBuilder()
@@ -174,7 +176,7 @@ namespace SketchBot.InteractionBasedModules
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageGuild)]
         [SlashCommand("resetuser", "Resets a user's stats")]
-        public async Task ResetUserStatsAsync(IGuildUser user)
+        public async Task ResetUserStatsAsync([Summary("User", "The user whose stats to reset")] IGuildUser user)
         {
             await DeferAsync();
             if (!_cache._dbConnected)
@@ -220,8 +222,9 @@ namespace SketchBot.InteractionBasedModules
                 });
             }
         }
+        [RequireContext(ContextType.Guild)]
         [SlashCommand("daily", "Claim your daily or give it to another person")]
-        public async Task ClaimDailyAsync(IGuildUser user = null)
+        public async Task ClaimDailyAsync([Summary("User", "The user to give daily tokens to (defaults to yourself)")] IGuildUser user = null)
         {
             await DeferAsync();
 
@@ -329,12 +332,12 @@ namespace SketchBot.InteractionBasedModules
         public async Task LeaderboardAsync([Summary("Type", "Leaderboard type"), Autocomplete(typeof(LeaderboardAutocompleteHandler))] string type)
         {
             await DeferAsync();
-            await Context.Guild.DownloadUsersAsync();
             if (!_cache._dbConnected)
             {
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
+            await Context.Guild.DownloadUsersAsync();
             type = type.ToLower();
             string[] types = ["tokens", "leveling"];
             var userStatsList = StatsDB.GetAllUserStats(Context.User as IGuildUser);
@@ -343,9 +346,9 @@ namespace SketchBot.InteractionBasedModules
             int totalPages = (int)Math.Ceiling(totalUsers / (double)pageSize);
             if (!types.Contains(type))
             {
-                await FollowupAsync("Usage: /leaderboard <type> <page>" +
+                await FollowupAsync("Usage: /leaderboard <type>" +
                     "\nAvailable types:" +
-                    "\nTokens, Leveling");
+                    $"\n{string.Join(", ", types.Select(HelperFunctions.CapitalizeFirstLetter))}");
                 return;
             }
 

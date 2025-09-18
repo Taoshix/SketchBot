@@ -64,22 +64,22 @@ namespace SketchBot.InteractionBasedModules
         }
 
         [SlashCommand("repeat", "Echo a message")]
-        public async Task RepeatAsync(string input)
+        public async Task RepeatAsync([Summary("Input", "The message to echo")] string input)
         {
             await DeferAsync();
             await FollowupAsync($"{Context.User.Mention} < {input}");
         }
 
         [RequireUserPermission(GuildPermission.SendTTSMessages)]
-        [SlashCommand("repeattts", "Echo a message")]
-        public async Task RepeatTTSAsync(string input)
+        [SlashCommand("repeattts", "Echo a message but as TTS")]
+        public async Task RepeatTTSAsync([Summary("Input", "The message to echo as TTS")] string input)
         {
             await DeferAsync();
             await FollowupAsync($"{Context.User.Mention} < {input}", null, true);
         }
 
         [SlashCommand("rate", "Rates something out of 100")]
-        public async Task Rate(string input)
+        public async Task Rate([Summary("Input", "The thing to rate")] string input)
         {
             await DeferAsync();
             var ci = CultureInfo.InvariantCulture;
@@ -115,7 +115,9 @@ namespace SketchBot.InteractionBasedModules
         }
 
         [SlashCommand("roll", "Rolls between x and y")]
-        public async Task RollAsync(int min = 1, int max = 100)
+        public async Task RollAsync(
+            [Summary("Min", "The minimum value to roll")] int min = 1,
+            [Summary("Max", "The maximum value to roll")] int max = 100)
         {
             await DeferAsync();
             _rand = new Random();
@@ -125,13 +127,13 @@ namespace SketchBot.InteractionBasedModules
             }
             else
             {
-                var rng = _rand.Next(min, max);
+                var rng = _rand.Next(min, max+1);
                 await FollowupAsync($"{Context.User.Username} rolled {rng} ({min}-{max})");
             }
         }
 
         [SlashCommand("choose", "Makes the choice for you between a bunch of listed things")]
-        public async Task ChooseAsync([Summary("Choices", "Each choice is separated by , (comma)")] string choices)
+        public async Task ChooseAsync([Summary("Choices", "Each choice is separated by a comma")] string choices)
         {
             await DeferAsync();
             if (string.IsNullOrWhiteSpace(choices))
@@ -202,7 +204,7 @@ namespace SketchBot.InteractionBasedModules
         }
 
         [SlashCommand("avatar", "Get the avatar of a user")]
-        public async Task AvatarAsync(IUser user = null)
+        public async Task AvatarAsync([Summary("User", "The user to get the avatar for")] IUser user = null)
         {
             await DeferAsync();
             user ??= Context.User;
@@ -214,7 +216,7 @@ namespace SketchBot.InteractionBasedModules
         }
 
         [SlashCommand("eightball", "Ask the 8ball a question")]
-        public async Task EightballAsync(string input)
+        public async Task EightballAsync([Summary("Input", "The question to ask the 8ball")] string input)
         {
             await DeferAsync();
             string[] predictionsTexts =
@@ -234,7 +236,7 @@ namespace SketchBot.InteractionBasedModules
         }
 
         [SlashCommand("status", "Checks to see if a website is up")]
-        public async Task StatusAsync(string websiteUrl = "http://sketchbot.xyz")
+        public async Task StatusAsync([Summary("WebsiteUrl", "The website URL to check")] string websiteUrl = "http://sketchbot.xyz")
         {
             await DeferAsync();
             string description;
@@ -270,7 +272,7 @@ namespace SketchBot.InteractionBasedModules
         }
 
         [SlashCommand("calculate", "Calculates a math problem")]
-        public async Task CalculateAsync(HelperFunctions.Calculation expression)
+        public async Task CalculateAsync([Summary("Expression", "The math expression to calculate")] HelperFunctions.Calculation expression)
         {
             await DeferAsync();
             try
@@ -315,7 +317,7 @@ namespace SketchBot.InteractionBasedModules
         [RequireBotPermission(GuildPermission.ManageMessages)]
         [RequireContext(ContextType.Guild)]
         [SlashCommand("purge", "Purges messages from the channel")]
-        public async Task PurgeAsync(uint amount)
+        public async Task PurgeAsync([Summary("Amount", "The number of messages to purge")] uint amount)
         {
             await DeferAsync();
             if ((Context.User as IGuildUser).GuildPermissions.ManageMessages)
@@ -656,7 +658,7 @@ namespace SketchBot.InteractionBasedModules
 
         [RequireContext(ContextType.Guild)]
         [SlashCommand("userinfo", "Displays information about the user")]
-        public async Task SlashUserInfoAsync(IGuildUser user)
+        public async Task SlashUserInfoAsync([Summary("User", "The user to display info for")] IGuildUser user)
         {
             await DeferAsync();
             var builder = new EmbedBuilder()
@@ -686,7 +688,7 @@ namespace SketchBot.InteractionBasedModules
             await FollowupAsync(embed: builder.Build());
         }
         [SlashCommand("youtube", "Searches YouTube and returns the first result")]
-        public async Task YouTubeSearchAsync(string searchquery)
+        public async Task YouTubeSearchAsync([Summary("Query", "The search query for YouTube")] string searchquery)
         {
             await DeferAsync();
             var items = new VideoSearch();
@@ -696,7 +698,7 @@ namespace SketchBot.InteractionBasedModules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("roleinfo", "Displays info about a role")]
-        public async Task RoleInfoAsync(IRole role)
+        public async Task RoleInfoAsync([Summary("Role", "The role to display info for")] IRole role)
         {
             await DeferAsync();
             var rolePermissionsList = role.Permissions.ToList();
@@ -717,14 +719,16 @@ namespace SketchBot.InteractionBasedModules
             await FollowupAsync("", embed: embed.Build());
         }
         [SlashCommand("activity", "Launch a discord activity in a voice channel!")]
-        public async Task CreateDiscordActivityAsync(IVoiceChannel chan, DefaultApplications app)
+        public async Task CreateDiscordActivityAsync(
+            [Summary("Channel", "The voice channel to launch the activity in")] IVoiceChannel chan,
+            [Summary("App", "The Discord application to launch")] DefaultApplications app)
         {
             await DeferAsync();
             var invite = await chan.CreateInviteToApplicationAsync(app);
             await Context.Interaction.FollowupAsync(invite.Url);
         }
         [SlashCommand("emote", "Enlargens an emote")]
-        public async Task ShowEmoteAsync(string emote)
+        public async Task ShowEmoteAsync([Summary("Emote", "The emote to enlarge")] string emote)
         {
             await DeferAsync();
             var emo = Emote.Parse(emote);
@@ -740,7 +744,10 @@ namespace SketchBot.InteractionBasedModules
 
         [Ratelimit(1, 10, Measure.Seconds, RatelimitFlags.NoLimitForDevelopers | RatelimitFlags.ApplyPerGuild)]
         [SlashCommand("memegen", "Generates a meme")]
-        public async Task GenerateMemeAsync([Summary("Template", "The name of the meme template you wish to use"), Autocomplete(typeof(MemeAutoCompleteHandler))] string templateName, string topText, string bottomText)
+        public async Task GenerateMemeAsync(
+            [Summary("Template", "The name of the meme template you wish to use"), Autocomplete(typeof(MemeAutoCompleteHandler))] string templateName,
+            [Summary("TopText", "The text to display at the top of the meme")] string topText,
+            [Summary("BottomText", "The text to display at the bottom of the meme")] string bottomText)
         {
             await DeferAsync();
             var service = _memeService.GetMemeService();

@@ -22,7 +22,9 @@ namespace SketchBot.InteractionBasedModules
         [RequireUserPermission(GuildPermission.KickMembers)]
         [RequireContext(ContextType.Guild)]
         [SlashCommand("kick", "Kicks someone from the server")]
-        public async Task KickAsync(IGuildUser user, string reason = "No reason")
+        public async Task KickAsync(
+            [Summary("User", "The user to kick")] IGuildUser user,
+            [Summary("Reason", "The reason for the kick")] string reason = "No reason")
         {
             await DeferAsync();
             var currentUser = Context.User as IGuildUser;
@@ -47,7 +49,9 @@ namespace SketchBot.InteractionBasedModules
         [RequireUserPermission(GuildPermission.BanMembers)]
         [RequireContext(ContextType.Guild)]
         [SlashCommand("ban", "Bans someone from the server")]
-        public async Task BanAsync(IGuildUser user, string reason = "No reason specified")
+        public async Task BanAsync(
+            [Summary("User", "The user to ban")] IGuildUser user,
+            [Summary("Reason", "The reason for the ban")] string reason = "No reason specified")
         {
             await DeferAsync();
             var currentUser = Context.User as IGuildUser;
@@ -71,7 +75,7 @@ namespace SketchBot.InteractionBasedModules
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [SlashCommand("setwelcome", "Sets the welcome channel for welcome messages")]
-        public async Task SetWelcomeChannelAsync(ITextChannel Channel)
+        public async Task SetWelcomeChannelAsync([Summary("Channel", "The channel to set as welcome channel")] ITextChannel channel)
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -79,8 +83,8 @@ namespace SketchBot.InteractionBasedModules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            _cachingService.SetWelcomeChannel(Context.Guild.Id, Channel.Id);
-            await FollowupAsync($"{Channel.Mention} will be the new welcome channel 👍");
+            _cachingService.SetWelcomeChannel(Context.Guild.Id, channel.Id);
+            await FollowupAsync($"{channel.Mention} will be the new welcome channel 👍");
         }
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
@@ -99,7 +103,7 @@ namespace SketchBot.InteractionBasedModules
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [SlashCommand("setlevelmsg", "Enables or disables level up messages")]
-        public async Task SetLevelMessagesAsync(bool enabled)
+        public async Task SetLevelMessagesAsync([Summary("Enabled", "Enable or disable level up messages")] bool enabled)
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -113,7 +117,7 @@ namespace SketchBot.InteractionBasedModules
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [SlashCommand("setmodlog", "Sets the modlog channel")]
-        public async Task SetModlogChannelAsync(ITextChannel Channel)
+        public async Task SetModlogChannelAsync([Summary("Channel", "The channel to set as modlog channel")] ITextChannel channel)
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -121,8 +125,8 @@ namespace SketchBot.InteractionBasedModules
                 await FollowupAsync("Database is down, please try again later");
                 return;
             }
-            _cachingService.SetModlogChannel(Context.Guild.Id, Channel.Id);
-            await FollowupAsync($"{Channel.Mention} will be the new mod-log channel 👍");
+            _cachingService.SetModlogChannel(Context.Guild.Id, channel.Id);
+            await FollowupAsync($"{channel.Mention} will be the new mod-log channel 👍");
         }
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(ChannelPermission.ManageChannels)]
@@ -142,7 +146,9 @@ namespace SketchBot.InteractionBasedModules
         [RequireUserPermission(GuildPermission.ManageNicknames)]
         [RequireBotPermission(GuildPermission.ManageNicknames)]
         [SlashCommand("nickname", "Changes your nickname")]
-        public async Task NicknameAsync(string newNickname, IGuildUser targetUser = null)
+        public async Task NicknameAsync(
+            [Summary("NewNickname", "The new nickname to set")] string newNickname,
+            [Summary("TargetUser", "The user to change nickname for (defaults to yourself)")] IGuildUser targetUser = null)
         {
             await DeferAsync();
 
@@ -179,7 +185,7 @@ namespace SketchBot.InteractionBasedModules
         [RequireUserPermission(ChannelPermission.ManageChannels)]
         [RequireContext(ContextType.Guild)]
         [SlashCommand("slowmode", "Sets the slowmode of a channel to the specified seconds")]
-        public async Task SetSlowmodeAsync(int seconds)
+        public async Task SetSlowmodeAsync([Summary("Seconds", "The slowmode interval in seconds")] int seconds)
         {
             if (seconds < 21600)
             {

@@ -66,7 +66,7 @@ namespace SketchBot.InteractionBasedModules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("stats", "Display a user's level and token")]
-        public async Task SlashUserStatsAsync(IGuildUser user = null)
+        public async Task SlashUserStatsAsync([Summary("User", "Specifies the user you want to stat check. Defaults to yourself")]IGuildUser user = null)
         {
             await DeferAsync();
             user ??= Context.User as IGuildUser;
@@ -109,7 +109,7 @@ namespace SketchBot.InteractionBasedModules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("gamble", "Gamble tokens")]
-        public async Task GambleAsync(long amount)
+        public async Task GambleAsync([Summary("Amount", "The number of tokens you want to gamble")] long amount)
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -213,7 +213,11 @@ namespace SketchBot.InteractionBasedModules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("award", "Give someone tokens")]
-        public async Task AwardTokensAsync(IGuildUser guildUser, int tokens, string comment = "")
+        public async Task AwardTokensAsync(
+            [Summary("User", "The user to award tokens to")] IGuildUser guildUser,
+            [Summary("Tokens", "The number of tokens to award")] int tokens,
+            [Summary("Comment", "A comment to include with the award")] string comment = ""
+        )
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -250,7 +254,10 @@ namespace SketchBot.InteractionBasedModules
         [Ratelimit(1, 5, Measure.Minutes, RatelimitFlags.ApplyPerGuild | RatelimitFlags.NoLimitForDevelopers)]
         [RequireContext(ContextType.Guild)]
         [SlashCommand("awardall", "Give everyone on the server some tokens")]
-        public async Task AwardTokensToEveryoneAsync(int tokens, string comment = "")
+        public async Task AwardTokensToEveryoneAsync(
+            [Summary("Tokens", "The number of tokens to award to everyone")] int tokens,
+            [Summary("Comment", "A comment to include with the award")] string comment = ""
+        )
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -288,7 +295,11 @@ namespace SketchBot.InteractionBasedModules
         }
         [RequireContext(ContextType.Guild)]
         [SlashCommand("pay", "Pay someone else some of your tokens")]
-        public async Task PayTokensAsync(IGuildUser usertopay, int amount, string comment = "No comment")
+        public async Task PayTokensAsync(
+            [Summary("User", "The user you want to pay tokens to")] IGuildUser usertopay,
+            [Summary("Amount", "The number of tokens to pay")] int amount,
+            [Summary("Comment", "A comment to include with the payment")] string comment = "No comment"
+        )
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -352,7 +363,10 @@ namespace SketchBot.InteractionBasedModules
         [RequireUserPermission(GuildPermission.ManageRoles)]
         [RequireContext(ContextType.Guild)]
         [SlashCommand("addrole", "Add a role for leveling")]
-        public async Task AddRoleAsync(IRole role, int level)
+        public async Task AddRoleAsync(
+            [Summary("Role", "The role to award for reaching a level")] IRole role,
+            [Summary("Level", "The level required to receive the role")] int level
+        )
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)
@@ -367,7 +381,9 @@ namespace SketchBot.InteractionBasedModules
         [RequireUserPermission(GuildPermission.ManageRoles)]
         [RequireContext(ContextType.Guild)]
         [SlashCommand("removerole", "Remove a role for leveing")]
-        public async Task RemoveRoleAsync(IRole role)
+        public async Task RemoveRoleAsync(
+            [Summary("Role", "The role to remove from level rewards")] IRole role
+        )
         {
             await DeferAsync();
             if (!_cachingService._dbConnected)

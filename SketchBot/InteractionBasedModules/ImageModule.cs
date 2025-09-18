@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using Discord;
-using Discord.Commands;
 using Discord.WebSocket;
 using Discord.Rest;
 using SixLabors.ImageSharp;
@@ -27,12 +26,12 @@ namespace SketchBot.InteractionBasedModules
         private readonly HttpClient client = new HttpClient();
         private readonly IImageEncoder encoder = new PngEncoder();
         [SlashCommand("invert", "Inverts an image")]
-        public async Task InvertAsync(IAttachment inputImage)
+        public async Task InvertAsync([Summary("Image", "The image attachment to invert")] IAttachment imageAttachment)
         {
             await DeferAsync();
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
@@ -52,13 +51,12 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("grayscale", "Grayscales an image")]
-        [Alias("greyscale", "gray", "grey")]
-        public async Task GrayscaleAsync(IAttachment inputImage)
+        public async Task GrayscaleAsync([Summary("Image", "The image attachment to grayscale")] IAttachment imageAttachment)
         {
             await DeferAsync();
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
@@ -80,12 +78,12 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("flip", "Flips an image upside down")]
-        public async Task FlipAsync(IAttachment inputImage)
+        public async Task FlipAsync([Summary("Image", "The image attachment to flip upside down")] IAttachment imageAttachment)
         {
             await DeferAsync();
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
@@ -104,7 +102,9 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("sepia", "Sepia color filter")]
-        public async Task SepiaAsync(double amount, IAttachment inputImage)
+        public async Task SepiaAsync(
+            [Summary("Amount", "The intensity of the sepia effect (0 to 1)")] double amount, 
+            [Summary("Image", "The image attachment to apply sepia to")] IAttachment imageAttachment)
         {
             await DeferAsync();
             if (amount > 1 && Context.Interaction.User.Id != 135446225565515776)
@@ -113,7 +113,7 @@ namespace SketchBot.InteractionBasedModules
             }
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
@@ -135,7 +135,9 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("pixelate", "Pixelates an image")]
-        public async Task PixelateAsync(int factor, IAttachment inputImage)
+        public async Task PixelateAsync(
+            [Summary("Factor", "The pixelation factor (max 50)")] int factor, 
+            [Summary("Image", "The image attachment to pixelate")] IAttachment imageAttachment)
         {
             await DeferAsync();
             if (factor > 50 && Context.Interaction.User.Id != 135446225565515776)
@@ -144,7 +146,7 @@ namespace SketchBot.InteractionBasedModules
             }
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
@@ -164,26 +166,28 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("contrast", "Adjusts the contrast of an image")]
-        public async Task ContrastAsync(float factor, IAttachment inputImage)
+        public async Task ContrastAsync(
+            [Summary("Amount", "The contrast adjustment factor (max 100)")] float amount, 
+            [Summary("Image", "The image attachment to adjust contrast")] IAttachment imageAttachment)
         {
             await DeferAsync();
-            if (factor > 100 && Context.Interaction.User.Id != 135446225565515776)
+            if (amount > 100 && Context.Interaction.User.Id != 135446225565515776)
             {
-                factor = 100;
+                amount = 100;
             }
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    image.Mutate(x => x.Contrast(factor));
+                    image.Mutate(x => x.Contrast(amount));
                     image.Save(stream, encoder);
 
                 }
                 stream.Position = 0;
                 string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                await Context.Interaction.FollowupWithFileAsync(stream, $"Contrast.png", $"Factor: `{factor}`\n Filesize: `{fileSize}`");
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Contrast.png", $"Factor: `{amount}`\n Filesize: `{fileSize}`");
                 await stream.FlushAsync();
                 stream.Dispose();
             }
@@ -193,7 +197,9 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("glow", "Glows the image")]
-        public async Task GlowAsync(int size, IAttachment inputImage)
+        public async Task GlowAsync(
+            [Summary("Size", "The size/intensity of the glow effect (max 2500)")] int size, 
+            [Summary("Image", "The image attachment to glow")] IAttachment imageAttachment)
         {
             await DeferAsync();
             if (size > 2500 && Context.Interaction.User.Id != 135446225565515776)
@@ -202,7 +208,7 @@ namespace SketchBot.InteractionBasedModules
             }
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
@@ -222,12 +228,15 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("skew", "Skews the image")]
-        public async Task SkewAsync(float x, float y, IAttachment inputImage)
+        public async Task SkewAsync(
+            [Summary("X", "The X-axis skew amount in degrees")] float x, 
+            [Summary("Y", "The Y-axis skew amount in degrees")] float y, 
+            [Summary("Image", "The image attachment to skew")] IAttachment imageAttachment)
         {
             await DeferAsync();
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
@@ -247,12 +256,12 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("oil", "Oil painting filter")]
-        public async Task OilAsync(IAttachment inputImage)
+        public async Task OilAsync([Summary("Image", "The image attachment to apply oil painting filter")] IAttachment imageAttachment)
         {
             await DeferAsync();
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
@@ -272,12 +281,12 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("polaroid", "Polaroid photo filter")]
-        public async Task PolaroidAsync(IAttachment inputImage)
+        public async Task PolaroidAsync([Summary("Image", "The image attachment to apply polaroid filter")] IAttachment imageAttachment)
         {
             await DeferAsync();
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
@@ -297,12 +306,14 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("hue", "Alters the Hue component of a image")]
-        public async Task HueAsync(float degrees, IAttachment inputImage)
+        public async Task HueAsync(
+            [Summary("Degrees", "The number of degrees to shift the hue")] float degrees, 
+            [Summary("Image", "The image attachment to alter hue")] IAttachment imageAttachment)
         {
             await DeferAsync();
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
@@ -322,7 +333,9 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("huewheel", "Creates a GIF cycling the hue of the image through 360 degrees over the given seconds")]
-        public async Task HuewheelAsync(int seconds, IAttachment inputImage)
+        public async Task HuewheelAsync(
+            [Summary("Seconds", "The duration in seconds for the hue cycle (1-10)")] int seconds, 
+            [Summary("Image", "The image attachment to cycle hue")] IAttachment imageAttachment)
         {
             await DeferAsync();
             if (seconds < 1 || seconds > 10)
@@ -332,7 +345,7 @@ namespace SketchBot.InteractionBasedModules
             }
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
 
                 int fps = 30;
                 int frameCount = seconds * fps;
@@ -343,7 +356,6 @@ namespace SketchBot.InteractionBasedModules
                 var gifMetaData = original.Metadata.GetGifMetadata();
                 gifMetaData.RepeatCount = 0; // infinite loop
 
-                // Prepare the first frame (0 degrees)
                 original.Mutate(x => x.Hue(0));
                 var rootFrameMeta = original.Frames.RootFrame.Metadata.GetGifMetadata();
                 rootFrameMeta.FrameDelay = frameDelay;
@@ -371,7 +383,9 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("opacity", "Multiplies the opacity of the input image with a given factor between 0 and 1")]
-        public async Task OpacityAsync(float factor, IAttachment inputImage)
+        public async Task OpacityAsync(
+            [Summary("Factor", "The opacity multiplier (0 to 1)")] float factor, 
+            [Summary("Image", "The image attachment to adjust opacity")] IAttachment imageAttachment)
         {
             await DeferAsync();
             if (factor < 0 || factor > 1)
@@ -381,7 +395,7 @@ namespace SketchBot.InteractionBasedModules
             }
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
@@ -401,7 +415,9 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("fadeout", "Creates a GIF fading out the image to transparency")]
-        public async Task FadeoutAsync(int seconds, IAttachment inputImage)
+        public async Task FadeoutAsync(
+            [Summary("Seconds", "The duration in seconds for the fadeout (1-100)")] int seconds, 
+            [Summary("Image", "The image attachment to fade out")] IAttachment imageAttachment)
         {
             await DeferAsync();
             if (seconds < 1 || seconds > 100)
@@ -411,7 +427,7 @@ namespace SketchBot.InteractionBasedModules
             }
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
 
                 using var original = SixLabors.ImageSharp.Image.Load<Rgba32>(photoBytes);
 
@@ -463,7 +479,9 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("spin", "Creates a GIF of the image spinning 360 degrees over the given seconds")]
-        public async Task SpinAsync(int seconds, IAttachment inputImage)
+        public async Task SpinAsync(
+            [Summary("Seconds", "The duration in seconds for the spin (1-20)")] int seconds, 
+            [Summary("Image", "The image attachment to spin")] IAttachment imageAttachment)
         {
             await DeferAsync();
             if (seconds < 1 || seconds > 20)
@@ -473,7 +491,7 @@ namespace SketchBot.InteractionBasedModules
             }
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
 
                 int fps = 30;
                 int frameCount = seconds * fps;
@@ -523,12 +541,12 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("detectedges", "Detect edges on an image")]
-        public async Task DetectEdgesAsync(IAttachment inputImage)
+        public async Task DetectEdgesAsync([Summary("Image", "The image attachment to detect edges on")] IAttachment imageAttachment)
         {
             await DeferAsync();
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
@@ -548,12 +566,17 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("crop", "Crops the image")]
-        public async Task CropAsync(int width, int height, IAttachment inputImage)
+        public async Task CropAsync(
+            [Summary("Width", "The width to crop to (max 3840)")] int width, 
+            [Summary("Height", "The height to crop to (max 2160)")] int height, 
+            [Summary("Image", "The image attachment to crop")] IAttachment imageAttachment)
         {
             await DeferAsync();
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                width = Math.Min(width, 3840);
+                height = Math.Min(height, 2160);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
@@ -562,12 +585,6 @@ namespace SketchBot.InteractionBasedModules
 
                 }
                 stream.Position = 0;
-                if (width > 3840 || height > 2160)
-                {
-                    await FollowupAsync("Image is larger than `3840x2160`");
-                    stream.Dispose();
-                    return;
-                }
                 string fileSize = HelperFunctions.FormatFileSize(stream.Length);
                 await Context.Interaction.FollowupWithFileAsync(stream, $"Crop.png", $"`{width}`x`{height}`\nFilesize: `{fileSize}`");
                 await stream.FlushAsync();
@@ -579,26 +596,28 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("brightness", "Adjusts brightness of an image")]
-        public async Task BrightnessAsync(float factor, IAttachment inputImage)
+        public async Task BrightnessAsync(
+            [Summary("Amount", "The brightness adjustment factor (max 100)")] float amount, 
+            [Summary("Image", "The image attachment to adjust brightness")] IAttachment imageAttachment)
         {
             await DeferAsync();
-            if (factor > 100 && Context.Interaction.User.Id != 135446225565515776)
+            if (amount > 100 && Context.Interaction.User.Id != 135446225565515776)
             {
-                factor = 100;
+                amount = 100;
             }
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    image.Mutate(x => x.Brightness(factor));
+                    image.Mutate(x => x.Brightness(amount));
                     image.Save(stream, encoder);
 
                 }
                 stream.Position = 0;
                 string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                await Context.Interaction.FollowupWithFileAsync(stream, $"Brightness.png", $"Factor: `{factor}`\nFilesize: `{fileSize}`");
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Brightness.png", $"Factor: `{amount}`\nFilesize: `{fileSize}`");
                 await stream.FlushAsync();
                 stream.Dispose();
             }
@@ -608,12 +627,15 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("rotate", "Rotates an image")]
-        public async Task RotateAsync(float angle, IAttachment inputImage)
+        public async Task RotateAsync(
+            [Summary("Angle", "The angle in degrees to rotate the image")] float angle, 
+            [Summary("Image", "The image attachment to rotate")] IAttachment imageAttachment)
         {
             await DeferAsync();
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                angle %= 360;
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
@@ -633,25 +655,27 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("saturate", "Saturates an image")]
-        public async Task SaturateAsync(float size, IAttachment inputImage)
+        public async Task SaturateAsync(
+            [Summary("Amount", "The saturation factor (max 100)")] float amount, 
+            [Summary("Image", "The image attachment to saturate")] IAttachment imageAttachment)
         {
             await DeferAsync();
-            if (size > 100 && Context.Interaction.User.Id != 135446225565515776)
+            if (amount > 100 && Context.Interaction.User.Id != 135446225565515776)
             {
-                size = 100;
+                amount = 100;
             }
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    image.Mutate(x => x.Saturate(size));
+                    image.Mutate(x => x.Saturate(amount));
                     image.Save(stream, encoder);
                 }
                 stream.Position = 0;
                 string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                await Context.Interaction.FollowupWithFileAsync(stream, $"Saturate.png", $"Factor: `{size}`\nFilesize: `{fileSize}`");
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Saturate.png", $"Factor: `{amount}`\nFilesize: `{fileSize}`");
                 await stream.FlushAsync();
                 stream.Dispose();
             }
@@ -661,25 +685,27 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("blur", "Blurs an image")]
-        public async Task BlurAsync(int factor, IAttachment inputImage)
+        public async Task BlurAsync(
+            [Summary("Amount", "The blur factor (max 100)")] int amount, 
+            [Summary("Image", "The image attachment to blur")] IAttachment imageAttachment)
         {
             await DeferAsync();
-            if (factor > 100 && Context.Interaction.User.Id != 135446225565515776)
+            if (amount > 100 && Context.Interaction.User.Id != 135446225565515776)
             {
-                factor = 100;
+                amount = 100;
             }
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    image.Mutate(x => x.BoxBlur(factor));
+                    image.Mutate(x => x.BoxBlur(amount));
                     image.Save(stream, encoder);
                 }
                 stream.Position = 0;
                 string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                await Context.Interaction.FollowupWithFileAsync(stream, $"Blur.png", $"Factor: `{factor}`\nFilesize: `{fileSize}`");
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Blur.png", $"Factor: `{amount}`\nFilesize: `{fileSize}`");
                 await stream.FlushAsync();
                 stream.Dispose();
             }
@@ -689,27 +715,29 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("sharpen", "Sharpens an image")]
-        public async Task SharpenAsync(int size, IAttachment inputImage)
+        public async Task SharpenAsync(
+            [Summary("Amount", "The sharpening factor (max 100)")] int amount, 
+            [Summary("Image", "The image attachment to sharpen")] IAttachment imageAttachment)
         {
             await DeferAsync();
-            if (size > 100 && Context.Interaction.User.Id != 135446225565515776)
+            if (amount > 100 && Context.Interaction.User.Id != 135446225565515776)
             {
-                size = 100;
+                amount = 100;
             }
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
-                    image.Mutate(x => x.GaussianSharpen(size));
+                    image.Mutate(x => x.GaussianSharpen(amount));
                     image.Save(stream, encoder);
 
                     image.Dispose();
                 }
                 stream.Position = 0;
                 string fileSize = HelperFunctions.FormatFileSize(stream.Length);
-                await Context.Interaction.FollowupWithFileAsync(stream, $"Sharpen.png", $"Factor: `{size}`\nFilesize: `{fileSize}`");
+                await Context.Interaction.FollowupWithFileAsync(stream, $"Sharpen.png", $"Factor: `{amount}`\nFilesize: `{fileSize}`");
                 await stream.FlushAsync();
                 stream.Dispose();
             }
@@ -719,15 +747,12 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("upscale", "Upscales an image")]
-        public async Task UpscaleAsync(IAttachment inputImage)
+        public async Task UpscaleAsync([Summary("Image", "The image attachment to upscale")] IAttachment imageAttachment)
         {
             await DeferAsync();
             try
             {
-                int width;
-                int height;
-
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes);
                 if (image.Width > 3840 || image.Height > 2160)
@@ -740,8 +765,8 @@ namespace SketchBot.InteractionBasedModules
                     image.Mutate(x => x.Resize(image.Width * 2, image.Height * 2));
                     image.Save(stream, encoder);
 
-                    width = Math.Min(image.Width, 3840);
-                    height = Math.Min(image.Height, 2160);
+                    int width = Math.Min(image.Width, 3840);
+                    int height = Math.Min(image.Height, 2160);
                     image.Dispose();
                     stream.Position = 0;
                     string fileSize = HelperFunctions.FormatFileSize(stream.Length);
@@ -756,7 +781,10 @@ namespace SketchBot.InteractionBasedModules
             }
         }
         [SlashCommand("resize", "Resizes the image")]
-        public async Task ResizeAsync(int width, int height, IAttachment inputImage)
+        public async Task ResizeAsync(
+            [Summary("Width", "The width to resize to (max 3840)")] int width, 
+            [Summary("Height", "The height to resize to (max 2160)")] int height, 
+            [Summary("Image", "The image attachment to resize")] IAttachment imageAttachment)
         {
             await DeferAsync();
             if (width > 3840 && Context.Interaction.User.Id != 135446225565515776)
@@ -769,7 +797,7 @@ namespace SketchBot.InteractionBasedModules
             }
             try
             {
-                var photoBytes = await client.GetByteArrayAsync(inputImage.Url);
+                var photoBytes = await client.GetByteArrayAsync(imageAttachment.Url);
                 using var stream = new MemoryStream();
                 using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(photoBytes))
                 {
