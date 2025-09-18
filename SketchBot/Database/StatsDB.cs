@@ -105,8 +105,8 @@ namespace SketchBot.Database
         {
             var result = new List<string>();
             var database = new StatsDB();
-            var realguildid = user.Guild.Id;
-            var query = $"SELECT * FROM `{realguildid}` WHERE user_id = @UserId";
+            var guildId = user.Guild.Id;
+            var query = $"SELECT * FROM `{guildId}` WHERE user_id = @UserId";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
                 cmd.Parameters.AddWithValue("@UserId", user.Id.ToString());
@@ -215,8 +215,8 @@ namespace SketchBot.Database
         public static void EnterUser(IGuildUser user)
         {
             var database = new StatsDB();
-            var realguildid = user.Guild.Id;
-            var query = $@"INSERT INTO `{realguildid}` (user_id, tokens, daily, level, xp) VALUES (@UserId, @Tokens, @Daily, @Level, @XP)";
+            var guildId = user.Guild.Id;
+            var query = $@"INSERT INTO `{guildId}` (user_id, tokens, daily, level, xp) VALUES (@UserId, @Tokens, @Daily, @Level, @XP)";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
                 cmd.Parameters.AddWithValue("@UserId", user.Id.ToString());
@@ -247,8 +247,8 @@ namespace SketchBot.Database
         {
             var result = new List<UserStats>();
             var database = new StatsDB();
-            var realguildid = user.Guild.Id;
-            var query = $"SELECT * FROM `{realguildid}` WHERE user_id = @UserId";
+            var guildId = user.Guild.Id;
+            var query = $"SELECT * FROM `{guildId}` WHERE user_id = @UserId";
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
                 cmd.Parameters.AddWithValue("@UserId", user.Id.ToString());
@@ -274,42 +274,19 @@ namespace SketchBot.Database
             database.CloseConnection();
             return result.FirstOrDefault();
         }
-        public static List<UserStats> GetAllUserStats(IGuildUser user)
+        public static List<UserStats> GetAllUserStats(ulong guildId, bool orderByLevel = false)
         {
             var result = new List<UserStats>();
             var database = new StatsDB();
-            var realguildid = user.Guild.Id;
-            var query = $"SELECT * FROM `{realguildid}` ORDER BY tokens DESC LIMIT 10000";
-            using (var cmd = new MySqlCommand(query, database.dbConnection))
+            string query;
+            if (orderByLevel)
             {
-                using var userTable = cmd.ExecuteReader();
-                while (userTable.Read())
-                {
-                    var userId = Convert.ToUInt64(userTable["user_id"]);
-                    var currentTokens = (long)userTable["tokens"];
-                    var daily = (DateTime)userTable["daily"];
-                    var level = (long)userTable["level"];
-                    var xp = (long)userTable["xp"];
-
-                    result.Add(new UserStats
-                    {
-                        UserId = userId,
-                        Tokens = currentTokens,
-                        Daily = daily,
-                        Level = level,
-                        XP = xp
-                    });
-                }
+                query = $"SELECT * FROM `{guildId}` ORDER BY level DESC, xp DESC LIMIT 10000";
             }
-            database.CloseConnection();
-            return result;
-        }
-        public static List<UserStats> GetAllUsersLeveling(IGuildUser user)
-        {
-            var result = new List<UserStats>();
-            var database = new StatsDB();
-            var realguildid = user.Guild.Id;
-            var query = $"SELECT * FROM `{realguildid}` ORDER BY level DESC, xp DESC LIMIT 10000";
+            else
+            {
+                query = $"SELECT * FROM `{guildId}` ORDER BY tokens DESC LIMIT 10000";
+            }
             using (var cmd = new MySqlCommand(query, database.dbConnection))
             {
                 using var userTable = cmd.ExecuteReader();
@@ -361,11 +338,11 @@ namespace SketchBot.Database
         }
         public static void AddXP(IGuildUser user, long xp)
         {
-            var realguildid = user.Guild.Id;
+            var guildId = user.Guild.Id;
             var database = new StatsDB();
             try
             {
-                var query = $"UPDATE `{realguildid}` SET xp = xp + @XP WHERE user_id = @UserId";
+                var query = $"UPDATE `{guildId}` SET xp = xp + @XP WHERE user_id = @UserId";
                 using (var cmd = new MySqlCommand(query, database.dbConnection))
                 {
                     cmd.Parameters.AddWithValue("@XP", xp);
@@ -384,11 +361,11 @@ namespace SketchBot.Database
         }
         public static void LevelUp(IGuildUser user, long xp, long level)
         {
-            var realguildid = user.Guild.Id;
+            var guildId = user.Guild.Id;
             var database = new StatsDB();
             try
             {
-                var query = $"UPDATE `{realguildid}` SET level = level + @Level, xp = xp + @XP WHERE user_id = @UserId";
+                var query = $"UPDATE `{guildId}` SET level = level + @Level, xp = xp + @XP WHERE user_id = @UserId";
                 using (var cmd = new MySqlCommand(query, database.dbConnection))
                 {
                     cmd.Parameters.AddWithValue("@Level", level);
@@ -409,10 +386,10 @@ namespace SketchBot.Database
         public static void AddTokens(IGuildUser user, long tokens)
         {
             var database = new StatsDB();
-            var realguildid = user.Guild.Id;
+            var guildId = user.Guild.Id;
             try
             {
-                var query = $"UPDATE `{realguildid}` SET tokens = tokens + @Tokens WHERE user_id = @UserId";
+                var query = $"UPDATE `{guildId}` SET tokens = tokens + @Tokens WHERE user_id = @UserId";
                 using (var cmd = new MySqlCommand(query, database.dbConnection))
                 {
                     cmd.Parameters.AddWithValue("@Tokens", tokens);
@@ -432,10 +409,10 @@ namespace SketchBot.Database
         public static void RemoveTokens(IGuildUser user, long tokens)
         {
             var database = new StatsDB();
-            var realguildid = user.Guild.Id;
+            var guildId = user.Guild.Id;
             try
             {
-                var query = $"UPDATE `{realguildid}` SET tokens = tokens - @Tokens WHERE user_id = @UserId";
+                var query = $"UPDATE `{guildId}` SET tokens = tokens - @Tokens WHERE user_id = @UserId";
                 using (var cmd = new MySqlCommand(query, database.dbConnection))
                 {
                     cmd.Parameters.AddWithValue("@Tokens", tokens);
@@ -508,10 +485,10 @@ namespace SketchBot.Database
         public static void UpdateDailyTimestamp(IGuildUser user)
         {
             var database = new StatsDB();
-            var realguildid = user.Guild.Id;
+            var guildId = user.Guild.Id;
             try
             {
-                var query = $"UPDATE `{realguildid}` SET daily = curtime() WHERE user_id = @UserId";
+                var query = $"UPDATE `{guildId}` SET daily = curtime() WHERE user_id = @UserId";
                 using (var cmd = new MySqlCommand(query, database.dbConnection))
                 {
                     cmd.Parameters.AddWithValue("@UserId", user.Id.ToString());

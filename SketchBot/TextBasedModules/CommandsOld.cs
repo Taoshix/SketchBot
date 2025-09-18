@@ -857,7 +857,7 @@ namespace SketchBot.TextBasedModules
                         {
                             Color = new Color(0, 0, 255)
                         };
-                        var list = StatsDB.GetAllUserStats(user as IGuildUser);
+                        var list = StatsDB.GetAllUserStats(Context.Guild.Id);
                         var foreachedlist = new List<string>();
                         foreach (var item in list.Skip(pagelimit).Take(10))
                         {
@@ -909,7 +909,7 @@ namespace SketchBot.TextBasedModules
                         {
                             Color = new Color(0, 0, 255)
                         };
-                        var list = StatsDB.GetAllUsersLeveling(user as IGuildUser);
+                        var list = StatsDB.GetAllUserStats(Context.Guild.Id, true);
                         var foreachedlist = new List<string>();
                         foreach (var item in list.Skip(pageLimit).Take(10))
                         {

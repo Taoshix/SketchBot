@@ -340,10 +340,6 @@ namespace SketchBot.InteractionBasedModules
             await Context.Guild.DownloadUsersAsync();
             type = type.ToLower();
             string[] types = ["tokens", "leveling"];
-            var userStatsList = StatsDB.GetAllUserStats(Context.User as IGuildUser);
-            int totalUsers = userStatsList.Count;
-            int pageSize = 10;
-            int totalPages = (int)Math.Ceiling(totalUsers / (double)pageSize);
             if (!types.Contains(type))
             {
                 await FollowupAsync("Usage: /leaderboard <type>" +
@@ -351,6 +347,10 @@ namespace SketchBot.InteractionBasedModules
                     $"\n{string.Join(", ", types.Select(HelperFunctions.CapitalizeFirstLetter))}");
                 return;
             }
+            var userStatsList = type == "leveling" ? StatsDB.GetAllUserStats(Context.Guild.Id, true) : StatsDB.GetAllUserStats(Context.Guild.Id);
+            int totalUsers = userStatsList.Count;
+            int pageSize = 10;
+            int totalPages = (int)Math.Ceiling(totalUsers / (double)pageSize);
 
             var pages = new List<IPageBuilder>();
             for (int page = 1; page <= totalPages; page++)
@@ -383,7 +383,7 @@ namespace SketchBot.InteractionBasedModules
 
                 pages.Add(new PageBuilder()
                     .WithColor(Color.Blue)
-                    .WithTitle($"{type} leaderboard for {Context.Guild.Name}")
+                    .WithTitle($"{HelperFunctions.CapitalizeFirstLetter(type)} leaderboard for {Context.Guild.Name}")
                     .WithDescription($"```css\n{longstring}\n```"));
             }
 
