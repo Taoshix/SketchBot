@@ -13,6 +13,7 @@ services:
       SKETCHBOT_OSU_API_ID: ${SKETCHBOT_OSU_API_ID}
       SKETCHBOT_OSU_API_KEY: ${SKETCHBOT_OSU_API_KEY}
       SKETCHBOT_DBL_API_KEY: ${SKETCHBOT_DBL_API_KEY}
+      SKETCHBOT_DBGG_API_KEY: ${SKETCHBOT_DBGG_API_KEY}
       SKETCHBOT_DATABASE_USERNAME: ${SKETCHBOT_DATABASE_USERNAME}
       SKETCHBOT_DATABASE_PASSWORD: ${SKETCHBOT_DATABASE_PASSWORD}
       SKETCHBOT_DATABASE_NAME: ${SKETCHBOT_DATABASE_NAME}
@@ -22,5 +23,15 @@ services:
       SKETCHBOT_TEMPDB_PASSWORD: ${SKETCHBOT_TEMPDB_PASSWORD}
       SKETCHBOT_TEMPDB_HOST: ${SKETCHBOT_TEMPDB_HOST}
       SKETCHBOT_TEMPDB_DATABASE: ${SKETCHBOT_TEMPDB_DATABASE}
-    # volumes:
-    #   - ./SketchBot/config.json:/app/config.json
+    volumes:
+      - ./SketchBot/config.json:/app/config.json
+  lavalink:
+    build:
+      context: ./SketchBot/LavaLink
+      dockerfile: Dockerfile
+    container_name: lavalink
+    restart: unless-stopped
+    ports:
+      - "2333:2333"
+    volumes:
+      - ./SketchBot/LavaLink/application.yml:/lavalink/application.yml

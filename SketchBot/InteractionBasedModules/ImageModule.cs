@@ -47,7 +47,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("grayscale", "Grayscales an image")]
@@ -98,7 +98,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("sepia", "Sepia color filter")]
@@ -162,7 +162,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("contrast", "Adjusts the contrast of an image")]
@@ -193,7 +193,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("glow", "Glows the image")]
@@ -224,7 +224,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("skew", "Skews the image")]
@@ -252,7 +252,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("oil", "Oil painting filter")]
@@ -277,7 +277,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("polaroid", "Polaroid photo filter")]
@@ -302,7 +302,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("hue", "Alters the Hue component of a image")]
@@ -329,7 +329,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("huewheel", "Creates a GIF cycling the hue of the image through 360 degrees over the given seconds")]
@@ -379,7 +379,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to process the image\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to process the image\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("opacity", "Multiplies the opacity of the input image with a given factor between 0 and 1")]
@@ -411,7 +411,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("fadeout", "Creates a GIF fading out the image to transparency")]
@@ -475,7 +475,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to process the image\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to process the image\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("spin", "Creates a GIF of the image spinning 360 degrees over the given seconds")]
@@ -537,7 +537,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to process the image\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to process the image\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("detectedges", "Detect edges on an image")]
@@ -562,7 +562,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("crop", "Crops the image")]
@@ -592,7 +592,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("brightness", "Adjusts brightness of an image")]
@@ -623,7 +623,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("rotate", "Rotates an image")]
@@ -651,7 +651,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("saturate", "Saturates an image")]
@@ -681,7 +681,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("blur", "Blurs an image")]
@@ -711,7 +711,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("sharpen", "Sharpens an image")]
@@ -743,7 +743,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("upscale", "Upscales an image")]
@@ -777,7 +777,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
         [SlashCommand("resize", "Resizes the image")]
@@ -814,7 +814,7 @@ namespace SketchBot.InteractionBasedModules
             }
             catch (Exception ex)
             {
-                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}\n\n{ex.StackTrace}");
+                await FollowupAsync($"Unable to download the image or verify the url\n{ex.GetType()}: {ex.Message}");
             }
         }
     }

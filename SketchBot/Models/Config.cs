@@ -41,22 +41,23 @@ namespace SketchBot.Models
                 }
                 catch { }
             }
+            string GetEnv(string key) => string.IsNullOrEmpty(Environment.GetEnvironmentVariable(key)) ? null : Environment.GetEnvironmentVariable(key);
             return new Config
             {
-                Prefix = Environment.GetEnvironmentVariable("SKETCHBOT_PREFIX") ?? fileConfig?.Prefix ?? string.Empty,
-                Token = Environment.GetEnvironmentVariable("SKETCHBOT_TOKEN") ?? fileConfig?.Token ?? string.Empty,
-                OsuApiKey = Environment.GetEnvironmentVariable("SKETCHBOT_OSU_API_KEY") ?? fileConfig?.OsuApiKey ?? string.Empty,
-                OsuApiId = int.TryParse(Environment.GetEnvironmentVariable("SKETCHBOT_OSU_API_ID"), out var osuId) ? osuId : fileConfig?.OsuApiId ?? 0,
-                DblApiKey = Environment.GetEnvironmentVariable("SKETCHBOT_DBL_API_KEY") ?? fileConfig?.DblApiKey ?? string.Empty,
-                DbggApiKey = Environment.GetEnvironmentVariable("SKETCHBOT_DBGG_API_KEY") ?? fileConfig?.DbggApiKey ?? string.Empty,
-                DatabaseUsername = Environment.GetEnvironmentVariable("SKETCHBOT_DATABASE_USERNAME") ?? fileConfig?.DatabaseUsername ?? string.Empty,
-                DatabasePassword = Environment.GetEnvironmentVariable("SKETCHBOT_DATABASE_PASSWORD") ?? fileConfig?.DatabasePassword ?? string.Empty,
-                DatabaseHost = Environment.GetEnvironmentVariable("SKETCHBOT_DATABASE_HOST") ?? fileConfig?.DatabaseHost ?? string.Empty,
-                IMGFlip = Environment.GetEnvironmentVariable("SKETCHBOT_IMGFLIP") ?? fileConfig?.IMGFlip ?? string.Empty,
-                TempDBUsername = Environment.GetEnvironmentVariable("SKETCHBOT_TEMPDB_USERNAME") ?? fileConfig?.TempDBUsername ?? string.Empty,
-                TempDBPassword = Environment.GetEnvironmentVariable("SKETCHBOT_TEMPDB_PASSWORD") ?? fileConfig?.TempDBPassword ?? string.Empty,
-                TempDBHost = Environment.GetEnvironmentVariable("SKETCHBOT_TEMPDB_HOST") ?? fileConfig?.TempDBHost ?? string.Empty,
-                TempDBDatabase = Environment.GetEnvironmentVariable("SKETCHBOT_TEMPDB_DATABASE") ?? fileConfig?.TempDBDatabase ?? string.Empty
+                Prefix = GetEnv("SKETCHBOT_PREFIX") ?? fileConfig?.Prefix ?? string.Empty,
+                Token = GetEnv("SKETCHBOT_TOKEN") ?? fileConfig?.Token ?? string.Empty,
+                OsuApiKey = GetEnv("SKETCHBOT_OSU_API_KEY") ?? fileConfig?.OsuApiKey ?? string.Empty,
+                OsuApiId = int.TryParse(GetEnv("SKETCHBOT_OSU_API_ID"), out var osuId) ? osuId : fileConfig?.OsuApiId ?? 0,
+                DblApiKey = GetEnv("SKETCHBOT_DBL_API_KEY") ?? fileConfig?.DblApiKey ?? string.Empty,
+                DbggApiKey = GetEnv("SKETCHBOT_DBGG_API_KEY") ?? fileConfig?.DbggApiKey ?? string.Empty,
+                DatabaseUsername = GetEnv("SKETCHBOT_DATABASE_USERNAME") ?? fileConfig?.DatabaseUsername ?? string.Empty,
+                DatabasePassword = GetEnv("SKETCHBOT_DATABASE_PASSWORD") ?? fileConfig?.DatabasePassword ?? string.Empty,
+                DatabaseHost = GetEnv("SKETCHBOT_DATABASE_HOST") ?? fileConfig?.DatabaseHost ?? string.Empty,
+                IMGFlip = GetEnv("SKETCHBOT_IMGFLIP") ?? fileConfig?.IMGFlip ?? string.Empty,
+                TempDBUsername = GetEnv("SKETCHBOT_TEMPDB_USERNAME") ?? fileConfig?.TempDBUsername ?? string.Empty,
+                TempDBPassword = GetEnv("SKETCHBOT_TEMPDB_PASSWORD") ?? fileConfig?.TempDBPassword ?? string.Empty,
+                TempDBHost = GetEnv("SKETCHBOT_TEMPDB_HOST") ?? fileConfig?.TempDBHost ?? string.Empty,
+                TempDBDatabase = GetEnv("SKETCHBOT_TEMPDB_DATABASE") ?? fileConfig?.TempDBDatabase ?? string.Empty
             };
         }
 

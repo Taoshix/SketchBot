@@ -85,6 +85,7 @@ namespace SketchBot
                 .AddLavaNode(x =>
                 {
                     x.SelfDeaf = false;
+                    x.Hostname = "lavalink";
                 })
                 .AddSingleton(new InteractiveConfig 
                 { 
